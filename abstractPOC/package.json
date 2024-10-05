@@ -10,5 +10,8 @@
 	},
 	"peerDependencies": {
 		"typescript": "^5.0.0"
+	},
+	"dependencies": {
+		"@ast-grep/napi": "^0.27.2"
 	}
 }
