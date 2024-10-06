@@ -7,8 +7,14 @@ const source = fs.readFileSync(filePath, "utf-8");
 const ast = parse(Lang.Python, source);
 const root = ast.root();
 
-const children = root.children();
-// console.log(new Set(children.map((x) => x.kind())));
-const flow = children.filter((x) => flowKinds.includes(x.kind() as FlowKind));
+const rootChildren = root.children();
+// console.log(new Set(rootChildren.map((x) => x.kind())));
+const flow = rootChildren.filter((x) =>
+	flowKinds.includes(x.kind() as FlowKind),
+);
 
-console.log(flow.map((x) => x.kind()));
+for (const f of flow) {
+	const children = f.children();
+	console.log(`children of ${f.kind()} are:`);
+	console.log(children.map((x) => x.kind()));
+}
