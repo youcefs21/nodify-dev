@@ -1,14 +1,9 @@
 import { parse, Lang, type SgNode } from "@ast-grep/napi";
 import fs from "node:fs";
 
-const filePath = "youtube_dl/__main__.py";
-const source = fs.readFileSync(filePath, "utf-8");
-const ast = parse(Lang.Python, source);
-const root = ast.root();
-
-const generateAstSchema = (node: SgNode) => {
+const generateAstSchema = (roots: SgNode[]) => {
 	const schema = {} as Record<string, string[]>;
-	const queue = [node];
+	const queue = [...roots];
 
 	while (queue.length > 0) {
 		// biome-ignore lint/style/noNonNullAssertion: <explanation>
@@ -36,6 +31,10 @@ const generateAstSchema = (node: SgNode) => {
 	return schema;
 };
 
-const astSchema = generateAstSchema(root);
+const quest_source = fs.readFileSync("PythonQuest/main.py", "utf-8");
+const quest_ast = parse(Lang.Python, quest_source);
+const quest_root = quest_ast.root();
+
+const astSchema = generateAstSchema([quest_root]);
 
 fs.writeFileSync("astSchema.json", JSON.stringify(astSchema, null, 2));
