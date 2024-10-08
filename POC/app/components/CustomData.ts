@@ -2,9 +2,10 @@ import type { Node } from "@xyflow/react";
 
 export type CustomData = {
 	text: string;
-	groupId: string;
 	og_pos: { x: number; y: number };
-	onExpand: (parent: Node<CustomData>) => void;
+	onExpand: (node: CustomNode) => void;
+	groupId: string | null;
+	expanded: boolean;
 };
 
 export type CustomNode = Node<CustomData>;
