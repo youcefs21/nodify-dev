@@ -1,0 +1,112 @@
+{
+	"nodes": [
+		{
+			"id": "R",
+			"type": "entry",
+			"title": "A game of snake"
+		},
+		{
+			"id": "RG1",
+			"group_id": "RG",
+			"type": "sequence",
+			"title": "Create the window",
+			"content": "wn = turtle.Screen()\nwn.title(\"Snake Game by @TokyoEdTech\")\nwn.bgcolor(\"green\")\nwn.setup(width=600, height=600)\nwn.tracer(0)  # Turns off the screen updates"
+		},
+		{
+			"id": "RG2",
+			"group_id": "RG",
+			"type": "sequence",
+			"title": "Draw the snake's head at 0,0",
+			"content": "head = turtle.Turtle()\nhead.speed(0)\nhead.shape(\"square\")\nhead.color(\"black\")\nhead.penup()\nhead.goto(0, 0)\nhead.direction = \"stop\""
+		},
+		{
+			"id": "RG3",
+			"type": "sequence",
+			"group_id": "RG",
+			"title": "Draw the food at 0, 100",
+			"content": ""
+		},
+		{
+			"id": "RG4",
+			"type": "sequence",
+			"group_id": "RG",
+			"title": "declare pen and draw scoreboard",
+			"content": ""
+		},
+		{
+			"id": "RF1",
+			"type": "function",
+			"title": "go up",
+			"params": [],
+			"content": "if the snake is not going down, go up"
+		},
+		{
+			"id": "RF2",
+			"type": "function",
+			"title": "go down",
+			"params": [],
+			"content": "if the snake is not going up, go down"
+		},
+		{
+			"id": "RF3",
+			"type": "function",
+			"title": "go left",
+			"params": [],
+			"content": "if the snake is not going right, go left"
+		},
+		{
+			"id": "RF4",
+			"type": "function",
+			"title": "go right",
+			"params": [],
+			"content": "if the snake is not going left, go right"
+		},
+		{
+			"id": "RF5",
+			"type": "function",
+			"title": "move head based on it's direction",
+			"params": [],
+			"content": "move the snake's head 1 block in the direction it's facing"
+		},
+		{
+			"id": "RG5",
+			"group_id": "RG",
+			"type": "sequence",
+			"title": "initialize key bindings",
+			"content": ""
+		},
+		{
+			"id": "RG6",
+			"group_id": "RG",
+			"type": "while_loop",
+			"title": "Main game loop",
+			"content": ""
+		}
+	],
+	"edges": [
+		{
+			"from": "RG5",
+			"to": "RF1",
+			"label": "if the `w` button is pressed"
+		},
+		{
+			"from": "RG5",
+			"to": "RF2",
+			"label": "if the `s` button is pressed"
+		},
+		{
+			"from": "RG5",
+			"to": "RF3",
+			"label": "if the `a` button is pressed"
+		},
+		{
+			"from": "RG5",
+			"to": "RF4",
+			"label": "if the `d` button is pressed"
+		},
+		{
+			"from": "R",
+			"to": "RG"
+		}
+	]
+}
