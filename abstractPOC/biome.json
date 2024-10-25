@@ -1,12 +1,21 @@
 {
-	"$schema": "https://biomejs.dev/schemas/1.9.3/schema.json",
-	"formatter": {
-		"enabled": false
+	"$schema": "https://biomejs.dev/schemas/1.9.4/schema.json",
+	"organizeImports": {
+		"enabled": true
 	},
 	"linter": {
-		"enabled": false
-	},
-	"organizeImports": {
-		"enabled": false
+		"enabled": true,
+		"rules": {
+			"recommended": true,
+			"complexity": {
+				"noForEach": "off"
+			},
+			"suspicious": {
+				"noArrayIndexKey": "off"
+			},
+			"style": {
+				"noNonNullAssertion": "info"
+			}
+		}
 	}
 }

@@ -1,7 +1,5 @@
-
-export type LLMBlocks = {
-    id: number,
-    text: string,
-    children: LLMBlocks[]
-}
-
+export type LLMBlock = {
+	id: number;
+	text: string;
+	children: LLMBlock[];
+};

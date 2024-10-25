@@ -6,7 +6,6 @@ const generateAstSchema = (roots: SgNode[]) => {
 	const queue = [...roots];
 
 	while (queue.length > 0) {
-		// biome-ignore lint/style/noNonNullAssertion: <explanation>
 		const currentNode = queue.shift()!;
 		const kind = currentNode.kind();
 
@@ -25,7 +24,6 @@ const generateAstSchema = (roots: SgNode[]) => {
 	}
 
 	// Exclude nodes with empty lists
-	// biome-ignore lint/complexity/noForEach: <explanation>
 	Object.keys(schema).forEach((key) => {
 		if (schema[key].length === 0) {
 			delete schema[key];
