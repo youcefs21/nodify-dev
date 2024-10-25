@@ -19,6 +19,7 @@ export const definitionKinds = [
 	"decorated_definition",
 	"class_definition",
 ] as const;
+
 export type DefinitionKind = (typeof definitionKinds)[number];
 
 export const kinds = [

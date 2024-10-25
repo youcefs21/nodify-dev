@@ -82,16 +82,15 @@ interface Func extends GraphAST {
  * These can be combined (eg a classmethod can also be abstract or final).
  * Some combinations are invalid, but that is the responsibility of the language itself.
  */
-enum MethodKind {
-    static,
-    class,
-    instance,
-    final,
-    abstract,
-    property_setter,
-    property_getter,
-    property_deleter
-}
+type MethodKind = "static" |
+    "class" |
+    "instance" |
+    "final" |
+    "abstract" |
+    "property_setter" |
+    "property_getter" |
+    "property_deleter"
+
 
 /**
  * Methods are just functions within a class.
