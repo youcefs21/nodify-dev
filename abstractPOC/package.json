@@ -6,6 +6,7 @@
 		"start": "bun run src/index.ts"
 	},
 	"devDependencies": {
+		"@biomejs/biome": "1.9.4",
 		"@types/bun": "latest"
 	},
 	"peerDependencies": {

@@ -10,6 +10,10 @@ const generateAstSchema = (roots: SgNode[]) => {
 		const currentNode = queue.shift()!;
 		const kind = currentNode.kind();
 
+		if (kind === "augmented_assignment") {
+			console.log(currentNode.text());
+		}
+
 		if (!schema[kind]) {
 			schema[kind] = [];
 		}
