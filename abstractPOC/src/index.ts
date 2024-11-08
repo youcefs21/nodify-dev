@@ -16,34 +16,38 @@ function handleFlow(node: SgNode, kind: FlowKind, id: number): LLMBlock {
 				"while children: ",
 				node.children().map((x) => x.kind()),
 			);
-			const block = node.child(3);
-			if (!block || block.kind() !== "block") throw "NoBlockFound";
+			const block = node.children().find((x) => x.kind() === "block");
+			if (!block || block.kind() !== "block") {
+				throw "NoBlockFound";
+			}
 
 			const children = handleFlows(block.children());
 
-			return { id, children, text: node.text() };
+			return { id, text: node.text(), children };
 		}
 		case "for_statement": {
 			console.log(
 				"for children: ",
 				node.children().map((x) => x.kind()),
 			);
-			return { id, children: [], text: node.text() };
+			return { id, text: node.text(), children: [] };
 		}
 		case "while_statement": {
 			console.log(
 				"while children: ",
 				node.children().map((x) => x.kind()),
 			);
-			const block = node.child(3);
-			if (!block || block.kind() !== "block") throw "NoBlockFound";
+			const block = node.children().find((x) => x.kind() === "block");
+			if (!block || block.kind() !== "block") {
+				throw "NoBlockFound";
+			}
 
 			const children = handleFlows(block.children());
 
-			return { id, children, text: node.text() };
+			return { id, text: node.text(), children };
 		}
 		case "expression_statement": {
-			return { id, children: [], text: node.text() };
+			return { id, text: node.text(), children: [] };
 		}
 		default:
 			console.log("unknown type: ", node.kind());
