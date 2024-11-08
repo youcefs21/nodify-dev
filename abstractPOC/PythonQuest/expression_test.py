@@ -1,5 +1,3 @@
-
-
 # def hello():
 #     print("Hello, World!")
 
@@ -29,15 +27,43 @@
 # [a,2]
 # b[0] = 3
 # lambda x: x + 1
-# c = lambda x: x+1
-# {1: 2, 3: 4}
+# c = lambda x: x + 1
+# {c(1): c(2), 3: 4}
+# (1 + (1 + 1))
+# 1 if 1 else 0 if 1 else 1
+# a = [1]
+# a[call(0)]
 # {1, 2, 3}
 # {c(1)}
 # {c(1): 2}
-# (i for i in range(10))
+# (i for c(i) in range(10))
 # [i for i in range(10)]
 # {i for i in range(10)}
 # {i:i for i in range(10)}
--1
-1-1
-1-1-1
+# -c(1)
+# 1-1
+# 1-1-1
+
+# 1 if 1 or not c(1) else 1
+# class Test:
+#     def a()
+
+
+# a = Test()
+# a.a()
+# assert c(1) == 1
+# a, *b = 1, 1
+# a[c(1) : c(2)]
+def c():
+    return 1
+
+
+def c():
+    return 1
+
+
+def c():
+    return 1
+
+
+c(1)

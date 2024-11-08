@@ -84,6 +84,7 @@ function handleFlow(
 				throw "InvalidExpressionStatement";
 			}
 			const ref = handleExpression(children[0], scope);
+			console.log("ref obj for expression_statement: ", ref);
 
 			// handle variable assignment
 
@@ -114,6 +115,42 @@ function handleExpression(node: SgNode, scope: Scope): Reference[] {
 		"lambda_parameters",
 		"{",
 		"}",
+		"if",
+		"else",
+		"or",
+		"not",
+		"and",
+		"==",
+		"!=",
+		"<",
+		">",
+		"<=",
+		">=",
+		"in",
+		"not in",
+		"is",
+		"is not",
+		"|",
+		"^",
+		"&",
+		"<<",
+		">>",
+		"+",
+		"-",
+		"*",
+		"/",
+		"//",
+		"%",
+		"**",
+		"true",
+		"false",
+		"await",
+		"ellipsis",
+		"string_content",
+		"string_start",
+		"string_end",
+		"for",
+		"in",
 	];
 	if (ignoreKinds.includes(node.kind())) {
 		return [];
@@ -130,65 +167,66 @@ function handleExpression(node: SgNode, scope: Scope): Reference[] {
 
 			return children;
 		}
+		case "pattern_list": {
+			const children = node.children().flatMap((x) => {
+				// TODO fix bug for a, *b = {} - likely text will include *b here but we just want b
+				return { name: x.text(), node: x };
+			});
+			scope.concat(children);
+			break;
+		}
 
 		case "call": {
-			const ref_id = scope.findLastIndex((x) => x.name === node.text());
+			const ref_id = scope.findLastIndex(
+				(x) =>
+					x.name ===
+					node
+						.children()
+						.find((y) => y.kind() === "identifier")
+						?.text(),
+			);
 			return [{ name: node.text(), ref_id: ref_id }];
 		}
 
 		case "lambda":
 		case "tuple":
 		case "set":
-		case "list": {
+		case "list":
+		case "dictionary":
+		case "pair":
+		case "parenthesized_expression":
+		case "conditional_expression":
+		case "binary_operator":
+		case "boolean_operator":
+		case "not_operator":
+		case "comparison_operator":
+		case "string":
+		case "interpolation":
+		case "subscript":
+		case "slice":
+		case "generator_expression":
+		case "set_comprehension":
+		case "tuple_comprehension":
+		case "list_comprehension":
+		case "dictionary_comprehension":
+		case "for_in_clause":
+		case "unary_operator": {
 			const children = node
 				.children()
 				.flatMap((x) => handleExpression(x, scope));
 			return children;
 		}
 
-		case "dictionary": {
-			break;
-		}
+		// case "dictionary_splat": {
+		// 	break;
+		// }
 
-		case "dictionary_splat": {
-			break;
-		}
-
-		case "parenthesized_expression": {
-			break;
-		}
-
-		case "conditional_expression": {
-			break;
-		}
-
-		case "subscript": {
-			break;
-		}
-
-		case "set_comprehension":
-		case "tuple_comprehension":
-		case "list_comprehension": {
-			break;
-		}
-		case "dictionary_comprehension": {
-			break;
-		}
-		case "generator_expression": {
-			break;
-		}
-
-		case "binary_operator": {
-			break;
-		}
-		case "pair": {
-			break;
-		}
-		case "unary_operator": {
-			break;
-		}
-		case "for_in_clause": {
-			break;
+		case "yield": {
+			const children = node
+				.children()
+				.slice(1)
+				.flatMap((x) => handleExpression(x, scope));
+			return children;
 		}
 
 		default: {
@@ -204,7 +242,13 @@ function handleFlows(nodes: SgNode[]): LLMBlock[] {
 	for (let i = 0; i < nodes.length; i++) {
 		const kind = nodes[i].kind();
 		if (definitionKinds.includes(kind as DefinitionKind)) {
-			scope.push({ name: nodes[i].text(), node: nodes[i] });
+			scope.push({
+				name: nodes[i]
+					.children()
+					.find((x) => x.kind() === "identifier")
+					?.text(),
+				node: nodes[i],
+			});
 		} else if (flowKinds.includes(kind as FlowKind)) {
 			output.push(handleFlow(nodes[i], kind as FlowKind, i, scope));
 		}
