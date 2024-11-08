@@ -12,10 +12,6 @@ const root = ast.root();
 function handleFlow(node: SgNode, kind: FlowKind, id: number): LLMBlock {
 	switch (kind) {
 		case "if_statement": {
-			console.log(
-				"while children: ",
-				node.children().map((x) => x.kind()),
-			);
 			const block = node.children().find((x) => x.kind() === "block");
 			if (!block || block.kind() !== "block") {
 				throw "NoBlockFound";
@@ -23,20 +19,11 @@ function handleFlow(node: SgNode, kind: FlowKind, id: number): LLMBlock {
 
 			const children = handleFlows(block.children());
 
-			return { id, text: node.text(), children };
+			const edit = block.replace("<if_body/>");
+			const text = node.commitEdits([edit]);
+			return { id, text, children };
 		}
 		case "for_statement": {
-			console.log(
-				"for children: ",
-				node.children().map((x) => x.kind()),
-			);
-			return { id, text: node.text(), children: [] };
-		}
-		case "while_statement": {
-			console.log(
-				"while children: ",
-				node.children().map((x) => x.kind()),
-			);
 			const block = node.children().find((x) => x.kind() === "block");
 			if (!block || block.kind() !== "block") {
 				throw "NoBlockFound";
@@ -44,10 +31,24 @@ function handleFlow(node: SgNode, kind: FlowKind, id: number): LLMBlock {
 
 			const children = handleFlows(block.children());
 
-			return { id, text: node.text(), children };
+			const edit = block.replace("<for_body/>");
+			const text = node.commitEdits([edit]);
+			return { id, text, children };
+		}
+		case "while_statement": {
+			const block = node.children().find((x) => x.kind() === "block");
+			if (!block || block.kind() !== "block") {
+				throw "NoBlockFound";
+			}
+
+			const children = handleFlows(block.children());
+
+			const edit = block.replace("<while_body/>");
+			const text = node.commitEdits([edit]);
+			return { id, text, children };
 		}
 		case "expression_statement": {
-			return { id, text: node.text(), children: [] };
+			return { id, text: node.text() };
 		}
 		default:
 			console.log("unknown type: ", node.kind());
