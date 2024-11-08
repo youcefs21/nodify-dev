@@ -1,6 +1,16 @@
 <|im_start|>user
 you are a python code partitioning expert. Your job is to convert the above json into a more useful format.
 
+your input will be a json of the following format:
+
+```ts
+type input = {
+  id: number;
+  text: string;
+  children?: input[];
+}[];
+```
+
 your output type must match the following:
 
 ```ts
@@ -8,7 +18,7 @@ type output = {
   groupID: number;
   label: string;
   idRange: [number, number];
-  children: output[];
+  children?: output[];
 }[];
 ```
 
@@ -22,275 +32,523 @@ OK
 [
   {
     "id": 0,
-    "code": "# Simple Snake Game in Python 3 for Beginners",
-    "children": []
+    "text": "delay = 0.1"
   },
   {
     "id": 1,
-    "code": "# By @TokyoEdTech",
-    "children": []
+    "text": "score = 0"
   },
   {
     "id": 2,
-    "code": "import turtle",
-    "children": []
+    "text": "high_score = 0"
   },
   {
     "id": 3,
-    "code": "import time",
-    "children": []
+    "text": "wn = turtle.Screen()"
   },
   {
     "id": 4,
-    "code": "import random",
-    "children": []
+    "text": "wn.title(\"Snake Game by @TokyoEdTech\")"
   },
   {
     "id": 5,
-    "code": "delay = 0.1",
-    "children": []
+    "text": "wn.bgcolor(\"green\")"
   },
   {
     "id": 6,
-    "code": "# Score",
-    "children": []
+    "text": "wn.setup(width=600, height=600)"
   },
   {
     "id": 7,
-    "code": "score = 0",
-    "children": []
+    "text": "wn.tracer(0)"
   },
   {
     "id": 8,
-    "code": "high_score = 0",
-    "children": []
+    "text": "head = turtle.Turtle()"
   },
   {
     "id": 9,
-    "code": "# Create the Window",
-    "children": []
+    "text": "head.speed(0)"
   },
   {
     "id": 10,
-    "code": "wn = turtle.Screen()",
-    "children": []
+    "text": "head.shape(\"square\")"
   },
   {
     "id": 11,
-    "code": "wn.title(\"Snake Game by @TokyoEdTech\")",
-    "children": []
+    "text": "head.color(\"black\")"
   },
   {
     "id": 12,
-    "code": "wn.bgcolor(\"green\")",
-    "children": []
+    "text": "head.penup()"
   },
   {
     "id": 13,
-    "code": "wn.setup(width=600, height=600)",
-    "children": []
+    "text": "head.goto(0, 0)"
   },
   {
     "id": 14,
-    "code": "wn.tracer(0)  # Turns off the screen updates",
-    "children": []
+    "text": "head.direction = \"stop\""
   },
   {
     "id": 15,
-    "code": "# Draw the snake's head at 0,0",
-    "children": []
+    "text": "food = turtle.Turtle()"
   },
   {
     "id": 16,
-    "code": "head = turtle.Turtle()",
-    "children": []
+    "text": "food.speed(0)"
   },
   {
     "id": 17,
-    "code": "head.speed(0)",
-    "children": []
+    "text": "food.shape(\"circle\")"
   },
   {
     "id": 18,
-    "code": "head.shape(\"square\")",
-    "children": []
+    "text": "food.color(\"red\")"
   },
   {
     "id": 19,
-    "code": "head.color(\"black\")",
-    "children": []
+    "text": "food.penup()"
   },
   {
     "id": 20,
-    "code": "head.penup()",
-    "children": []
+    "text": "food.goto(0, 100)"
   },
   {
     "id": 21,
-    "code": "head.goto(0, 0)",
-    "children": []
+    "text": "segments = []"
   },
   {
     "id": 22,
-    "code": "head.direction = \"stop\"",
-    "children": []
+    "text": "pen = turtle.Turtle()"
   },
   {
     "id": 23,
-    "code": "# Draw the food at 0, 100",
-    "children": []
+    "text": "pen.speed(0)"
   },
   {
     "id": 24,
-    "code": "food = turtle.Turtle()",
-    "children": []
+    "text": "pen.shape(\"square\")"
   },
   {
     "id": 25,
-    "code": "food.speed(0)",
-    "children": []
+    "text": "pen.color(\"white\")"
   },
   {
     "id": 26,
-    "code": "food.shape(\"circle\")",
-    "children": []
+    "text": "pen.penup()"
   },
   {
     "id": 27,
-    "code": "food.color(\"red\")",
-    "children": []
+    "text": "pen.hideturtle()"
   },
   {
     "id": 28,
-    "code": "food.penup()",
-    "children": []
+    "text": "pen.goto(0, 260)"
   },
   {
     "id": 29,
-    "code": "food.goto(0, 100)",
-    "children": []
+    "text": "pen.write(\n    \"Score: 0  High Score: 0\",\n    font=(\"Courier\", 24, \"normal\"),\n)"
   },
   {
     "id": 30,
-    "code": "segments = []",
-    "children": []
+    "text": "wn.listen()"
   },
   {
     "id": 31,
-    "code": "# Pen",
-    "children": []
+    "text": "wn.onkeypress(go_up, \"w\")",
+    "references": [{ "name": "go_up", "id": "1" }]
   },
   {
     "id": 32,
-    "code": "pen = turtle.Turtle()",
-    "children": []
+    "text": "wn.onkeypress(go_down, \"s\")"
   },
   {
     "id": 33,
-    "code": "pen.speed(0)",
-    "children": []
+    "text": "wn.onkeypress(go_left, \"a\")"
   },
   {
     "id": 34,
-    "code": "pen.shape(\"square\")",
-    "children": []
+    "text": "wn.onkeypress(go_right, \"d\")"
   },
   {
     "id": 35,
-    "code": "pen.color(\"white\")",
-    "children": []
+    "text": "while True:\n    <while_body/>",
+    "children": [
+      {
+        "id": 0,
+        "text": "wn.update()"
+      },
+      {
+        "id": 1,
+        "text": "if (\n        head.xcor() > 290\n        or head.xcor() < -290\n        or head.ycor() > 290\n        or head.ycor() < -290\n    ):\n        <if_body/>",
+        "children": [
+          {
+            "id": 0,
+            "text": "time.sleep(1)"
+          },
+          {
+            "id": 1,
+            "text": "head.goto(0, 0)"
+          },
+          {
+            "id": 2,
+            "text": "head.direction = \"stop\""
+          },
+          {
+            "id": 3,
+            "text": "for segment in segments:\n            <for_body/>",
+            "children": [
+              {
+                "id": 0,
+                "text": "segment.goto(1000, 1000)"
+              }
+            ]
+          },
+          {
+            "id": 4,
+            "text": "segments.clear()"
+          },
+          {
+            "id": 5,
+            "text": "score = 0"
+          },
+          {
+            "id": 6,
+            "text": "delay = 0.1"
+          },
+          {
+            "id": 7,
+            "text": "pen.clear()"
+          },
+          {
+            "id": 8,
+            "text": "pen.write(\n            \"Score: {}  High Score: {}\".format(score, high_score),\n            align=\"center\",\n            font=(\"Courier\", 24, \"normal\"),\n        )"
+          }
+        ]
+      },
+      {
+        "id": 2,
+        "text": "if head.distance(food) < 20:\n        # Move the food to a random spot\n        <if_body/>",
+        "children": [
+          {
+            "id": 0,
+            "text": "x = random.randint(-290, 290)"
+          },
+          {
+            "id": 1,
+            "text": "y = random.randint(-290, 290)"
+          },
+          {
+            "id": 2,
+            "text": "food.goto(x, y)"
+          },
+          {
+            "id": 3,
+            "text": "new_segment = turtle.Turtle()"
+          },
+          {
+            "id": 4,
+            "text": "new_segment.speed(0)"
+          },
+          {
+            "id": 5,
+            "text": "new_segment.shape(\"square\")"
+          },
+          {
+            "id": 6,
+            "text": "new_segment.color(\"grey\")"
+          },
+          {
+            "id": 7,
+            "text": "new_segment.penup()"
+          },
+          {
+            "id": 8,
+            "text": "segments.append(new_segment)"
+          },
+          {
+            "id": 9,
+            "text": "delay -= 0.001"
+          },
+          {
+            "id": 10,
+            "text": "score += 10"
+          },
+          {
+            "id": 11,
+            "text": "if score > high_score:\n            <if_body/>",
+            "children": [
+              {
+                "id": 0,
+                "text": "high_score = score"
+              }
+            ]
+          },
+          {
+            "id": 12,
+            "text": "pen.clear()"
+          },
+          {
+            "id": 13,
+            "text": "pen.write(\n            \"Score: {}  High Score: {}\".format(score, high_score),\n            align=\"center\",\n            font=(\"Courier\", 24, \"normal\"),\n        )"
+          }
+        ]
+      },
+      {
+        "id": 3,
+        "text": "for index in range(len(segments) - 1, 0, -1):\n        <for_body/>",
+        "children": [
+          {
+            "id": 0,
+            "text": "x = segments[index - 1].xcor()"
+          },
+          {
+            "id": 1,
+            "text": "y = segments[index - 1].ycor()"
+          },
+          {
+            "id": 2,
+            "text": "segments[index].goto(x, y)"
+          }
+        ]
+      },
+      {
+        "id": 4,
+        "text": "if len(segments) > 0:\n        <if_body/>",
+        "children": [
+          {
+            "id": 0,
+            "text": "x = head.xcor()"
+          },
+          {
+            "id": 1,
+            "text": "y = head.ycor()"
+          },
+          {
+            "id": 2,
+            "text": "segments[0].goto(x, y)"
+          }
+        ]
+      },
+      {
+        "id": 5,
+        "text": "move()"
+      },
+      {
+        "id": 6,
+        "text": "for segment in segments:\n        <for_body/>",
+        "children": [
+          {
+            "id": 0,
+            "text": "if segment.distance(head) < 20:\n            <if_body/>",
+            "children": [
+              {
+                "id": 0,
+                "text": "time.sleep(1)"
+              },
+              {
+                "id": 1,
+                "text": "head.goto(0, 0)"
+              },
+              {
+                "id": 2,
+                "text": "head.direction = \"stop\""
+              },
+              {
+                "id": 3,
+                "text": "for segment in segments:\n                <for_body/>",
+                "children": [
+                  {
+                    "id": 0,
+                    "text": "segment.goto(1000, 1000)"
+                  }
+                ]
+              },
+              {
+                "id": 4,
+                "text": "segments.clear()"
+              },
+              {
+                "id": 5,
+                "text": "score = 0"
+              },
+              {
+                "id": 6,
+                "text": "delay = 0.1"
+              },
+              {
+                "id": 7,
+                "text": "pen.clear()"
+              },
+              {
+                "id": 8,
+                "text": "pen.write(\n                \"Score: {}  High Score: {}\".format(score, high_score),\n                align=\"center\",\n                font=(\"Courier\", 24, \"normal\"),\n            )"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": 7,
+        "text": "time.sleep(delay)"
+      }
+    ]
   },
   {
     "id": 36,
-    "code": "pen.penup()",
-    "children": []
-  },
-  {
-    "id": 37,
-    "code": "pen.hideturtle()",
-    "children": []
-  },
-  {
-    "id": 38,
-    "code": "pen.goto(0, 260)",
-    "children": []
-  },
-  {
-    "id": 39,
-    "code": "pen.write(\n\t\"Score: 0  High Score: 0\",\n\tfont=(\"Courier\", 24, \"normal\"),\n)",
-    "children": []
-  },
-  {
-    "id": 40,
-    "code": "# Functions",
-    "children": []
-  },
-  {
-    "id": 41,
-    "code": "def go_up():\n\tif head.direction != \"down\":\n\t\thead.direction = \"up\"",
-    "children": []
-  },
-  {
-    "id": 42,
-    "code": "def go_down():\n\tif head.direction != \"up\":\n\t\thead.direction = \"down\"",
-    "children": []
-  },
-  {
-    "id": 43,
-    "code": "def go_left():\n\tif head.direction != \"right\":\n\t\thead.direction = \"left\"",
-    "children": []
-  },
-  {
-    "id": 44,
-    "code": "def go_right():\n\tif head.direction != \"left\":\n\t\thead.direction = \"right\"",
-    "children": []
-  },
-  {
-    "id": 45,
-    "code": "def move():\n\tif head.direction == \"up\":\n\t\ty = head.ycor()\n\t\thead.sety(y + 20)\n\n\tif head.direction == \"down\":\n\t\ty = head.ycor()\n\t\thead.sety(y - 20)\n\n\tif head.direction == \"left\":\n\t\tx = head.xcor()\n\t\thead.setx(x - 20)\n\n\tif head.direction == \"right\":\n\t\tx = head.xcor()\n\t\thead.setx(x + 20)",
-    "children": []
-  },
-  {
-    "id": 46,
-    "code": "# Initialize keyboard bindings",
-    "children": []
-  },
-  {
-    "id": 47,
-    "code": "wn.listen()",
-    "children": []
-  },
-  {
-    "id": 48,
-    "code": "wn.onkeypress(go_up, \"w\")",
-    "children": []
-  },
-  {
-    "id": 49,
-    "code": "wn.onkeypress(go_down, \"s\")",
-    "children": []
-  },
-  {
-    "id": 50,
-    "code": "wn.onkeypress(go_left, \"a\")",
-    "children": []
-  },
-  {
-    "id": 51,
-    "code": "wn.onkeypress(go_right, \"d\")",
-    "children": []
-  },
-  {
-    "id": 52,
-    "code": "# Main game loop",
-    "children": []
-  },
-  {
-    "id": 53,
-    "code": "while True:\n\twn.update()\n\n\t# Check for a collision with the border\n\tif (\n\t\thead.xcor() > 290\n\t\tor head.xcor() < -290\n\t\tor head.ycor() > 290\n\t\tor head.ycor() < -290\n\t):\n\t\ttime.sleep(1)\n\t\thead.goto(0, 0)\n\t\thead.direction = \"stop\"\n\n\t\t# Hide the segments\n\t\tfor segment in segments:\n\t\t\tsegment.goto(1000, 1000)\n\n\t\t# Clear the segments list\n\t\tsegments.clear()\n\n\t\t# Reset the score\n\t\tscore = 0\n\n\t\t# Reset the delay\n\t\tdelay = 0.1\n\n\t\tpen.clear()\n\t\tpen.write(\n\t\t\t\"Score: {}  High Score: {}\".format(score, high_score),\n\t\t\talign=\"center\",\n\t\t\tfont=(\"Courier\", 24, \"normal\"),\n\t\t)\n\n\t# Check for a collision with the food\n\tif head.distance(food) < 20:\n\t\t# Move the food to a random spot\n\t\tx = random.randint(-290, 290)\n\t\ty = random.randint(-290, 290)\n\t\tfood.goto(x, y)\n\n\t\t# Add a segment\n\t\tnew_segment = turtle.Turtle()\n\t\tnew_segment.speed(0)\n\t\tnew_segment.shape(\"square\")\n\t\tnew_segment.color(\"grey\")\n\t\tnew_segment.penup()\n\t\tsegments.append(new_segment)\n\n\t\t# Shorten the delay\n\t\tdelay -= 0.001\n\n\t\t# Increase the score\n\t\tscore += 10\n\n\t\tif score > high_score:\n\t\t\thigh_score = score\n\n\t\tpen.clear()\n\t\tpen.write(\n\t\t\t\"Score: {}  High Score: {}\".format(score, high_score),\n\t\t\talign=\"center\",\n\t\t\tfont=(\"Courier\", 24, \"normal\"),\n\t\t)\n\n\t# Move the end segments first in reverse order\n\tfor index in range(len(segments) - 1, 0, -1):\n\t\tx = segments[index - 1].xcor()\n\t\ty = segments[index - 1].ycor()\n\t\tsegments[index].goto(x, y)\n\n\t# Move segment 0 to where the head is\n\tif len(segments) > 0:\n\t\tx = head.xcor()\n\t\ty = head.ycor()\n\t\tsegments[0].goto(x, y)\n\n\tmove()\n\n\t# Check for head collision with the body segments\n\tfor segment in segments:\n\t\tif segment.distance(head) < 20:\n\t\t\ttime.sleep(1)\n\t\t\thead.goto(0, 0)\n\t\t\thead.direction = \"stop\"\n\n\t\t\t# Hide the segments\n\t\t\tfor segment in segments:\n\t\t\t\tsegment.goto(1000, 1000)\n\n\t\t\t# Clear the segments list\n\t\t\tsegments.clear()\n\n\t\t\t# Reset the score\n\t\t\tscore = 0\n\n\t\t\t# Reset the delay\n\t\t\tdelay = 0.1\n\n\t\t\t# Update the score display\n\t\t\tpen.clear()\n\t\t\tpen.write(\n\t\t\t\t\"Score: {}  High Score: {}\".format(score, high_score),\n\t\t\t\talign=\"center\",\n\t\t\t\tfont=(\"Courier\", 24, \"normal\"),\n\t\t\t)\n\n\ttime.sleep(delay)",
-    "children": []
+    "text": "wn.mainloop()"
   }
 ]
 ```
 
 <|im_end|>
+
+To convert the provided JSON structure into the specified `output` type, the hierarchical nature of the structure must be maintained while ensuring the resulting structure fits the TypeScript type definition. Here's how the output would be structured:
+
+```json
+[
+  {
+    "groupID": 0,
+    "label": "Initial Variables and Screen Setup",
+    "idRange": [0, 7],
+    "children": []
+  },
+  {
+    "groupID": 1,
+    "label": "Head Initialization",
+    "idRange": [8, 14],
+    "children": []
+  },
+  {
+    "groupID": 2,
+    "label": "Food Initialization",
+    "idRange": [15, 20],
+    "children": []
+  },
+  {
+    "groupID": 3,
+    "label": "Segments and Pen Initialization",
+    "idRange": [21, 29],
+    "children": []
+  },
+  {
+    "groupID": 4,
+    "label": "Keyboard Bindings",
+    "idRange": [30, 34],
+    "children": []
+  },
+  {
+    "groupID": 5,
+    "label": "Main Loop",
+    "idRange": [35, 35],
+    "children": [
+      {
+        "groupID": 6,
+        "label": "Update Screen",
+        "idRange": [0, 0],
+        "children": []
+      },
+      {
+        "groupID": 7,
+        "label": "Collision with Border Check",
+        "idRange": [1, 1],
+        "children": [
+          {
+            "groupID": 8,
+            "label": "Reset Snake & Score",
+            "idRange": [0, 8],
+            "children": [
+              {
+                "groupID": 9,
+                "label": "Hide Segment",
+                "idRange": [3, 3],
+                "children": []
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "groupID": 10,
+        "label": "Collision with Food Check",
+        "idRange": [2, 2],
+        "children": [
+          {
+            "groupID": 11,
+            "label": "Reposition Food & Update Score",
+            "idRange": [0, 13],
+            "children": [
+              {
+                "groupID": 12,
+                "label": "Update High Score",
+                "idRange": [11, 11],
+                "children": []
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "groupID": 13,
+        "label": "Move Segments",
+        "idRange": [3, 4],
+        "children": [
+          {
+            "groupID": 14,
+            "label": "Move Body Segments",
+            "idRange": [3, 3],
+            "children": []
+          },
+          {
+            "groupID": 15,
+            "label": "Move First Segment",
+            "idRange": [4, 4],
+            "children": []
+          }
+        ]
+      },
+      {
+        "groupID": 16,
+        "label": "Move Head",
+        "idRange": [5, 5],
+        "children": []
+      },
+      {
+        "groupID": 17,
+        "label": "Collision with Body Check",
+        "idRange": [6, 6],
+        "children": [
+          {
+            "groupID": 18,
+            "label": "Reset Snake & Score",
+            "idRange": [0, 8],
+            "children": [
+              {
+                "groupID": 19,
+                "label": "Hide Segment",
+                "idRange": [3, 3],
+                "children": []
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "groupID": 20,
+        "label": "Control Game Speed",
+        "idRange": [7, 7],
+        "children": []
+      }
+    ]
+  },
+  {
+    "groupID": 21,
+    "label": "Mainloop",
+    "idRange": [36, 36],
+    "children": []
+  }
+]
+```
+
+This structure partitions the JSON into multiple hierarchical groups representing different sections of the setup and main loop of the game code, while conforming to the required TypeScript `output` type.
