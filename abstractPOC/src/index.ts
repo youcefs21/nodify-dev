@@ -6,10 +6,10 @@ import {
 	type DefinitionKind,
 	definitionKinds,
 } from "./types/ast.schema";
-import type { LLMBlock } from "./types/llm.types";
+import type { LLMBlock, Reference } from "./types/llm.types";
 import { exportJson } from "./utils/exportJson";
 
-const filePath = "PythonQuest/main.py";
+const filePath = "PythonQuest/expression_test.py";
 const source = fs.readFileSync(filePath, "utf-8");
 const ast = parse(Lang.Python, source);
 const root = ast.root();
@@ -17,16 +17,10 @@ const root = ast.root();
 // I need to hold a "scope" array that will keep track of variables, functions, and classes
 // currently in scope.
 
-interface Def {
+type Scope = {
 	name: string;
 	node: SgNode;
-}
-
-type Scope = {
-	variables: Def[];
-	functions: Def[];
-	classes: Def[];
-};
+}[];
 
 function handleFlow(
 	node: SgNode,
@@ -72,12 +66,30 @@ function handleFlow(
 			return { id, text, children };
 		}
 		case "expression_statement": {
-			const children = node.children().map((x) => {
-				return { kind: x.kind(), text: x.text() };
+			// handle variable assignment
+			const childrenText = node.children().map((x) => {
+				return {
+					kind: x.kind(),
+					text: x.text(),
+					children: x.children().map((y) => ({
+						kind: y.kind(),
+						text: y.text(),
+					})),
+				};
 			});
-			// TODO handle variable assignment
-			console.log("expression_statement children: ", children);
-			return { id, text: node.text() };
+			console.log("expression_statement children: ", childrenText);
+
+			const children = node.children();
+			if (children.length !== 1) {
+				throw "InvalidExpressionStatement";
+			}
+			const ref = handleExpression(children[0], scope);
+
+			// handle variable assignment
+
+			// calling functions
+			// add reference to most recent function/class index in scope
+			return { id, text: node.text(), references: ref };
 		}
 
 		default: {
@@ -87,36 +99,112 @@ function handleFlow(
 	}
 }
 
-function handleScope(node: SgNode, scope: Scope) {
+function handleExpression(node: SgNode, scope: Scope): Reference[] {
+	const ignoreKinds = [
+		"=",
+		"identifier",
+		"integer",
+		"[",
+		"]",
+		"(",
+		")",
+		",",
+		"lambda",
+		":",
+		"lambda_parameters",
+		"{",
+		"}",
+	];
+	if (ignoreKinds.includes(node.kind())) {
+		return [];
+	}
 	switch (node.kind()) {
-		case "function_definition": {
-			scope.functions.push({ name: node.text(), node });
+		case "assignment": {
+			const var_name = node.children()[0];
+			const var_value = node.children()[2];
+			const children = node
+				.children()
+				.flatMap((x) => handleExpression(x, scope));
+
+			scope.push({ name: var_name.text(), node: var_value });
+
+			return children;
+		}
+
+		case "call": {
+			const ref_id = scope.findLastIndex((x) => x.name === node.text());
+			return [{ name: node.text(), ref_id: ref_id }];
+		}
+
+		case "lambda":
+		case "tuple":
+		case "set":
+		case "list": {
+			const children = node
+				.children()
+				.flatMap((x) => handleExpression(x, scope));
+			return children;
+		}
+
+		case "dictionary": {
 			break;
 		}
-		case "class_definition": {
-			scope.classes.push({ name: node.text(), node });
+
+		case "dictionary_splat": {
 			break;
 		}
+
+		case "parenthesized_expression": {
+			break;
+		}
+
+		case "conditional_expression": {
+			break;
+		}
+
+		case "subscript": {
+			break;
+		}
+
+		case "set_comprehension":
+		case "tuple_comprehension":
+		case "list_comprehension": {
+			break;
+		}
+		case "dictionary_comprehension": {
+			break;
+		}
+		case "generator_expression": {
+			break;
+		}
+
+		case "binary_operator": {
+			break;
+		}
+		case "pair": {
+			break;
+		}
+		case "unary_operator": {
+			break;
+		}
+		case "for_in_clause": {
+			break;
+		}
+
 		default: {
-			console.log("unknown type: ", node.kind());
-			throw new Error("Unknown Type");
+			throw new Error(`Unknown Expression Type: ${node.kind()}`);
 		}
 	}
-	return;
 }
 
 function handleFlows(nodes: SgNode[]): LLMBlock[] {
-	const scope: Scope = {
-		classes: [],
-		functions: [],
-		variables: [],
-	};
+	const scope: Scope = [];
 
 	const output: LLMBlock[] = [];
 	for (let i = 0; i < nodes.length; i++) {
 		const kind = nodes[i].kind();
 		if (definitionKinds.includes(kind as DefinitionKind)) {
-			handleScope(nodes[i], scope);
+			scope.push({ name: nodes[i].text(), node: nodes[i] });
 		} else if (flowKinds.includes(kind as FlowKind)) {
 			output.push(handleFlow(nodes[i], kind as FlowKind, i, scope));
 		}
