@@ -1,8 +1,10 @@
 # def hello():
 #     print("Hello, World!")
 
-# def add(a, b):
-#     return a + b
+
+def add(a, b):
+    return a + b
+
 
 # # function call
 # hello()
@@ -67,3 +69,11 @@ def c():
 
 
 c(1)
+-1
+1 - 1
+1 - 1 - 1
+f"{1-1}"
+f"{add(1,2)}"
+5
+5
+5, 5
