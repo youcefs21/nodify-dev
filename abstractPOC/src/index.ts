@@ -1,25 +1,13 @@
 import { parse, Lang, type SgNode } from "@ast-grep/napi";
 import fs from "node:fs";
-import { type FlowKind, flowKinds } from "./kinds";
-import type { LLMBlock } from "./llm";
+import { type FlowKind, flowKinds } from "./types/ast.schema";
+import type { LLMBlock } from "./types/llm.types";
+import { exportJson } from "./utils/exportJson";
 
 const filePath = "PythonQuest/snake.py";
 const source = fs.readFileSync(filePath, "utf-8");
 const ast = parse(Lang.Python, source);
 const root = ast.root();
-
-export async function exportJson(filename: string, out: LLMBlock[]) {
-	const jsonString = JSON.stringify(out, null, 2);
-	const path = `llmBlob/${filename}.json`;
-	try {
-		// Write the JSON string to the specified file using Bun's write method
-		await Bun.write(path, jsonString);
-		console.log(`JSON data has been written to ${filename}`);
-	} catch (error) {
-		console.error("Error writing JSON to file:", error);
-		throw error; // Rethrow the error after logging
-	}
-}
 
 function handleFlow(node: SgNode, kind: FlowKind, id: number): LLMBlock {
 	switch (kind) {
