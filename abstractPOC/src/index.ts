@@ -175,7 +175,7 @@ function handleExpression(node: SgNode, scope: Scope): Reference[] {
 				// TODO fix bug for a, *b = {} - likely text will include *b here but we just want b
 				return { name: x.text(), node: x };
 			});
-			scope.concat(children);
+			scope = scope.concat(children);
 			break;
 		}
 

@@ -1,4 +1,4 @@
-import type { SgNode } from "@ast-grep/napi";
+import type { SgNode, Range } from "@ast-grep/napi";
 
 /**
  * Incremental ID tracker to collect useful information on chunks of Python code for displaying within the graph.
@@ -9,11 +9,9 @@ type ID = number;
  * Source code location for a particular block/definition
  */
 interface Location {
-	file_name: string;
-	line_num_start: number;
-	line_num_end: number;
-	col_start: number;
-	col_end: number;
+	filename: string;
+	start: Range;
+	end: Range;
 }
 
 /**
@@ -97,6 +95,8 @@ interface Method extends Func {
 	kind: MethodKind[];
 }
 
+type ClassKind = "abstract" | "interface" | "concrete" | "final" | "enum";
+
 /**
  * Class definition in Python.
  */
@@ -104,7 +104,7 @@ interface Class extends GraphAST {
 	name: string;
 	privacy: Privacy;
 
-	kind: "abstract" | "interface" | "concrete" | "final" | "enum";
+	kind: ClassKind;
 	bases: string[];
 	decorators: string[];
 
@@ -139,8 +139,19 @@ export type {
 	Method,
 	MethodKind,
 	Class,
+	ClassKind,
 	InModuleDef,
 	Def,
 	Module,
 	GraphAST,
 };
+
+export function isFunc(def: Def): def is Func {
+	return (def as Func).args !== undefined;
+}
+export function isVar(def: Def): def is Var {
+	return (def as Var).privacy !== undefined;
+}
+export function isClass(def: Def): def is Class {
+	return (def as Class).methods !== undefined;
+}

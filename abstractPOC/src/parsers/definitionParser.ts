@@ -18,11 +18,13 @@ import type {
 	Method,
 	MethodKind,
 	Class,
+	ClassKind,
 	InModuleDef,
 	Def,
 	Module,
 	GraphAST,
 } from "../types/graph.types";
+import { isFunc, isVar, isClass } from "../types/graph.types";
 import type { LLMBlock, Reference } from "../types/llm.types";
 import { exportJson } from "../utils/exportJson";
 
@@ -31,6 +33,14 @@ const source = fs.readFileSync(filePath, "utf-8");
 const ast = parse(Lang.Python, source);
 const root = ast.root();
 
+function parseLocation(node: SgNode): Location {
+	return {
+		start: node.range().start,
+		end: node.range().end,
+		file: node.getRoot().filename(),
+	};
+}
+
 function parseDefinitions(
 	unfiltered_children: SgNode[],
 	id: number,
@@ -38,7 +48,7 @@ function parseDefinitions(
 	// if (node.kind() === "module") {
 	// 	return parseModule(node, id);
 	// }
-	const in_module_defs: InModuleDef[] = [];
+	let in_module_defs: InModuleDef[] = [];
 	// const children = node.children();
 	const children = unfiltered_children.filter((x) => x.kind() !== "comment");
 
@@ -61,12 +71,13 @@ function parseDefinitions(
 				}
 				//assert(node.children().length === 1);
 				// many vars may be defined on one line
-				in_module_defs.concat(
+				in_module_defs = in_module_defs.concat(
 					parseVar(children[i].children()[0], id, possible_docstr),
 				);
+				// console.dir(in_module_defs[in_module_defs.length - 1], { depth: null });
 				break;
 			}
-			case "decorated_definition":
+			// case "decorated_definition": // commenting out for now since decorated definitions contain both funcs and classes ( need to separate them out here)
 			case "function_definition":
 				in_module_defs.push(parseFunction(children[i], id));
 				// console.dir(in_module_defs[in_module_defs.length - 1], { depth: null });
@@ -93,8 +104,8 @@ function determineIdentifierPrivacy(name: string): Privacy {
 
 function parseVar(node: SgNode, id: number, possible_docstr?: SgNode): Var[] {
 	// assert(node.kind() === "expression_statement");
-	console.log(node.children().map((x) => x.kind()));
-	console.log(node.kind());
+	// console.log(node.children().map((x) => x.kind()));
+	// console.log(node.kind());
 
 	switch (node.kind()) {
 		case "augmented_assignment":
@@ -171,7 +182,7 @@ function parseVar(node: SgNode, id: number, possible_docstr?: SgNode): Var[] {
 			// 		vars[i].value = split_values[i];
 			// 	}
 			// }
-			console.log(vars);
+			// console.log(vars);
 			return vars;
 		}
 
@@ -181,7 +192,7 @@ function parseVar(node: SgNode, id: number, possible_docstr?: SgNode): Var[] {
 }
 function parseArgs(node: SgNode, id: number): Args {
 	// assert(node.kind() === "parameters");
-	console.log(node.children().map((x) => x.kind()));
+	// console.log(node.children().map((x) => x.kind()));
 	const ignore = ["(", ")", ","];
 	const argNodes = node.children().filter((x) => !ignore.includes(x.kind()));
 	let pos_only_args: Var[] = [];
@@ -265,7 +276,8 @@ function parseArgs(node: SgNode, id: number): Args {
 
 function parseFunction(node: SgNode, id: number): Func {
 	// assert(node.kind() === "function_definition");
-	console.log(node.children().map((x) => x.kind()));
+	// console.log(node.children().map((x) => x.kind()));
+	const location = parseLocation(node);
 	let pointer = 0;
 
 	// Handle decorators
@@ -314,6 +326,7 @@ function parseFunction(node: SgNode, id: number): Func {
 
 	return {
 		id,
+		location,
 		name,
 		return_type,
 		args,
@@ -323,10 +336,66 @@ function parseFunction(node: SgNode, id: number): Func {
 		body,
 	};
 }
-function parseClass(node: SgNode, id: number): Class {}
-function parseModule(node: SgNode, id: number): Module {}
+function parseClass(node: SgNode, id: number): Class {
+	// assert(node.kind() === "class_definition");
+	// console.log(node.children().map((x) => x.kind()));
+	const location = parseLocation(node);
+	const name = node.children()[1].text();
+	const class_args = parseArgs(node.children()[2], id);
+	const bases = class_args.pos_only_args.map((x) => x.name);
+	const privacy = determineIdentifierPrivacy(name);
+	let kind: ClassKind = "concrete";
 
-// for (const child of root.children()) {
-// console.log(child.kind());
+	// very naive check for abstract classes - breaks if someone aliases the name
+	// leave mostly as a placeholder for now
+	if (bases.includes("ABC")) {
+		kind = "abstract";
+	}
+	let body_children = node.children()[node.children().length - 1].children();
+	let docstr = null;
+	if (
+		body_children[0].kind() === "expression_statement" &&
+		body_children[0].children()[0].kind() === "string"
+	) {
+		docstr = body_children[0].children()[0].children()[1].text();
+		body_children = body_children.slice(1);
+	}
+	const in_class_defs = parseDefinitions(body_children, id);
+	const class_vars = in_class_defs.filter(isVar);
+	const future_methods = in_class_defs.filter(isFunc);
+	const methods: Method[] = [];
+	for (const method of future_methods) {
+		methods.push({
+			...method,
+			privacy: determineIdentifierPrivacy(method.name),
+			kind: ["instance"], //for now, just leave as-is until we get decorators working
+		});
+	}
+
+	return {
+		id,
+		location,
+		name,
+		privacy,
+		kind,
+		bases,
+		decorators: [],
+		methods,
+		class_vars,
+		instance_vars: [], // Leave empty for now since this requires looking inside the init func
+		docstr,
+	};
+}
+function parseModule(node: SgNode, id: number): Module {
+	// assert(node.kind() === "module");
+	const definitions = parseDefinitions(node.children(), id);
+	const location = parseLocation(node);
+	return {
+		id,
+		location,
+		definitions,
+		docstr: [],
+	};
+}
+
 parseDefinitions(root.children(), 0);
-// }
