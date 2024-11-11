@@ -7,9 +7,29 @@ def add():
 
 
 @decor
-def sub(arg: type) -> tuple:
+@decor
+async def sub(arg: type) -> tuple:
     """testdocstr"""
     return arg, arg
+
+
+# async def sub1(arg: type) -> tuple:
+#     """testdocstr"""
+#     return arg, arg
+
+
+async def test(untyped_arg, test: int = 1, *args, **kwargs):
+    pass
+
+
+def test1(
+    pos_only,
+    /,
+    gen_arg,
+    *,
+    kwarg1,
+):
+    pass
 
 
 # print(x)

@@ -69,6 +69,7 @@ function parseDefinitions(
 			case "decorated_definition":
 			case "function_definition":
 				in_module_defs.push(parseFunction(children[i], id));
+				// console.dir(in_module_defs[in_module_defs.length - 1], { depth: null });
 				break;
 			case "class_definition":
 				in_module_defs.push(parseClass(children[i], id));
@@ -178,8 +179,149 @@ function parseVar(node: SgNode, id: number, possible_docstr?: SgNode): Var[] {
 			throw new Error(`Unknown kind: ${node.kind()}`);
 	}
 }
+function parseArgs(node: SgNode, id: number): Args {
+	// assert(node.kind() === "parameters");
+	console.log(node.children().map((x) => x.kind()));
+	const ignore = ["(", ")", ","];
+	const argNodes = node.children().filter((x) => !ignore.includes(x.kind()));
+	let pos_only_args: Var[] = [];
+	let pos_or_kw_args: Var[] = [];
+	let kw_only_args: Var[] = [];
+	let pos_remainder_arg: Var | null = null;
+	let kw_remainder_arg: Var | null = null;
+
+	let current_args: Var[] = [];
+	let keyword_sep_seen = false;
+	for (const argNode of argNodes) {
+		if (argNode.kind() === "positional_separator") {
+			pos_only_args = current_args.slice();
+			current_args = [];
+			continue;
+		}
+		if (argNode.kind() === "keyword_separator") {
+			pos_or_kw_args = current_args.slice();
+			current_args = [];
+			keyword_sep_seen = true;
+			continue;
+		}
+		if (argNode.kind() === "list_splat_pattern") {
+			pos_remainder_arg = {
+				name: argNode.children()[1].text(),
+				type: null,
+				value: null,
+				docstr: null,
+				privacy: "public",
+			};
+			continue;
+		}
+		if (argNode.kind() === "dictionary_splat_pattern") {
+			kw_remainder_arg = {
+				name: argNode.children()[1].text(),
+				type: null,
+				value: null,
+				docstr: null,
+				privacy: "public",
+			};
+			continue;
+		}
+
+		let name = argNode.text();
+		let type = null;
+		let value = null;
+		if (
+			argNode.kind() === "typed_parameter" ||
+			argNode.kind() === "typed_default_parameter"
+		) {
+			name = argNode.children()[0].text();
+			type = argNode.children()[2].text();
+		}
+		if (argNode.kind() === "typed_default_parameter") {
+			value = argNode.children()[4].text();
+		}
+
+		current_args.push({
+			name,
+			type,
+			value,
+			docstr: null,
+			privacy: determineIdentifierPrivacy(name),
+		});
+	}
+
+	if (keyword_sep_seen) {
+		kw_only_args = current_args.slice();
+	} else {
+		pos_or_kw_args = current_args.slice();
+	}
+
+	return {
+		pos_only_args,
+		pos_or_kw_args,
+		kw_only_args,
+		pos_remainder_arg,
+		kw_remainder_arg,
+	};
+}
+
 function parseFunction(node: SgNode, id: number): Func {
-	//
+	// assert(node.kind() === "function_definition");
+	console.log(node.children().map((x) => x.kind()));
+	let pointer = 0;
+
+	// Handle decorators
+	// TODO make this a reference?
+	const decorator_list = [];
+	while (node.children()[pointer].kind() === "decorator") {
+		decorator_list.push(node.children()[pointer].children()[1].text());
+		pointer++;
+	}
+
+	if (node.children()[pointer].kind() === "function_definition") {
+		return {
+			...parseFunction(node.children()[pointer], id),
+			decorators: decorator_list,
+		};
+	}
+
+	// Handle the actual function
+	let modifier: "async" | null = null;
+	if (node.children()[pointer].kind() === "async") {
+		modifier = "async";
+		pointer++;
+	}
+	pointer++; // skip "def"
+	const name = node.children()[pointer].text();
+	pointer++;
+	const args = parseArgs(node.children()[pointer], id);
+	// const args = null;
+	pointer++;
+	let return_type = null;
+	if (node.children()[pointer].kind() === "->") {
+		pointer++;
+		return_type = node.children()[pointer].text();
+		pointer++;
+	}
+	pointer++;
+	const body = node.children()[pointer];
+
+	let docstr = null;
+	if (
+		body.children()[0].kind() === "expression_statement" &&
+		body.children()[0].children()[0].kind() === "string"
+	) {
+		docstr = body.children()[0].children()[0].children()[1].text();
+	}
+
+	return {
+		id,
+		name,
+		return_type,
+		args,
+		decorators: decorator_list,
+		modifier,
+		docstr,
+		body,
+	};
 }
 function parseClass(node: SgNode, id: number): Class {}
 function parseModule(node: SgNode, id: number): Module {}

@@ -1,3 +1,5 @@
+import type { SgNode } from "@ast-grep/napi";
+
 /**
  * Incremental ID tracker to collect useful information on chunks of Python code for displaying within the graph.
  */
@@ -63,12 +65,12 @@ interface Args {
  */
 interface Func extends GraphAST {
 	name: string;
-	return_type: string;
+	return_type: string | null;
 	args: Args;
 	decorators: string[];
 	modifier: "async" | null;
 	docstr: string | null;
-	body: string;
+	body: SgNode;
 }
 
 /**
