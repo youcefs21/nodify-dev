@@ -2,8 +2,8 @@
 #     print("Hello, World!")
 
 
-def add(a, b):
-    return a + b
+# def add(a, b):
+#     return a + b
 
 
 # # function call
@@ -56,24 +56,35 @@ def add(a, b):
 # assert c(1) == 1
 # a, *b = 1, 1
 # a[c(1) : c(2)]
-def c():
-    return 1
+# def c():
+#     return 1
 
 
-def c():
-    return 1
+# def c():
+#     return 1
 
 
-def c():
-    return 1
+# def c():
+#     return 1
 
 
-c(1)
--1
-1 - 1
-1 - 1 - 1
-f"{1-1}"
-f"{add(1,2)}"
-5
-5
-5, 5
+# c(1)
+# -1
+# 1 - 1
+# 1 - 1 - 1
+# f"{1-1}"
+# f"{add(1,2)}"
+# 5
+# 5
+# 5, 5
+
+# import math
+# import math, m1 as math1, m2
+
+# # from math import *
+# from math import sqrt as test
+
+# # from __future__ import division
+# import math.a
+# import math.a as t2
+# import math.sqrt as t3

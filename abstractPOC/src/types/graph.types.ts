@@ -115,13 +115,30 @@ interface Class extends GraphAST {
 	docstr: string | null;
 }
 
-type Def = Func | Class;
+type InModuleDef = Func | Class | Var;
 
 /**
  * Module definition in Python. Intended for one file.
  */
 interface Module extends GraphAST {
-	global_vars: Var[];
-	definitions: Def[];
+	// global_vars: Var[];
+	definitions: InModuleDef[];
 	docstr: string[];
 }
+type Def = Func | Class | Var | Module;
+
+export type {
+	ID,
+	Location,
+	Privacy,
+	Var,
+	Args,
+	Func,
+	Method,
+	MethodKind,
+	Class,
+	InModuleDef,
+	Def,
+	Module,
+	GraphAST,
+};

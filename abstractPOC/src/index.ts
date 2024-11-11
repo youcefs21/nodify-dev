@@ -5,6 +5,8 @@ import {
 	flowKinds,
 	type DefinitionKind,
 	definitionKinds,
+	type ImportKind,
+	importKinds,
 } from "./types/ast.schema";
 import type { LLMBlock, Reference } from "./types/llm.types";
 import { exportJson } from "./utils/exportJson";
@@ -19,7 +21,7 @@ const root = ast.root();
 
 type Scope = {
 	name: string;
-	node: SgNode;
+	node: SgNode | string; // include string as a file path for import locations, for now
 }[];
 
 function handleFlow(
@@ -155,6 +157,7 @@ function handleExpression(node: SgNode, scope: Scope): Reference[] {
 	if (ignoreKinds.includes(node.kind())) {
 		return [];
 	}
+
 	switch (node.kind()) {
 		case "assignment": {
 			const var_name = node.children()[0];
@@ -233,6 +236,62 @@ function handleExpression(node: SgNode, scope: Scope): Reference[] {
 			throw new Error(`Unknown Expression Type: ${node.kind()}`);
 		}
 	}
+	throw new Error(
+		`Unknown Expression Type (no switch statements activated): ${node.kind()}`,
+	);
+}
+
+function handleImport(node: SgNode, kind: ImportKind, scope: Scope): void {
+	switch (kind) {
+		case "import_statement": {
+			console.log(node);
+			const import_names = node
+				.children()
+				.filter((x) => x.text() !== "import")
+				.filter((x) => x.text() !== ",")
+				.map((x) => x.text());
+
+			console.log("import statement children: ", import_names);
+			if (import_names.includes("*")) {
+				// TODO dont throw err here, just stop the traversal
+				throw new Error("Wildcard imports are not supported");
+			}
+			for (const name of import_names) {
+				let display_name = name;
+				if (name.includes("as")) {
+					display_name = name.split("as")[1];
+				}
+				const file_path = name.split("as")[0].replaceAll(".", "/");
+				// TODO check that the path exists (if not, skip), else place root node as node
+				scope.push({ name: display_name, node: file_path });
+			}
+			break;
+		}
+		case "import_from_statement": {
+			const import_names = node
+				.children()
+				.filter((x) => x.text() !== "from")
+				.filter((x) => x.text() !== "import")
+				.filter((x) => x.text() !== ",")
+				.map((x) => x.text());
+			console.log("import from statement: ", import_names);
+			if (import_names.includes("*")) {
+				throw new Error("Wildcard imports are not supported");
+			}
+			// TODO check that the path exists (if not, skip), else
+			// run handleFlows on the root node of the file,
+			// extract the scope, and return the most recently defined node matching the function name
+			break;
+		}
+		case "future_import_statement": {
+			throw new Error("future imports not supported (for now)");
+			//TODO handle after PoC
+			// break;
+		}
+		default: {
+			throw new Error(`Unknown Import Type: ${kind}`);
+		}
+	}
 }
 
 function handleFlows(nodes: SgNode[]): LLMBlock[] {
@@ -249,6 +308,8 @@ function handleFlows(nodes: SgNode[]): LLMBlock[] {
 					?.text(),
 				node: nodes[i],
 			});
+		} else if (importKinds.includes(kind as ImportKind)) {
+			handleImport(nodes[i], kind as ImportKind, scope);
 		} else if (flowKinds.includes(kind as FlowKind)) {
 			output.push(handleFlow(nodes[i], kind as FlowKind, i, scope));
 		}
