@@ -42,90 +42,101 @@ export default function Index() {
 	const [edges, setEdges, onEdgesChange] = useEdgesState<Edge>([]);
 
 	useEffect(() => {
-		// const functions = data.nodes.filter((x) => x.type === "function");
-		// const other = data.nodes.filter((x) => x.type !== "function");
+		const positionOffsets = {
+			x: 300, // Horizontal offset when expanding nested nodes
+			y: 100, // Vertical offset between nodes in a sequence
+		};
 
-		const expandTree = (parent: CustomNode) => {
-			const newEdges = data.edges.filter((x) => x.from === parent.id);
+		// Function to expand a node
+		const expandNode = (parentNode: CustomNode) => {
+			if (parentNode.data.expanded) return; // Avoid re-expanding
+			parentNode.data.expanded = true;
 
-			const newNodes = newEdges.flatMap((edge, groupIndex) => {
-				const children = data.nodes.filter((x) => x.id === edge.to);
-				console.log("children!", children);
+			// Find child nodes directly connected to this node
+			const childEdges = data.edges.filter(
+				(edge) => edge.from === parentNode.id,
+			);
+			const childNodesData = childEdges.map((edge) =>
+				data.nodes.find((node) => node.id === edge.to),
+			);
 
-				const pos = (i: number) => ({
-					x: parent.data.og_pos.x + 700,
-					y: 65 * (groupIndex * 2 + groupIndex) * (i + 1),
-				});
+			const newNodes: CustomNode[] = [];
+			const newEdges: Edge[] = [];
 
-				return children.map((x, i) => ({
-					data: {
-						text: x.title,
-						og_pos: pos(i),
-						onExpand: expandTree,
-						groupId: parent.id + groupIndex,
-					},
+			childNodesData.forEach((childData, index: number) => {
+				if (!childData) return;
+
+				// const isSequence =
+				// 	childData.type === "sequence" ||
+				// 	childData.type === "while_loop" ||
+				// 	childData.type === "if_statement" ||
+				// 	childData.type === "for_loop";
+
+				const position = {
+					x: parentNode.data.og_pos.x + 0,
+					y:
+						parentNode.data.og_pos.y +
+						index * positionOffsets.y +
+						positionOffsets.y,
+				};
+
+				const newNode = {
+					id: childData.id,
 					type: "summaryNode",
-					width: 350,
-					id: x.id,
-					position: pos(i),
-				}));
+					position,
+					data: {
+						text: childData.title,
+						og_pos: position,
+						onExpand: expandNode,
+						groupId: childData.group_id,
+						expanded: false,
+						// content: childData.content,
+					},
+				};
+
+				newNodes.push(newNode);
+
+				const edge = edges.find(
+					(e) => e.source === parentNode.id && e.target === childData.id,
+				);
+				const newEdge: Edge = {
+					id: `${parentNode.id}-${childData.id}`,
+					source: parentNode.id,
+					target: childData.id,
+					label: edge?.label || "",
+				};
+
+				newEdges.push(newEdge);
 			});
 
-			setNodes((x) => [...x, ...newNodes]);
-
-			// now for the edges!
-			setEdges(
-				newEdges.map(({ from, to, label }) => ({
-					id: `${from}-${to}`,
-					source: from,
-					target: to,
-					label,
-				})),
-			);
+			setNodes((prevNodes) => prevNodes.concat(newNodes));
+			setEdges((prevEdges) => prevEdges.concat(newEdges));
 		};
 
-		const expandFromRoot = (root: CustomNode) => {
-			// what if I make the root a group?
-			console.log("expanded root!");
-			// find the edge coming out of root
-			// expand that group.
-			const edge = data.edges.find((x) => x.from === root.id);
-			if (!edge) return;
-			const rootChildren = data.nodes.filter((x) => x.group_id === edge.to);
+		// Initialize the root node
+		const initializeTree = () => {
+			const rootNodeData = data.nodes.find((node) => node.id === "R");
+			if (!rootNodeData) return;
 
-			const rootGroup = rootChildren.map((x, i) => ({
-				data: {
-					text: x.title,
-					og_pos: { x: 0, y: 65 * (i + 1) },
-					onExpand: expandTree,
-					groupId: root.id,
-				},
+			const rootNode: CustomNode = {
+				id: rootNodeData.id,
 				type: "summaryNode",
-				width: 350,
-				id: x.id,
-				position: { x: 0, y: 65 * (i + 1) },
-			}));
-
-			setNodes((ns) => [...ns, ...rootGroup]);
-		};
-
-		const root = data.nodes.find((x) => x.id === "R");
-		if (!root) return;
-
-		setNodes(() => [
-			{
-				data: {
-					text: root.title,
-					og_pos: { x: 0, y: 0 },
-					groupId: "N/A",
-					onExpand: expandFromRoot,
-				},
-				type: "summaryNode",
-				width: 350,
-				id: root.id,
 				position: { x: 0, y: 0 },
-			},
-		]);
+				data: {
+					text: rootNodeData.title,
+					og_pos: { x: 0, y: 0 },
+					onExpand: expandNode,
+					groupId: rootNodeData.group_id,
+					expanded: false,
+					// content: rootNodeData.content,
+				},
+			};
+
+			setNodes([rootNode]);
+			setEdges([]);
+		};
+
+		initializeTree();
 	}, [data]);
 
 	const onConnect = useCallback(

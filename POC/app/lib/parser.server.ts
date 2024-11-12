@@ -73,10 +73,11 @@ function processNode(node: SgNode) {
 type JSONType = {
 	nodes: {
 		id: string;
-		group_id?: string;
+		group_id: string | null;
 		type: string;
 		title: string;
 		content?: string;
+		order?: number;
 	}[];
 	edges: {
 		from: string;

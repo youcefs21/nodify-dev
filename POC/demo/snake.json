@@ -3,7 +3,21 @@
 		{
 			"id": "R",
 			"type": "entry",
-			"title": "A game of snake"
+			"title": "A game of snake",
+			"group_id": null
+		},
+		{
+			"id": "RI",
+			"type": "sequence",
+			"title": "Import modules and declare variables",
+			"content": "import turtle\nimport time\nimport random\n\ndelay = 0.1\n\n# Score\nscore = 0\nhigh_score = 0\n\nsegments = []",
+			"group_id": "R"
+		},
+		{
+			"id": "RG",
+			"type": "group",
+			"title": "Setup and Initialization",
+			"group_id": "R"
 		},
 		{
 			"id": "RG1",
@@ -21,92 +35,168 @@
 		},
 		{
 			"id": "RG3",
-			"type": "sequence",
 			"group_id": "RG",
+			"type": "sequence",
 			"title": "Draw the food at 0, 100",
-			"content": ""
+			"content": "food = turtle.Turtle()\nfood.speed(0)\nfood.shape(\"circle\")\nfood.color(\"red\")\nfood.penup()\nfood.goto(0, 100)"
 		},
 		{
 			"id": "RG4",
-			"type": "sequence",
 			"group_id": "RG",
-			"title": "declare pen and draw scoreboard",
+			"type": "sequence",
+			"title": "Declare pen and draw scoreboard",
+			"content": "pen = turtle.Turtle()\npen.speed(0)\npen.shape(\"square\")\npen.color(\"white\")\npen.penup()\npen.hideturtle()\npen.goto(0, 260)\npen.write(\n    \"Score: 0  High Score: 0\",\n    font=(\"Courier\", 24, \"normal\"),\n)"
+		},
+		{
+			"id": "RG5",
+			"group_id": "R",
+			"type": "sequence",
+			"title": "Initialize key bindings",
+			"content": "wn.listen()\nwn.onkeypress(go_up, \"w\")\nwn.onkeypress(go_down, \"s\")\nwn.onkeypress(go_left, \"a\")\nwn.onkeypress(go_right, \"d\")"
+		},
+		{
+			"id": "RG6",
+			"group_id": "R",
+			"type": "while_loop",
+			"title": "Main game loop",
 			"content": ""
 		},
 		{
-			"id": "RF1",
-			"type": "function",
-			"title": "go up",
-			"params": [],
-			"content": "if the snake is not going down, go up"
+			"id": "RC",
+			"type": "group",
+			"title": "Main Game Loop Content",
+			"group_id": "RG6"
 		},
 		{
-			"id": "RF2",
-			"type": "function",
-			"title": "go down",
-			"params": [],
-			"content": "if the snake is not going up, go down"
+			"id": "RC1",
+			"group_id": "RC",
+			"type": "sequence",
+			"title": "Update the screen",
+			"content": "wn.update()"
 		},
 		{
-			"id": "RF3",
-			"type": "function",
-			"title": "go left",
-			"params": [],
-			"content": "if the snake is not going right, go left"
+			"id": "RC2",
+			"group_id": "RC",
+			"type": "if_statement",
+			"title": "Check for collision with the border",
+			"content": "if head.distance(food) < 20:\n    # Move the food to a random spot\n    x = random.randint(-290, 290)\n    y = random.randint(-290, 290)\n    food.goto(x, y)\n\n    # Add a segment\n    new_segment = turtle.Turtle()\n    new_segment.speed(0)\n    new_segment.shape(\"square\")\n    new_segment.color(\"grey\")\n    new_segment.penup()\n    segments.append(new_segment)\n\n    # Shorten the delay\n    delay -= 0.001\n\n    # Increase the score\n    score += 10\n\n    if score > high_score:\n        high_score = score\n\n    pen.clear()\n    pen.write(\n        \"Score: {}  High Score: {}\".format(score, high_score),\n        align=\"center\",\n        font=(\"Courier\", 24, \"normal\"),\n    )"
 		},
 		{
-			"id": "RF4",
-			"type": "function",
-			"title": "go right",
-			"params": [],
-			"content": "if the snake is not going left, go right"
+			"id": "RC3",
+			"group_id": "RC",
+			"type": "if_statement",
+			"title": "Check for collision with the food",
+			"content": "for index in range(len(segments) - 1, 0, -1):\n    x = segments[index - 1].xcor()\n    y = segments[index - 1].ycor()\n    segments[index].goto(x, y)"
+		},
+		{
+			"id": "RC4",
+			"group_id": "RC",
+			"type": "sequence",
+			"title": "Move the segments",
+			"content": "if len(segments) > 0:\n    x = head.xcor()\n    y = head.ycor()\n    segments[0].goto(x, y)"
+		},
+		{
+			"id": "RC5",
+			"group_id": "RC",
+			"type": "function_call",
+			"title": "Move the head",
+			"content": "move()"
+		},
+		{
+			"id": "RC6",
+			"group_id": "RC",
+			"type": "for_loop",
+			"title": "Check for head collision with the body segments",
+			"content": "for segment in segments:\n    if segment.distance(head) < 20:\n        time.sleep(1)\n        head.goto(0, 0)\n        head.direction = \"stop\"\n\n        # Hide the segments\n        for segment in segments:\n            segment.goto(1000, 1000)\n\n        # Clear the segments list\n        segments.clear()\n\n        # Reset the score\n        score = 0\n\n        # Reset the delay\n        delay = 0.1\n\n        # Update the score display\n        pen.clear()\n        pen.write(\n            \"Score: {}  High Score: {}\".format(score, high_score),\n            align=\"center\",\n            font=(\"Courier\", 24, \"normal\"),\n        )"
+		},
+		{
+			"id": "RC7",
+			"group_id": "RC",
+			"type": "sequence",
+			"title": "Pause for delay",
+			"content": "time.sleep(delay)"
 		},
 		{
 			"id": "RF5",
 			"type": "function",
-			"title": "move head based on it's direction",
+			"title": "move",
 			"params": [],
-			"content": "move the snake's head 1 block in the direction it's facing"
+			"content": "if head.direction == \"up\":\n    y = head.ycor()\n    head.sety(y + 20)\n\nif head.direction == \"down\":\n    y = head.ycor()\n    head.sety(y - 20)\n\nif head.direction == \"left\":\n    x = head.xcor()\n    head.setx(x - 20)\n\nif head.direction == \"right\":\n    x = head.xcor()\n    head.setx(x + 20)"
 		},
 		{
-			"id": "RG5",
-			"group_id": "RG",
-			"type": "sequence",
-			"title": "initialize key bindings",
-			"content": ""
+			"id": "RF1",
+			"type": "function",
+			"title": "go_up",
+			"params": [],
+			"content": "if head.direction != \"down\":\n    head.direction = \"up\""
 		},
 		{
-			"id": "RG6",
-			"group_id": "RG",
-			"type": "while_loop",
-			"title": "Main game loop",
-			"content": ""
+			"id": "RF2",
+			"type": "function",
+			"title": "go_down",
+			"params": [],
+			"content": "if head.direction != \"up\":\n    head.direction = \"down\""
+		},
+		{
+			"id": "RF3",
+			"type": "function",
+			"title": "go_left",
+			"params": [],
+			"content": "if head.direction != \"right\":\n    head.direction = \"left\""
+		},
+		{
+			"id": "RF4",
+			"type": "function",
+			"title": "go_right",
+			"params": [],
+			"content": "if head.direction != \"left\":\n    head.direction = \"right\""
 		}
 	],
 	"edges": [
 		{
-			"from": "RG5",
-			"to": "RF1",
-			"label": "if the `w` button is pressed"
-		},
-		{
-			"from": "RG5",
-			"to": "RF2",
-			"label": "if the `s` button is pressed"
-		},
-		{
-			"from": "RG5",
-			"to": "RF3",
-			"label": "if the `a` button is pressed"
-		},
-		{
-			"from": "RG5",
-			"to": "RF4",
-			"label": "if the `d` button is pressed"
+			"from": "R",
+			"to": "RI"
 		},
 		{
 			"from": "R",
 			"to": "RG"
+		},
+		{
+			"from": "R",
+			"to": "RG5"
+		},
+		{
+			"from": "R",
+			"to": "RG6"
+		},
+		{
+			"from": "RG6",
+			"to": "RC"
+		},
+		{
+			"from": "RC5",
+			"to": "RF5",
+			"label": "call move()"
+		},
+		{
+			"from": "RG5",
+			"to": "RF1",
+			"label": "if 'w' pressed"
+		},
+		{
+			"from": "RG5",
+			"to": "RF2",
+			"label": "if 's' pressed"
+		},
+		{
+			"from": "RG5",
+			"to": "RF3",
+			"label": "if 'a' pressed"
+		},
+		{
+			"from": "RG5",
+			"to": "RF4",
+			"label": "if 'd' pressed"
 		}
 	]
 }
