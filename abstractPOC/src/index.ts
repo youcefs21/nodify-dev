@@ -19,10 +19,17 @@ const root = ast.root();
 // I need to hold a "scope" array that will keep track of variables, functions, and classes
 // currently in scope.
 
-type Scope = {
+// type Scope = {
+// 	name: string;
+// 	node: SgNode | string; // include string as a file path for import locations, for now
+// }[];
+
+type ScopeItem = {
 	name: string;
-	node: SgNode | string; // include string as a file path for import locations, for now
-}[];
+	node: SgNode | ScopeItem | null;
+	kind: "function" | "class" | "variable" | "module" | "alias";
+};
+type Scope = ScopeItem[];
 
 function handleFlow(
 	node: SgNode,
@@ -166,14 +173,14 @@ function handleExpression(node: SgNode, scope: Scope): Reference[] {
 				.children()
 				.flatMap((x) => handleExpression(x, scope));
 
-			scope.push({ name: var_name.text(), node: var_value });
+			scope.push({ name: var_name.text(), node: var_value, kind: "variable" });
 
 			return children;
 		}
 		case "pattern_list": {
 			const children = node.children().flatMap((x) => {
 				// TODO fix bug for a, *b = {} - likely text will include *b here but we just want b
-				return { name: x.text(), node: x };
+				return { name: x.text(), node: x, kind: "variable" } as ScopeItem;
 			});
 			scope = scope.concat(children);
 			break;
@@ -257,13 +264,26 @@ function handleImport(node: SgNode, kind: ImportKind, scope: Scope): void {
 			// 	throw new Error("Wildcard imports are not supported");
 			// }
 			for (const name of import_names) {
-				let display_name = name;
-				if (name.includes("as")) {
-					display_name = name.split("as")[1];
-				}
-				const file_path = name.split("as")[0].replaceAll(".", "/");
+				const actual_name = name.split("as")[0];
+				//TODO handle file path with actual node or null
 				// TODO check that the path exists (if not, skip), else place root node as node
-				scope.push({ name: display_name, node: file_path });
+				const file_path = actual_name.replaceAll(".", "/");
+
+				const actual_scope_item: ScopeItem = {
+					name: actual_name,
+					node: file_path,
+					kind: "module",
+				};
+				if (name.includes("as")) {
+					const display_name = name.split("as")[1];
+					scope.push({
+						name: display_name,
+						kind: "alias",
+						node: actual_scope_item,
+					});
+				} else {
+					scope.push(actual_scope_item);
+				}
 			}
 
 			break;
@@ -282,14 +302,32 @@ function handleImport(node: SgNode, kind: ImportKind, scope: Scope): void {
 			// TODO check that the path exists (if not, skip), else
 			// run handleFlows on the root node of the file,
 			// extract the scope, and return the most recently defined node matching the function name
-			for (const name of import_names) {
-				let display_name = name;
-				if (name.includes("as")) {
-					display_name = name.split("as")[1];
-				}
-				const file_path = name.split("as")[0].replaceAll(".", "/");
+			const module_name = import_names[0];
+			const file_path = module_name.replaceAll(".", "/");
+			const module_scope_item: ScopeItem = {
+				name: module_name,
+				node: file_path,
+				kind: "module",
+			};
+			for (const name of import_names.slice(1)) {
+				const actual_name = name.split("as")[0];
+				//TODO handle file path with actual node or null
 				// TODO check that the path exists (if not, skip), else place root node as node
-				scope.push({ name: display_name, node: file_path });
+				const actual_scope_item: ScopeItem = {
+					name: actual_name,
+					kind: "function", //Func for now, could be class/var but doesnt really matter
+					node: module_scope_item,
+				};
+				if (name.includes("as")) {
+					const display_name = name.split("as")[1];
+					scope.push({
+						name: display_name,
+						kind: "alias",
+						node: actual_scope_item,
+					});
+				} else {
+					scope.push(actual_scope_item);
+				}
 			}
 			break;
 		}
@@ -302,7 +340,7 @@ function handleImport(node: SgNode, kind: ImportKind, scope: Scope): void {
 			throw new Error(`Unknown Import Type: ${kind}`);
 		}
 	}
-	// console.log(scope);
+	console.log(scope);
 }
 
 function handleFlows(nodes: SgNode[]): LLMBlock[] {
@@ -318,6 +356,7 @@ function handleFlows(nodes: SgNode[]): LLMBlock[] {
 					.find((x) => x.kind() === "identifier")
 					?.text(),
 				node: nodes[i],
+				kind: nodes[i].kind() === "class_definition" ? "class" : "function",
 			});
 		} else if (importKinds.includes(kind as ImportKind)) {
 			handleImport(nodes[i], kind as ImportKind, scope);

@@ -85,7 +85,7 @@ import math, m1 as math1, m2
 from math import sqrt as test
 
 # from __future__ import division
-import math.a
-import math.a as t2
-import math.sqrt as t3
-import definition_test
+# import math.a
+# import math.a as t2
+# import math.sqrt as t3
+# import definition_test
