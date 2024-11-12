@@ -78,13 +78,14 @@
 # 5
 # 5, 5
 
-# import math
-# import math, m1 as math1, m2
+import math
+import math, m1 as math1, m2
 
-# # from math import *
-# from math import sqrt as test
+# from math import *
+from math import sqrt as test
 
-# # from __future__ import division
-# import math.a
-# import math.a as t2
-# import math.sqrt as t3
+# from __future__ import division
+import math.a
+import math.a as t2
+import math.sqrt as t3
+import definition_test

@@ -53,6 +53,7 @@ function parseDefinitions(
 	const children = unfiltered_children.filter((x) => x.kind() !== "comment");
 
 	for (let i = 0; i < children.length; i++) {
+		id++;
 		console.log("Parsing kind:", children[i].kind());
 
 		switch (children[i].kind()) {
@@ -388,14 +389,23 @@ function parseClass(node: SgNode, id: number): Class {
 }
 function parseModule(node: SgNode, id: number): Module {
 	// assert(node.kind() === "module");
-	const definitions = parseDefinitions(node.children(), id);
 	const location = parseLocation(node);
+	let body_children = node.children();
+	let docstr = null;
+	if (
+		body_children[0].kind() === "expression_statement" &&
+		body_children[0].children()[0].kind() === "string"
+	) {
+		docstr = body_children[0].children()[0].children()[1].text();
+		body_children = body_children.slice(1);
+	}
+	const definitions = parseDefinitions(body_children, id);
 	return {
 		id,
 		location,
 		definitions,
-		docstr: [],
+		docstr,
 	};
 }
 
-parseDefinitions(root.children(), 0);
+parseModule(root, 0);

@@ -79,14 +79,14 @@ function handleFlow(
 					})),
 				};
 			});
-			console.log("expression_statement children: ", childrenText);
+			// console.log("expression_statement children: ", childrenText);
 
 			const children = node.children();
 			if (children.length !== 1) {
 				throw "InvalidExpressionStatement";
 			}
 			const ref = handleExpression(children[0], scope);
-			console.log("ref obj for expression_statement: ", ref);
+			// console.log("ref obj for expression_statement: ", ref);
 
 			// handle variable assignment
 
@@ -244,18 +244,44 @@ function handleExpression(node: SgNode, scope: Scope): Reference[] {
 function handleImport(node: SgNode, kind: ImportKind, scope: Scope): void {
 	switch (kind) {
 		case "import_statement": {
-			console.log(node);
+			// console.log(node);
 			const import_names = node
 				.children()
 				.filter((x) => x.text() !== "import")
 				.filter((x) => x.text() !== ",")
 				.map((x) => x.text());
 
-			console.log("import statement children: ", import_names);
-			if (import_names.includes("*")) {
-				// TODO dont throw err here, just stop the traversal
-				throw new Error("Wildcard imports are not supported");
+			// console.log("import statement children: ", import_names);
+			// if (import_names.includes("*")) {
+			// 	// TODO dont throw err here, just stop the traversal
+			// 	throw new Error("Wildcard imports are not supported");
+			// }
+			for (const name of import_names) {
+				let display_name = name;
+				if (name.includes("as")) {
+					display_name = name.split("as")[1];
+				}
+				const file_path = name.split("as")[0].replaceAll(".", "/");
+				// TODO check that the path exists (if not, skip), else place root node as node
+				scope.push({ name: display_name, node: file_path });
 			}
+
+			break;
+		}
+		case "import_from_statement": {
+			const import_names = node
+				.children()
+				.filter((x) => x.text() !== "from")
+				.filter((x) => x.text() !== "import")
+				.filter((x) => x.text() !== ",")
+				.map((x) => x.text());
+			console.log("import from statement: ", import_names);
+			// if (import_names.includes("*")) {
+			// 	throw new Error("Wildcard imports are not supported");
+			// }
+			// TODO check that the path exists (if not, skip), else
+			// run handleFlows on the root node of the file,
+			// extract the scope, and return the most recently defined node matching the function name
 			for (const name of import_names) {
 				let display_name = name;
 				if (name.includes("as")) {
@@ -267,22 +293,6 @@ function handleImport(node: SgNode, kind: ImportKind, scope: Scope): void {
 			}
 			break;
 		}
-		case "import_from_statement": {
-			const import_names = node
-				.children()
-				.filter((x) => x.text() !== "from")
-				.filter((x) => x.text() !== "import")
-				.filter((x) => x.text() !== ",")
-				.map((x) => x.text());
-			console.log("import from statement: ", import_names);
-			if (import_names.includes("*")) {
-				throw new Error("Wildcard imports are not supported");
-			}
-			// TODO check that the path exists (if not, skip), else
-			// run handleFlows on the root node of the file,
-			// extract the scope, and return the most recently defined node matching the function name
-			break;
-		}
 		case "future_import_statement": {
 			throw new Error("future imports not supported (for now)");
 			//TODO handle after PoC
@@ -292,6 +302,7 @@ function handleImport(node: SgNode, kind: ImportKind, scope: Scope): void {
 			throw new Error(`Unknown Import Type: ${kind}`);
 		}
 	}
+	// console.log(scope);
 }
 
 function handleFlows(nodes: SgNode[]): LLMBlock[] {

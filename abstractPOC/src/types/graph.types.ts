@@ -125,7 +125,7 @@ type InModuleDef = Func | Class | Var;
 interface Module extends GraphAST {
 	// global_vars: Var[];
 	definitions: InModuleDef[];
-	docstr: string[];
+	docstr: string | null;
 }
 type Def = Func | Class | Var | Module;
 
