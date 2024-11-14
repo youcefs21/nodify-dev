@@ -7,6 +7,9 @@ export type CustomData = {
 	label: string;
 	idRange: [number, number];
 	children: CustomData[];
+	reversed: boolean;
+	active: boolean;
+	disabled: boolean;
 	// add more node properties
 };
 
