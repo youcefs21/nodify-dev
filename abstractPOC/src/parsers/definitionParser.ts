@@ -28,10 +28,10 @@ import { isFunc, isVar, isClass } from "../types/graph.types";
 import type { LLMBlock, Reference } from "../types/llm.types";
 import { exportJson } from "../utils/exportJson";
 
-const filePath = "PythonQuest/definition_test.py";
-const source = fs.readFileSync(filePath, "utf-8");
-const ast = parse(Lang.Python, source);
-const root = ast.root();
+// const filePath = "PythonQuest/definition_test.py";
+// const source = fs.readFileSync(filePath, "utf-8");
+// const ast = parse(Lang.Python, source);
+// const root = ast.root();
 
 function parseLocation(node: SgNode): Location {
 	return {
@@ -87,7 +87,8 @@ function parseDefinitions(
 				in_module_defs.push(parseClass(children[i], id));
 				break;
 			default:
-				throw new Error(`Unknown kind: ${children[i].kind()}`);
+				console.log("Passing on kind:", children[i].kind());
+			// throw new Error(`Unknown kind: ${children[i].kind()}`);
 		}
 	}
 	return in_module_defs;
@@ -105,8 +106,8 @@ function determineIdentifierPrivacy(name: string): Privacy {
 
 function parseVar(node: SgNode, id: number, possible_docstr?: SgNode): Var[] {
 	// assert(node.kind() === "expression_statement");
-	// console.log(node.children().map((x) => x.kind()));
-	// console.log(node.kind());
+	console.log(node.children().map((x) => x.kind()));
+	console.log(node.text());
 
 	switch (node.kind()) {
 		case "augmented_assignment":
@@ -188,7 +189,10 @@ function parseVar(node: SgNode, id: number, possible_docstr?: SgNode): Var[] {
 		}
 
 		default:
-			throw new Error(`Unknown kind: ${node.kind()}`);
+			console.log("Passing on kind:", node.kind());
+			return [];
+
+		// throw new Error(`Unknown kind: ${node.kind()}, ${node.text()}`);
 	}
 }
 function parseArgs(node: SgNode, id: number): Args {
@@ -408,4 +412,12 @@ function parseModule(node: SgNode, id: number): Module {
 	};
 }
 
-parseModule(root, 0);
+// parseModule(root, 0);
+export {
+	parseArgs,
+	parseDefinitions,
+	parseFunction,
+	parseClass,
+	parseModule,
+	parseVar,
+};
