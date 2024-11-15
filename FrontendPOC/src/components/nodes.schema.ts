@@ -1,6 +1,7 @@
 import type { Node } from "@xyflow/react";
 import { DatastoreNode } from "./DatastoreNode";
 import { Schema } from "effect";
+import FunctionNode from "./FunctionNode";
 
 export type CustomData = {
 	id: string;
@@ -24,7 +25,7 @@ export const NodeTypesSchema = Schema.Literal(
 
 export const nodeTypes = {
 	expression: DatastoreNode,
-	function: DatastoreNode,
+	function: FunctionNode,
 	entry: DatastoreNode,
 	event: DatastoreNode,
 	loop: DatastoreNode,
