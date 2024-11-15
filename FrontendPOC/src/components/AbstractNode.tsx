@@ -23,6 +23,7 @@ export function EdgeButton({ direction, active, disabled }: EdgeButtonProps) {
 			className="w-[10px] border border-border bg-white flex items-center justify-center"
 			type="button"
 			disabled={disabled}
+			onClick={() => console.log("clicked")}
 		>
 			{active === false ? (
 				<XIcon className="w-5 h-5 text-red-500 stroke-2" />

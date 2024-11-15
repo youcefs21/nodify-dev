@@ -2,6 +2,11 @@ import type { Node } from "@xyflow/react";
 import { DatastoreNode } from "./DatastoreNode";
 import { Schema } from "effect";
 import FunctionNode from "./FunctionNode";
+import ExpressionNode from "./ExpressionNode";
+import EntryNode from "./EntryNode";
+import LoopNode from "./LoopNode";
+import EventNode from "./EventNode";
+import ConditionNode from "./ConditionNode";
 
 export type CustomData = {
 	id: string;
@@ -24,12 +29,12 @@ export const NodeTypesSchema = Schema.Literal(
 );
 
 export const nodeTypes = {
-	expression: DatastoreNode,
+	expression: ExpressionNode,
 	function: FunctionNode,
-	entry: DatastoreNode,
-	event: DatastoreNode,
-	loop: DatastoreNode,
-	condition: DatastoreNode,
+	entry: EntryNode,
+	event: EventNode,
+	loop: LoopNode,
+	condition: ConditionNode,
 } satisfies Record<NodeTypes, typeof DatastoreNode>;
 
 // don't worry about it
