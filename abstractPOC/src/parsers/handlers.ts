@@ -9,7 +9,6 @@ import {
 	importKinds,
 } from "../types/ast.schema";
 import type { LLMBlock, Reference } from "../types/llm.types";
-import { exportJson } from "../utils/exportJson";
 
 // const filePath = "PythonQuest/expression_test.py";
 // const source = fs.readFileSync(filePath, "utf-8");
