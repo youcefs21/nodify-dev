@@ -84,6 +84,9 @@ export function AbstractNode({
 						<Icon className="text-white" />
 					</div>
 				</div>
+				<div className="h-[39px] border bg-white flex items-center justify-center p-2">
+					{label}
+				</div>
 
 				<EdgeButton
 					direction={reverse ? "left" : "right"}
