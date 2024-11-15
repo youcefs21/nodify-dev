@@ -18,6 +18,7 @@ type output = {
   groupID: number;
   label: string;
   idRange: [number, number];
+  type: "function_call" | "expression" | "event_handler_setup" | "loop" | "conditional";
   children?: output[];
 }[];
 ```
@@ -410,143 +411,161 @@ To convert the provided JSON structure into the specified `output` type, the hie
 [
   {
     "groupID": 0,
-    "label": "Initial Variables and Screen Setup",
-    "idRange": [0, 7],
-    "children": []
-  },
-  {
-    "groupID": 1,
-    "label": "Head Initialization",
-    "idRange": [8, 14],
-    "children": []
-  },
-  {
-    "groupID": 2,
-    "label": "Food Initialization",
-    "idRange": [15, 20],
-    "children": []
-  },
-  {
-    "groupID": 3,
-    "label": "Segments and Pen Initialization",
-    "idRange": [21, 29],
-    "children": []
-  },
-  {
-    "groupID": 4,
-    "label": "Keyboard Bindings",
-    "idRange": [30, 34],
-    "children": []
-  },
-  {
-    "groupID": 5,
-    "label": "Main Loop",
-    "idRange": [35, 35],
+    "label": "Initial Setup",
+    "idRange": [0, 29],
+    "type": "expression",
     "children": [
       {
-        "groupID": 6,
-        "label": "Update Screen",
+        "groupID": 1,
+        "label": "Set delay",
         "idRange": [0, 0],
-        "children": []
+        "type": "expression"
+      },
+      {
+        "groupID": 2,
+        "label": "Set score variables",
+        "idRange": [1, 2],
+        "type": "expression"
+      },
+      {
+        "groupID": 3,
+        "label": "Setup screen",
+        "idRange": [3, 7],
+        "type": "expression"
+      },
+      {
+        "groupID": 4,
+        "label": "Setup head",
+        "idRange": [8, 14],
+        "type": "expression"
+      },
+      {
+        "groupID": 5,
+        "label": "Setup food",
+        "idRange": [15, 20],
+        "type": "expression"
+      },
+      {
+        "groupID": 6,
+        "label": "Setup segments list",
+        "idRange": [21, 21],
+        "type": "expression"
       },
       {
         "groupID": 7,
-        "label": "Collision with Border Check",
-        "idRange": [1, 1],
-        "children": [
-          {
-            "groupID": 8,
-            "label": "Reset Snake & Score",
-            "idRange": [0, 8],
-            "children": [
-              {
-                "groupID": 9,
-                "label": "Hide Segment",
-                "idRange": [3, 3],
-                "children": []
-              }
-            ]
-          }
-        ]
-      },
+        "label": "Setup pen",
+        "idRange": [22, 29],
+        "type": "expression"
+      }
+    ]
+  },
+  {
+    "groupID": 8,
+    "label": "Event Handlers Setup",
+    "idRange": [30, 34],
+    "type": "event_handler_setup"
+  },
+  {
+    "groupID": 9,
+    "label": "Main Loop",
+    "idRange": [35, 35],
+    "type": "loop",
+    "children": [
       {
         "groupID": 10,
-        "label": "Collision with Food Check",
-        "idRange": [2, 2],
+        "label": "Update screen",
+        "idRange": [0, 0],
+        "type": "function_call"
+      },
+      {
+        "groupID": 11,
+        "label": "Check for collision with border",
+        "idRange": [1, 1],
+        "type": "conditional",
         "children": [
           {
-            "groupID": 11,
-            "label": "Reposition Food & Update Score",
-            "idRange": [0, 13],
-            "children": [
-              {
-                "groupID": 12,
-                "label": "Update High Score",
-                "idRange": [11, 11],
-                "children": []
-              }
-            ]
+            "groupID": 12,
+            "label": "Collision actions",
+            "idRange": [0, 8],
+            "type": "expression"
           }
         ]
       },
       {
         "groupID": 13,
-        "label": "Move Segments",
-        "idRange": [3, 4],
+        "label": "Check for collision with food",
+        "idRange": [2, 2],
+        "type": "conditional",
         "children": [
           {
             "groupID": 14,
-            "label": "Move Body Segments",
-            "idRange": [3, 3],
-            "children": []
-          },
-          {
-            "groupID": 15,
-            "label": "Move First Segment",
-            "idRange": [4, 4],
-            "children": []
+            "label": "Food spawn",
+            "idRange": [0, 13],
+            "type": "expression"
           }
         ]
       },
       {
-        "groupID": 16,
-        "label": "Move Head",
-        "idRange": [5, 5],
-        "children": []
+        "groupID": 15,
+        "label": "Move segments",
+        "idRange": [3, 3],
+        "type": "loop",
+        "children": [
+          {
+            "groupID": 16,
+            "label": "Segment movement",
+            "idRange": [0, 2],
+            "type": "expression"
+          }
+        ]
       },
       {
         "groupID": 17,
-        "label": "Collision with Body Check",
-        "idRange": [6, 6],
+        "label": "Move head",
+        "idRange": [4, 4],
+        "type": "conditional",
         "children": [
           {
             "groupID": 18,
-            "label": "Reset Snake & Score",
-            "idRange": [0, 8],
-            "children": [
-              {
-                "groupID": 19,
-                "label": "Hide Segment",
-                "idRange": [3, 3],
-                "children": []
-              }
-            ]
+            "label": "Move first segment",
+            "idRange": [0, 2],
+            "type": "expression"
           }
         ]
       },
       {
+        "groupID": 19,
+        "label": "Function call",
+        "idRange": [5, 5],
+        "type": "function_call"
+      },
+      {
         "groupID": 20,
-        "label": "Control Game Speed",
+        "label": "Check for collisions with body",
+        "idRange": [6, 6],
+        "type": "loop",
+        "children": [
+          {
+            "groupID": 21,
+            "label": "Collision actions",
+            "idRange": [0, 8],
+            "type": "conditional"
+          }
+        ]
+      },
+      {
+        "groupID": 22,
+        "label": "Sleep for delay",
         "idRange": [7, 7],
-        "children": []
+        "type": "expression"
       }
     ]
   },
   {
-    "groupID": 21,
-    "label": "Mainloop",
+    "groupID": 23,
+    "label": "Mainloop Call",
     "idRange": [36, 36],
-    "children": []
+    "type": "function_call"
   }
 ]
 ```

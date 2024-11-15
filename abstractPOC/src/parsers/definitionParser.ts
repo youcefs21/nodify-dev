@@ -1,32 +1,17 @@
-import { parse, Lang, type SgNode } from "@ast-grep/napi";
-import fs from "node:fs";
-import {
-	type FlowKind,
-	flowKinds,
-	type DefinitionKind,
-	definitionKinds,
-	type ImportKind,
-	importKinds,
-} from "../types/ast.schema";
+import type { SgNode } from "@ast-grep/napi";
 import type {
-	ID,
 	Location,
 	Privacy,
 	Var,
 	Args,
 	Func,
 	Method,
-	MethodKind,
 	Class,
 	ClassKind,
 	InModuleDef,
-	Def,
 	Module,
-	GraphAST,
 } from "../types/graph.types";
-import { isFunc, isVar, isClass } from "../types/graph.types";
-import type { LLMBlock, Reference } from "../types/llm.types";
-import { exportJson } from "../utils/exportJson";
+import { isFunc, isVar } from "../types/graph.types";
 
 // const filePath = "PythonQuest/definition_test.py";
 // const source = fs.readFileSync(filePath, "utf-8");
