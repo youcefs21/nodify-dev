@@ -20,8 +20,8 @@
 #     return arg, arg
 
 
-# async def test(untyped_arg, test: int = 1, *args, **kwargs):
-#     pass
+async def test(untyped_arg, test: int = 1, *args, **kwargs):
+    pass
 
 
 # def test1(
@@ -46,15 +46,15 @@
 # print(a, b, c, d, e, f)
 
 
-# @decor
-class A(param1, param2, param3=1):
-    "docstr"
+# # @decor
+# class A(param1, param2, param3=1):
+#     "docstr"
 
-    "docstr1"
-    classvr = 1
+#     "docstr1"
+#     classvr = 1
 
-    def __init__(self):
-        self.a = 1
+#     def __init__(self):
+#         self.a = 1
 
-    def __str__(self):
-        return "A"
+#     def __str__(self):
+#         return "A"
