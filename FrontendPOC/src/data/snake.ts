@@ -1,3 +1,25 @@
+export const testSnake = [
+	{
+		groupID: 0,
+		label: "Initial Setup",
+		idRange: [0, 29],
+		type: "expression",
+		children: [
+			{
+				groupID: 1,
+				label: "Set delay",
+				idRange: [0, 0],
+				type: "expression",
+			},
+		],
+	},
+	{
+		groupID: 8,
+		label: "Event Handlers Setup",
+		idRange: [30, 34],
+		type: "event_handler_setup",
+	},
+];
 export const abstractSnake = [
 	{
 		groupID: 0,

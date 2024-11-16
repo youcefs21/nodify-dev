@@ -37,6 +37,19 @@ export const nodeTypes = {
 	condition: ConditionNode,
 } satisfies Record<NodeTypes, typeof DatastoreNode>;
 
+export type output = {
+	groupID: number;
+	label: string;
+	idRange: [number, number];
+	type:
+		| "function_call"
+		| "expression"
+		| "event_handler_setup"
+		| "loop"
+		| "conditional";
+	children?: output[];
+};
+
 // don't worry about it
 export type CustomNode = Node<CustomData> & { type: NodeTypes };
 export type NodeTypes = Schema.Schema.Type<typeof NodeTypesSchema>;
