@@ -62,6 +62,7 @@ export function AbstractNode({
 				<Handle
 					type="target"
 					position={reverse ? Position.Right : Position.Left}
+					id={`${id}-target`}
 					style={{
 						background: "none",
 						borderRadius: 0,
@@ -99,7 +100,7 @@ export function AbstractNode({
 				<Handle
 					type="source"
 					position={reverse ? Position.Left : Position.Right}
-					id="a"
+					id={`${id}-source`}
 					style={{
 						background: "none",
 						borderRadius: 0,

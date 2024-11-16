@@ -16,6 +16,7 @@ export type CustomData = {
 	reversed: boolean;
 	active: boolean;
 	disabled: boolean;
+	type: NodeTypes;
 	// add more node properties
 };
 
@@ -46,10 +47,11 @@ export type output = {
 		| "expression"
 		| "event_handler_setup"
 		| "loop"
-		| "conditional";
+		| "conditional"
+		| "entry";
 	children?: output[];
 };
 
 // don't worry about it
-export type CustomNode = Node<CustomData> & { type: NodeTypes };
 export type NodeTypes = Schema.Schema.Type<typeof NodeTypesSchema>;
+export type CustomNode = Node<CustomData> & { type: "stacked" };

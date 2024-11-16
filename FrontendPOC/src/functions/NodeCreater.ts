@@ -15,6 +15,7 @@ function mapSingleNode(node: output, depth: number): CustomNode {
 			id: `${node.groupID}`,
 			label: node.label,
 			idRange: node.idRange,
+			type: nodeType,
 			children: node.children
 				? node.children.map((child) => {
 						const childNode = mapSingleNode(child, depth + 1);
@@ -28,7 +29,7 @@ function mapSingleNode(node: output, depth: number): CustomNode {
 			active: true,
 			disabled: false,
 		},
-		type: nodeType,
+		type: "stacked",
 		position: { x: 300 * depth, y: 0 },
 	};
 }
@@ -46,6 +47,8 @@ function mapNodeType(type: string): NodeTypes {
 			return "loop";
 		case "conditional":
 			return "condition";
+		case "entry":
+			return "entry";
 		default:
 			throw new Error(
 				`Unknown node type: ${type}. Please check the input data.`,

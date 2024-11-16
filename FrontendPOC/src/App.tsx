@@ -5,19 +5,12 @@ import {
 	Background,
 	useNodesState,
 	BackgroundVariant,
-	useEdgesState,
-	addEdge,
 } from "@xyflow/react";
 
 import "@xyflow/react/dist/style.css";
-import {
-	nodeTypes,
-	type output,
-	type CustomNode,
-} from "./components/nodes.schema";
-import { useCallback } from "react";
+import type { output } from "./components/nodes.schema";
 import { AbstractionLevelOneNodeMapper } from "./functions/NodeCreater";
-import { children } from "effect/Fiber";
+import { StackedNodes } from "./components/StackedNodes";
 // import { abstractSnake, testSnake } from "./data/snake";
 
 // const initialNodes = [
@@ -93,23 +86,69 @@ import { children } from "effect/Fiber";
 const abstractSnake: output[] = [
 	{
 		groupID: 1,
-		label: "Node 1",
-		idRange: [0, 10],
-		type: "function_call",
+		label: "entry",
+		idRange: [0, 999],
+		type: "entry",
 		children: [
 			{
-				groupID: 2,
+				groupID: 1,
 				label: "Child Label",
 				idRange: [11, 20],
 				type: "expression",
 			},
+			{
+				groupID: 2,
+				label: "Child Label",
+				idRange: [11, 20],
+				type: "function_call",
+				children: [
+					{
+						groupID: 3,
+						label: "Child Label",
+						idRange: [11, 20],
+						type: "expression",
+					},
+					{
+						groupID: 4,
+						label: "Child Label",
+						idRange: [11, 20],
+						type: "function_call",
+					},
+				],
+			},
+			{
+				groupID: 3,
+				label: "Child Label",
+				idRange: [11, 20],
+				type: "expression",
+			},
+			{
+				groupID: 4,
+				label: "Child Label",
+				idRange: [11, 20],
+				type: "function_call",
+			},
 		],
 	},
 	{
-		groupID: 3,
-		label: "Node 2",
-		idRange: [0, 0],
-		type: "expression",
+		groupID: 2,
+		label: "Child Label",
+		idRange: [11, 20],
+		type: "function_call",
+		children: [
+			{
+				groupID: 3,
+				label: "Child Label",
+				idRange: [11, 20],
+				type: "expression",
+			},
+			{
+				groupID: 4,
+				label: "Child Label",
+				idRange: [11, 20],
+				type: "function_call",
+			},
+		],
 	},
 ];
 
@@ -133,7 +172,9 @@ export default function App() {
 		<div style={{ width: "100vw", height: "100vh" }}>
 			<ReactFlow
 				nodes={nodes}
-				nodeTypes={nodeTypes}
+				nodeTypes={{
+					stacked: StackedNodes,
+				}}
 				onNodesChange={onNodesChange}
 				// edges={edges}
 				// onEdgesChange={onEdgesChange}
