@@ -1,5 +1,5 @@
 import type { Node } from "@xyflow/react";
-import { DatastoreNode } from "./DatastoreNode";
+import type { DatastoreNode } from "./DatastoreNode";
 import { Schema } from "effect";
 import FunctionNode from "./FunctionNode";
 import ExpressionNode from "./ExpressionNode";

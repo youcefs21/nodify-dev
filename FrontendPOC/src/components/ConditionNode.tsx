@@ -1,7 +1,7 @@
 import { AbstractNode } from "./AbstractNode";
 import type { CustomData } from "./nodes.schema";
 
-import { Split  } from "lucide-react";
+import { Split } from "lucide-react";
 
 const ExpressionNode = ({ data }: { data: CustomData }) => {
 	return (

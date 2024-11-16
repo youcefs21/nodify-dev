@@ -10,7 +10,11 @@ import {
 } from "@xyflow/react";
 
 import "@xyflow/react/dist/style.css";
-import { nodeTypes, type output, type CustomNode } from "./components/nodes.schema";
+import {
+	nodeTypes,
+	type output,
+	type CustomNode,
+} from "./components/nodes.schema";
 import { useCallback } from "react";
 import { AbstractionLevelOneNodeMapper } from "./functions/NodeCreater";
 import { children } from "effect/Fiber";
@@ -86,30 +90,28 @@ import { children } from "effect/Fiber";
 // 	},
 // ] satisfies CustomNode[];
 
-
 const abstractSnake: output[] = [
-    {
-        groupID: 1,
-        label: "Node 1",
-        idRange: [0, 10],
-        type: "function_call",
-        children: [
-            {
-                groupID: 2,
-                label: "Child Label",
-                idRange: [11, 20],
-                type: "expression",
-            },
-        ],
-    },
-    {
-        groupID: 3,
-        label: "Node 2",
-        idRange: [0, 0],
-        type: "expression",
-    },
+	{
+		groupID: 1,
+		label: "Node 1",
+		idRange: [0, 10],
+		type: "function_call",
+		children: [
+			{
+				groupID: 2,
+				label: "Child Label",
+				idRange: [11, 20],
+				type: "expression",
+			},
+		],
+	},
+	{
+		groupID: 3,
+		label: "Node 2",
+		idRange: [0, 0],
+		type: "expression",
+	},
 ];
-
 
 const initialNodes = AbstractionLevelOneNodeMapper(abstractSnake);
 // const initialEdges = [
@@ -117,7 +119,6 @@ const initialNodes = AbstractionLevelOneNodeMapper(abstractSnake);
 // 	{ id: "e2-3", source: "2", target: "3" },
 // 	{ id: "e3-4", source: "3", target: "4" },
 // 	{ id: "e4-5", source: "4", target: "5" }];
-
 
 export default function App() {
 	const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes);

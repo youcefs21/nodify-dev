@@ -1,7 +1,7 @@
 import { AbstractNode } from "./AbstractNode";
 import type { CustomData } from "./nodes.schema";
 
-import { LogIn  } from "lucide-react";
+import { LogIn } from "lucide-react";
 
 const EntryNode = ({ data }: { data: CustomData }) => {
 	return (
