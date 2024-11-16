@@ -1,26 +1,53 @@
-export const testSnake = [
+import type { output } from "../components/nodes.schema";
+export const testSnake: output[] = [
 	{
 		groupID: 0,
-		label: "Initial Setup",
-		idRange: [0, 29],
+		label: "Level 1 Child 1",
+		idRange: [11, 20],
 		type: "expression",
+	},
+	{
+		groupID: 1,
+		label: "Level 1 Child 2",
+		idRange: [11, 20],
+		type: "function_call",
 		children: [
 			{
-				groupID: 1,
-				label: "Set delay",
-				idRange: [0, 0],
+				groupID: 2,
+				label: "Level 3 Child 1",
+				idRange: [11, 20],
 				type: "expression",
+			},
+			{
+				groupID: 3,
+				label: "Level 3 Child 2",
+				idRange: [11, 20],
+				type: "function_call",
 			},
 		],
 	},
 	{
-		groupID: 8,
-		label: "Event Handlers Setup",
-		idRange: [30, 34],
-		type: "event_handler_setup",
+		groupID: 4,
+		label: "Level 1 Child 3",
+		idRange: [11, 20],
+		type: "expression",
+		children: [
+			{
+				groupID: 5,
+				label: "Level 3 Child 3",
+				idRange: [11, 20],
+				type: "function_call",
+			},
+		],
+	},
+	{
+		groupID: 6,
+		label: "Level 1 Child 4",
+		idRange: [11, 20],
+		type: "function_call",
 	},
 ];
-export const abstractSnake = [
+export const abstractSnake: output[] = [
 	{
 		groupID: 0,
 		label: "Initial Setup",
