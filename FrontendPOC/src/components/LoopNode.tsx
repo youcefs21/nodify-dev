@@ -4,7 +4,6 @@ import type { CustomData } from "./nodes.schema";
 import { Repeat2  } from "lucide-react";
 
 const LoopNode = ({ data }: { data: CustomData }) => {
-	console.log("data", data);
 	return (
 		<AbstractNode
 			data={data}

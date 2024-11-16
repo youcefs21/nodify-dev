@@ -4,7 +4,6 @@ import type { CustomData } from "./nodes.schema";
 import { SquareFunction  } from "lucide-react";
 
 const FunctionNode = ({ data }: { data: CustomData }) => {
-	console.log("data", data);
 	return (
 		<AbstractNode
 			data={data}

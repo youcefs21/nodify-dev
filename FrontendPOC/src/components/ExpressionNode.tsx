@@ -4,7 +4,6 @@ import type { CustomData } from "./nodes.schema";
 import { Variable } from "lucide-react";
 
 const ExpressionNode = ({ data }: { data: CustomData }) => {
-	console.log("data", data);
 	return (
 		<AbstractNode
 			data={data}

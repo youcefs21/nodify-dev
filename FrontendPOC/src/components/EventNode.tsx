@@ -4,7 +4,6 @@ import type { CustomData } from "./nodes.schema";
 import { Webhook } from "lucide-react";
 
 const EventNode = ({ data }: { data: CustomData }) => {
-	console.log("data", data);
 	return (
 		<AbstractNode
 			data={data}
