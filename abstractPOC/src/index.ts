@@ -1,8 +1,8 @@
 import { Hono } from "hono";
-import { handleFile } from "./parsers/handlers";
 import { parse, Lang } from "@ast-grep/napi";
-import { parseModule } from "./parsers/definitionParser";
 import fs from "node:fs";
+import { parseModule } from "./parsers/module.handler";
+import { handleFile } from "./parsers/root.handler";
 
 const app = new Hono();
 

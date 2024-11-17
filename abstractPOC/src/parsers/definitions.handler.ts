@@ -1,6 +1,5 @@
 import type { SgNode } from "@ast-grep/napi";
 import type {
-	Location,
 	Privacy,
 	Var,
 	Args,
@@ -9,22 +8,9 @@ import type {
 	Class,
 	ClassKind,
 	InModuleDef,
-	Module,
 } from "../types/graph.types";
 import { isFunc, isVar } from "../types/graph.types";
-
-// const filePath = "PythonQuest/definition_test.py";
-// const source = fs.readFileSync(filePath, "utf-8");
-// const ast = parse(Lang.Python, source);
-// const root = ast.root();
-
-function parseLocation(node: SgNode): Location {
-	return {
-		start: node.range().start,
-		end: node.range().end,
-		file: node.getRoot().filename(),
-	};
-}
+import { parseLocation } from "./module.handler";
 
 function parseDefinitions(
 	unfiltered_children: SgNode[],
@@ -37,8 +23,9 @@ function parseDefinitions(
 	// const children = node.children();
 	const children = unfiltered_children.filter((x) => x.kind() !== "comment");
 
+	let childId = id;
 	for (let i = 0; i < children.length; i++) {
-		id++;
+		childId++;
 		console.log("Parsing kind:", children[i].kind());
 
 		switch (children[i].kind()) {
@@ -58,18 +45,18 @@ function parseDefinitions(
 				//assert(node.children().length === 1);
 				// many vars may be defined on one line
 				in_module_defs = in_module_defs.concat(
-					parseVar(children[i].children()[0], id, possible_docstr),
+					parseVar(children[i].children()[0], childId, possible_docstr),
 				);
 				// console.dir(in_module_defs[in_module_defs.length - 1], { depth: null });
 				break;
 			}
 			// case "decorated_definition": // commenting out for now since decorated definitions contain both funcs and classes ( need to separate them out here)
 			case "function_definition":
-				in_module_defs.push(parseFunction(children[i], id));
+				in_module_defs.push(parseFunction(children[i], childId));
 				// console.dir(in_module_defs[in_module_defs.length - 1], { depth: null });
 				break;
 			case "class_definition":
-				in_module_defs.push(parseClass(children[i], id));
+				in_module_defs.push(parseClass(children[i], childId));
 				break;
 			default:
 				console.log("Passing on kind:", children[i].kind());
@@ -180,6 +167,7 @@ function parseVar(node: SgNode, id: number, possible_docstr?: SgNode): Var[] {
 		// throw new Error(`Unknown kind: ${node.kind()}, ${node.text()}`);
 	}
 }
+
 function parseArgs(node: SgNode, id: number): Args {
 	// assert(node.kind() === "parameters");
 	// console.log(node.children().map((x) => x.kind()));
@@ -326,6 +314,7 @@ function parseFunction(node: SgNode, id: number): Func {
 		body,
 	};
 }
+
 function parseClass(node: SgNode, id: number): Class {
 	// assert(node.kind() === "class_definition");
 	// console.log(node.children().map((x) => x.kind()));
@@ -376,33 +365,6 @@ function parseClass(node: SgNode, id: number): Class {
 		docstr,
 	};
 }
-function parseModule(node: SgNode, id: number): Module {
-	// assert(node.kind() === "module");
-	const location = parseLocation(node);
-	let body_children = node.children();
-	let docstr = null;
-	if (
-		body_children[0].kind() === "expression_statement" &&
-		body_children[0].children()[0].kind() === "string"
-	) {
-		docstr = body_children[0].children()[0].children()[1].text();
-		body_children = body_children.slice(1);
-	}
-	const definitions = parseDefinitions(body_children, id);
-	return {
-		id,
-		location,
-		definitions,
-		docstr,
-	};
-}
 
 // parseModule(root, 0);
-export {
-	parseArgs,
-	parseDefinitions,
-	parseFunction,
-	parseClass,
-	parseModule,
-	parseVar,
-};
+export { parseArgs, parseDefinitions, parseFunction, parseClass, parseVar };

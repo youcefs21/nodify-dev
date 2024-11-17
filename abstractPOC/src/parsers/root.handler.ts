@@ -11,30 +11,12 @@ import {
 import type { LLMBlock, Reference } from "../types/llm.types";
 import { handleImport } from "./import.handler";
 import { handleFlow } from "./flow.handler";
+import type { Scope } from "../types/graph.types";
 
 // const filePath = "PythonQuest/expression_test.py";
 // const source = fs.readFileSync(filePath, "utf-8");
 // const ast = parse(Lang.Python, source);
 // const root = ast.root();
-
-export type ScopeItem =
-	| {
-			name: string;
-			node: SgNode | null;
-			kind: "function" | "class" | "variable";
-	  }
-	| {
-			name: string;
-			node: SgRoot | null;
-			kind: "module";
-	  }
-	| {
-			name: string;
-			node: ScopeItem;
-			kind: "alias" | "function";
-	  };
-
-export type Scope = ScopeItem[];
 
 function handleFlows(nodes: SgNode[]): LLMBlock[] {
 	const scope: Scope = [];

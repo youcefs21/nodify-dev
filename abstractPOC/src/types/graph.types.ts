@@ -1,4 +1,4 @@
-import type { SgNode, Range } from "@ast-grep/napi";
+import type { SgNode, Range, Pos, SgRoot } from "@ast-grep/napi";
 
 /**
  * Incremental ID tracker to collect useful information on chunks of Python code for displaying within the graph.
@@ -10,8 +10,8 @@ type ID = number;
  */
 interface Location {
 	filename: string;
-	start: Range;
-	end: Range;
+	start: Pos;
+	end: Pos;
 }
 
 /**
@@ -128,6 +128,32 @@ interface Module extends GraphAST {
 	docstr: string | null;
 }
 type Def = Func | Class | Var | Module;
+
+/**
+ * Represents an item within a scope (like a function, class, variable, module, or alias).
+ * Each item has a name and associated AST node or reference to another scope item.
+ */
+export type ScopeItem =
+	| {
+			name: string;
+			node: SgNode | null;
+			kind: "function" | "class" | "variable";
+	  }
+	| {
+			name: string;
+			node: SgRoot | null;
+			kind: "module";
+	  }
+	| {
+			name: string;
+			node: ScopeItem;
+			kind: "alias" | "function";
+	  };
+
+/**
+ * A collection of items that are accessible within a particular scope.
+ */
+export type Scope = ScopeItem[];
 
 export type {
 	ID,
