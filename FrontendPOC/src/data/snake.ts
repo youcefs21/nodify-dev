@@ -1,4 +1,27 @@
 import type { output } from "../components/nodes.schema";
+export const myEdges = [
+	{
+		id: "e-2-1",
+		source: "-2",
+		sourceHandle: "-1-source",
+		target: "-1",
+		targetHandle: "0-target",
+	},
+	{
+		id: "e-1-0",
+		source: "-1",
+		sourceHandle: "1-source",
+		target: "1",
+		targetHandle: "2-target",
+	},
+	{
+		id: "e-1-4",
+		source: "-1",
+		sourceHandle: "4-source",
+		target: "4",
+		targetHandle: "5-target",
+	},
+];
 export const testSnake: output[] = [
 	{
 		groupID: 0,

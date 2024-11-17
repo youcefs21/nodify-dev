@@ -98,28 +98,31 @@ export function createEdges(nodes: CustomNode[]): {
 		targetHandle: string;
 	}[] = [];
 
-	function addEdgesForNode(node: CustomNode) {
-		if (node.data.children && node.data.children.length > 0) {
-			for (const child of node.data.children) {
-				edges.push({
-					id: `e${node.data.id}-${child.id}`,
-					source: node.data.id,
-					target: child.id,
-					sourceHandle: `${node.data.id}-source`,
-					targetHandle: `${child.id}-target`,
-				});
-				// Recursively create edges for each child node
-				addEdgesForNode({ ...node, data: child, id: child.id });
-			}
+	const parentMap: { [key: string]: string } = {};
+	let parentId = nodes[0].id;
+
+	for (let i = 0; i < nodes.length; i++) {
+		for (let j = 0; j < nodes[i].data.children.length; j++) {
+			const child = nodes[i].data.children[j];
+			parentMap[child.id] = nodes[i].id;
 		}
 	}
-
-	for (const node of nodes) {
-		addEdgesForNode(node);
+	console.log(parentMap);
+	for (let i = 1; i < nodes.length; i++) {
+		parentId = parentMap[nodes[i].id];
+		if (nodes[i].data.children && nodes[i].data.children.length > 0) {
+			edges.push({
+				id: `e${parentId}-${nodes[i].id}`,
+				source: parentId,
+				sourceHandle: `${nodes[i].id}-source`,
+				target: nodes[i].id,
+				targetHandle: `${nodes[i].data.children[0].id}-target`,
+			});
+		}
 	}
-
 	return edges;
 }
+
 export const entryNode: output = {
 	groupID: -2,
 	label: "Dummy",
