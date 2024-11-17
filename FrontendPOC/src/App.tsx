@@ -20,14 +20,13 @@ import { StackedNodes } from "./components/StackedNodes";
 import { useCallback } from "react";
 import { abstractSnake, testSnake } from "./data/snake";
 
-
-
-
 export default function App() {
 	if (entryNode.children?.[0]) {
 		entryNode.children[0].children = abstractSnake;
 	}
-	const flattenedNodes = flattenCustomNodes(AbstractionLevelOneNodeMapper([entryNode]));
+	const flattenedNodes = flattenCustomNodes(
+		AbstractionLevelOneNodeMapper([entryNode]),
+	);
 	const initialEdges = createEdges(flattenedNodes);
 
 	const [nodes, setNodes, onNodesChange] = useNodesState(flattenedNodes);
@@ -49,6 +48,8 @@ export default function App() {
 				edges={edges}
 				onEdgesChange={onEdgesChange}
 				onConnect={onConnect}
+				snapToGrid={true}
+				snapGrid={[10, 10]}
 			>
 				<Controls />
 				<MiniMap />

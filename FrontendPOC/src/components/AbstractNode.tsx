@@ -52,7 +52,7 @@ export function AbstractNode({
 	totalWidth = 260,
 }: NodeProps) {
 	return (
-		<div className="bg-white font-mono text-xs flex-1">
+		<div className="bg-white font-mono text-xs flex-1 max-h-[40px] min-h-[40px]">
 			<div
 				className={cn(
 					"flex w-full relative rounded-none outline outline-1",
@@ -76,7 +76,7 @@ export function AbstractNode({
 					id={id}
 					disabled={true}
 				/>
-				<div className="w-10 h-[39px] border bg-white flex items-center justify-center">
+				<div className="w-10 h-[40px] border bg-white flex items-center justify-center">
 					<div
 						className={cn(
 							"rounded  w-[30px] h-[30px] flex items-center justify-center p-1",
@@ -86,7 +86,7 @@ export function AbstractNode({
 						<Icon className="text-white" />
 					</div>
 				</div>
-				<div className="h-[39px] w-full border bg-white flex items-center justify-center p-2">
+				<div className="h-[40px] w-full border bg-white flex items-center justify-center p-2">
 					{label}
 				</div>
 
