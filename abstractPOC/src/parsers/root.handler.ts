@@ -18,8 +18,7 @@ import type { Scope } from "../types/graph.types";
 // const ast = parse(Lang.Python, source);
 // const root = ast.root();
 
-function handleFlows(nodes: SgNode[]): FlowOutput {
-	const scope: Scope = [];
+function handleFlows(nodes: SgNode[], scope: Scope = []): FlowOutput {
 	const blocks: LLMBlock[] = [];
 
 	for (let i = 0; i < nodes.length; i++) {

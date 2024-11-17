@@ -138,6 +138,22 @@ Note:
 	if (output) exportJson("llm_output", parsed.data.output);
 }
 
+function hasReference(block: inputItem, refID: number): boolean {
+	// Check current block's references
+	if (block.references?.some((r) => r.ref_id === refID)) {
+		return true;
+	}
+	// Recursively check children
+	if (block.children) {
+		for (const child of block.children) {
+			if (hasReference(child, refID)) {
+				return true;
+			}
+		}
+	}
+	return false;
+}
+
 const flowInput = handleFile("PythonQuest/snake.py");
 
 const input: inputList = {
@@ -146,13 +162,10 @@ const input: inputList = {
 		.map((x, i) => ({
 			refID: i,
 			name: x.name,
-			// TODO: do a proper description
 			description: x.kind,
 		}))
 		.filter((ref) =>
-			flowInput.blocks.some((block) =>
-				block.references?.some((r) => r.ref_id === ref.refID),
-			),
+			flowInput.blocks.some((block) => hasReference(block, ref.refID)),
 		),
 };
 console.log(JSON.stringify(input, null, 2));

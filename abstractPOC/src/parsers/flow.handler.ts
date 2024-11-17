@@ -8,6 +8,7 @@ import { handleFlows } from "./root.handler";
 function handleNodeWithBlock(
 	node: SgNode,
 	id: number,
+	scope: Scope,
 	replaceWith: string,
 ): LLMBlock {
 	const block = node.children().find((x) => x.kind() === "block");
@@ -15,7 +16,7 @@ function handleNodeWithBlock(
 		throw "NoBlockFound";
 	}
 
-	const children = handleFlows(block.children());
+	const children = handleFlows(block.children(), scope);
 
 	const edit = block.replace(replaceWith);
 	const text = node.commitEdits([edit]);
@@ -30,15 +31,15 @@ export function handleFlow(
 ): LLMBlock {
 	switch (kind) {
 		case "if_statement": {
-			return handleNodeWithBlock(node, id, "<if_body/>");
+			return handleNodeWithBlock(node, id, scope, "<if_body/>");
 		}
 
 		case "for_statement": {
-			return handleNodeWithBlock(node, id, "<for_body/>");
+			return handleNodeWithBlock(node, id, scope, "<for_body/>");
 		}
 
 		case "while_statement": {
-			return handleNodeWithBlock(node, id, "<while_body/>");
+			return handleNodeWithBlock(node, id, scope, "<while_body/>");
 		}
 
 		case "expression_statement": {
