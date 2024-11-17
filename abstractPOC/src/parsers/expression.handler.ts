@@ -99,10 +99,43 @@ export function handleExpression(node: SgNode, scope: Scope): Reference[] {
 
 		case "attribute":
 		case "call": {
-			const identifier = node.children().find((x) => x.kind() === "identifier");
+			const identifier = node
+				.children()
+				.find((x) => x.kind() === "identifier" || x.kind() === "attribute");
+			// This is what an attribute looks like
+			// {
+			// 	kind: "attribute",
+			// 	text: "turtle.Screen",
+			// 	children: [
+			// 		{
+			// 			kind: "identifier",
+			// 			text: "turtle",
+			// 		},
+			// 		{
+			// 			kind: ".",
+			// 			text: ".",
+			// 		},
+			// 		{
+			// 			kind: "identifier",
+			// 			text: "Screen",
+			// 		},
+			// 	],
+			// };
 			if (!identifier) {
-				throw new Error(`No identifier found for ${node.kind()}`);
+				console.error(
+					"No identifier or attribute found for call",
+					node.children().map((x) => ({
+						kind: x.kind(),
+						text: x.text(),
+						children: x.children().map((y) => ({
+							kind: y.kind(),
+							text: y.text(),
+						})),
+					})),
+				);
+				throw new Error("No identifier or attribute found for call");
 			}
+
 			const ref_id = scope.findLastIndex((x) => x.name === identifier.text());
 			if (ref_id === -1) {
 				return [];

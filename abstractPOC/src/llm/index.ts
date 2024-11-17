@@ -1,7 +1,6 @@
 import OpenAI from "openai";
 import { env } from "../utils/env";
 import { z } from "zod";
-import type { FlowOutput } from "../types/llm.types";
 import { handleFile } from "../parsers/root.handler";
 import { exportJson } from "../utils/exportJson";
 
@@ -139,7 +138,7 @@ Note:
 	if (output) exportJson("llm_output", parsed.data.output);
 }
 
-const flowInput = handleFile("PythonQuest/import_test/main.py");
+const flowInput = handleFile("PythonQuest/snake.py");
 
 const input: inputList = {
 	input: flowInput.blocks,
