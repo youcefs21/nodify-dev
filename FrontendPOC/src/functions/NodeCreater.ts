@@ -83,8 +83,20 @@ export function flattenCustomNodes(nodes: CustomNode[]): CustomNode[] {
 
 export function createEdges(
 	nodes: CustomNode[],
-): { id: string; source: string; target: string }[] {
-	const edges: { id: string; source: string; target: string }[] = [];
+): {
+	id: string;
+	source: string;
+	target: string;
+	sourceHandle: string;
+	targetHandle: string;
+}[] {
+	const edges: {
+		id: string;
+		source: string;
+		target: string;
+		sourceHandle: string;
+		targetHandle: string;
+	}[] = [];
 
 	function addEdgesForNode(node: CustomNode) {
 		if (node.data.children && node.data.children.length > 0) {
@@ -93,6 +105,8 @@ export function createEdges(
 					id: `e${node.data.id}-${child.id}`,
 					source: node.data.id,
 					target: child.id,
+					sourceHandle: `${node.data.id}-source`,
+					targetHandle: `${child.id}-target`,
 				});
 				// Recursively create edges for each child node
 				addEdgesForNode({ ...node, data: child, id: child.id });
