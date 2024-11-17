@@ -1,3 +1,4 @@
+import type { Edge } from "@xyflow/react";
 import type { CustomNode, NodeTypes, output } from "../components/nodes.schema";
 
 export function AbstractionLevelOneNodeMapper(output: output[]): CustomNode[] {
@@ -83,20 +84,8 @@ export function flattenCustomNodes(nodes: CustomNode[]): CustomNode[] {
 	return flattened;
 }
 
-export function createEdges(nodes: CustomNode[]): {
-	id: string;
-	source: string;
-	target: string;
-	sourceHandle: string;
-	targetHandle: string;
-}[] {
-	const edges: {
-		id: string;
-		source: string;
-		target: string;
-		sourceHandle: string;
-		targetHandle: string;
-	}[] = [];
+export function createEdges(nodes: CustomNode[]): Edge[] {
+	const edges: Edge[] = [];
 
 	const parentMap: { [key: string]: string } = {};
 	let parentId = nodes[0].id;
@@ -115,9 +104,10 @@ export function createEdges(nodes: CustomNode[]): {
 				id: `e${parentId}-${nodes[i].id}`,
 				source: parentId,
 				sourceHandle: `${nodes[i].id}-source`,
+				type: "step",
 				target: nodes[i].id,
 				targetHandle: `${nodes[i].data.children[0].id}-target`,
-			});
+			} satisfies Edge);
 		}
 	}
 	return edges;
