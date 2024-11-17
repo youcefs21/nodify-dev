@@ -1,6 +1,6 @@
 import type { SgNode } from "@ast-grep/napi";
-import type { Scope, ScopeItem } from "./handlers";
 import type { Reference } from "../types/llm.types";
+import type { Scope, ScopeItem } from "../types/graph.types";
 
 const ignoreKinds = [
 	"=",
@@ -99,15 +99,15 @@ export function handleExpression(node: SgNode, scope: Scope): Reference[] {
 
 		case "attribute":
 		case "call": {
-			const ref_id = scope.findLastIndex(
-				(x) =>
-					x.name ===
-					node
-						.children()
-						.find((y) => y.kind() === "identifier")
-						?.text(),
-			);
-			return [{ name: node.text(), ref_id: ref_id }];
+			const identifier = node.children().find((x) => x.kind() === "identifier");
+			if (!identifier) {
+				throw new Error(`No identifier found for ${node.kind()}`);
+			}
+			const ref_id = scope.findLastIndex((x) => x.name === identifier.text());
+			if (ref_id === -1) {
+				return [];
+			}
+			return [{ name: identifier.text(), ref_id: ref_id }];
 		}
 
 		case "lambda":

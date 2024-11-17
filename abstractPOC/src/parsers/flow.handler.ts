@@ -19,7 +19,7 @@ function handleNodeWithBlock(
 
 	const edit = block.replace(replaceWith);
 	const text = node.commitEdits([edit]);
-	return { id, text, children };
+	return { id, text, children: children.blocks };
 }
 
 export function handleFlow(
@@ -47,6 +47,10 @@ export function handleFlow(
 				throw "InvalidExpressionStatement";
 			}
 			const ref = handleExpression(children[0], scope);
+
+			if (ref.length === 0) {
+				return { id, text: node.text() };
+			}
 
 			return { id, text: node.text(), references: ref };
 		}

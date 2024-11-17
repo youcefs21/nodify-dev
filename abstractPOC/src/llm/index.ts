@@ -1,8 +1,7 @@
 import OpenAI from "openai";
 import { env } from "../utils/env";
-import { zodResponseFormat } from "openai/helpers/zod";
 import { z } from "zod";
-import type { LLMBlock } from "../types/llm.types";
+import type { FlowOutput } from "../types/llm.types";
 import { handleFile } from "../parsers/root.handler";
 import { exportJson } from "../utils/exportJson";
 
@@ -35,7 +34,27 @@ const outputSchema = z.object({
 	output: z.array(itemSchema),
 });
 
-async function main(input: LLMBlock[]) {
+type inputItem = {
+	id: number;
+	text: string;
+	children?: inputItem[];
+	references?: {
+		name: string;
+		ref_id: number;
+	}[];
+};
+type referenceItem = {
+	refID: number;
+	name: string;
+	description: string;
+};
+type inputList = {
+	input: inputItem[];
+	// references are just for context, not for partitioning
+	references: referenceItem[];
+};
+
+async function main(input: inputList) {
 	const chatCompletion = await openai.chat.completions.create({
 		messages: [
 			{
@@ -45,11 +64,25 @@ async function main(input: LLMBlock[]) {
 your input will be a json of the following format:
 
 \`\`\`ts
-type inputList = {
+type inputItem = {
   id: number;
   text: string;
-  children?: inputList;
-}[];
+  children?: inputItem[];
+  references?: {
+    name: string;
+    ref_id: number;
+  }[];
+};
+type referenceItem = {
+  refID: number;
+  name: string;
+  description: string;
+}
+type inputList = {
+  input: inputItem[];
+  // references are just for context, not for partitioning
+  references: referenceItem[];
+}
 \`\`\`
 
 your output type must match the following:
@@ -106,4 +139,22 @@ Note:
 	if (output) exportJson("llm_output", parsed.data.output);
 }
 
-await main(handleFile("PythonQuest/snake.py"));
+const flowInput = handleFile("PythonQuest/import_test/main.py");
+
+const input: inputList = {
+	input: flowInput.blocks,
+	references: flowInput.scope
+		.map((x, i) => ({
+			refID: i,
+			name: x.name,
+			// TODO: do a proper description
+			description: x.kind,
+		}))
+		.filter((ref) =>
+			flowInput.blocks.some((block) =>
+				block.references?.some((r) => r.ref_id === ref.refID),
+			),
+		),
+};
+console.log(JSON.stringify(input, null, 2));
+// await main(input);

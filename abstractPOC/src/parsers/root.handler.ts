@@ -8,7 +8,7 @@ import {
 	type ImportKind,
 	importKinds,
 } from "../types/ast.schema";
-import type { LLMBlock, Reference } from "../types/llm.types";
+import type { FlowOutput, LLMBlock, Reference } from "../types/llm.types";
 import { handleImport } from "./import.handler";
 import { handleFlow } from "./flow.handler";
 import type { Scope } from "../types/graph.types";
@@ -18,9 +18,9 @@ import type { Scope } from "../types/graph.types";
 // const ast = parse(Lang.Python, source);
 // const root = ast.root();
 
-function handleFlows(nodes: SgNode[]): LLMBlock[] {
+function handleFlows(nodes: SgNode[]): FlowOutput {
 	const scope: Scope = [];
-	const output: LLMBlock[] = [];
+	const blocks: LLMBlock[] = [];
 
 	for (let i = 0; i < nodes.length; i++) {
 		const kind = nodes[i].kind();
@@ -52,14 +52,14 @@ function handleFlows(nodes: SgNode[]): LLMBlock[] {
 
 		// handle flows
 		if (flowKinds.some((flowKinds) => flowKinds === kind)) {
-			output.push(handleFlow(nodes[i], kind as FlowKind, i, scope));
+			blocks.push(handleFlow(nodes[i], kind as FlowKind, i, scope));
 		}
 	}
 
-	return output;
+	return { scope, blocks };
 }
 
-function handleFile(filePath: string): LLMBlock[] {
+function handleFile(filePath: string): FlowOutput {
 	const source = fs.readFileSync(filePath, "utf-8");
 	const ast = parse(Lang.Python, source);
 	const root = ast.root();
