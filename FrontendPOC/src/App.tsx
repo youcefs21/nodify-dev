@@ -10,7 +10,12 @@ import {
 } from "@xyflow/react";
 
 import "@xyflow/react/dist/style.css";
-import { AbstractionLevelOneNodeMapper, createEdges, entryNode, flattenCustomNodes } from "./functions/NodeCreater";
+import {
+	AbstractionLevelOneNodeMapper,
+	createEdges,
+	entryNode,
+	flattenCustomNodes,
+} from "./functions/NodeCreater";
 import { StackedNodes } from "./components/StackedNodes";
 import { useCallback } from "react";
 import { abstractSnake, testSnake } from "./data/snake";
@@ -19,7 +24,7 @@ if (entryNode.children?.[0]) {
 	entryNode.children[0].children = testSnake;
 }
 
-const nodes =  AbstractionLevelOneNodeMapper([entryNode]);
+const nodes = AbstractionLevelOneNodeMapper([entryNode]);
 const flattenedNodes = flattenCustomNodes(nodes);
 const initialEdges = createEdges(nodes);
 console.log(flattenedNodes);
@@ -29,14 +34,26 @@ console.log(flattenedNodes);
 // 	{id: 'e-1-1', source: '-1', target: '1'},
 // 	{id: 'e1-2', source: '1', target: '2'},
 // 	{id: 'e1-3', source: '1', target: '3'},
-// 	{id: 'e-1-4', source: '-1', target: '4'}, 
+// 	{id: 'e-1-4', source: '-1', target: '4'},
 // 	{id: 'e4-5', source: '4', target: '5'},
 // 	{id: 'e-1-6', source: '-1', target: '6'},
 // ];
 
 const myEdges = [
-	{id: 'e-1-0', source: '-1', sourceHandle:'-1-source', target: '0',  targetHandle:'0-target'},
-	{id: 'e0-2', source: '0', sourceHandle: "0-2-source", targetHandle:"2", target: '2-target'},
+	{
+		id: "e-1-0",
+		source: "-1",
+		sourceHandle: "0-source",
+		target: "1",
+		targetHandle: "2-target",
+	},
+	{
+		id: "e0-2",
+		source: "1",
+		sourceHandle: "2-source",
+		targetHandle: "5-target",
+		target: "4",
+	},
 ];
 
 export default function App() {

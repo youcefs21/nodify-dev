@@ -62,7 +62,9 @@ export function flattenCustomNodes(nodes: CustomNode[]): CustomNode[] {
 	function flattenNode(node: CustomNode, depth: number, verticalDepth: number) {
 		node.id = node.data.id; // Ensure the node ID is set to its groupID
 		node.position = { x: 300 * depth, y: 100 * verticalDepth }; // Adjust position based on depth and verticalDepth to avoid overlap
-		flattened.push(node);
+		if (node.data.children.length > 0) {
+			flattened.push(node);
+		}
 		for (let i = 0; i < node.data.children.length; i++) {
 			const childData = node.data.children[i];
 			const childNode: CustomNode = {
@@ -81,9 +83,7 @@ export function flattenCustomNodes(nodes: CustomNode[]): CustomNode[] {
 	return flattened;
 }
 
-export function createEdges(
-	nodes: CustomNode[],
-): {
+export function createEdges(nodes: CustomNode[]): {
 	id: string;
 	source: string;
 	target: string;
