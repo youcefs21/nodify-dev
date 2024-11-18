@@ -23,6 +23,7 @@ export function EdgeButton({ direction, active, disabled }: EdgeButtonProps) {
 			className="w-[10px] border border-border bg-white flex items-center justify-center"
 			type="button"
 			disabled={disabled}
+			onClick={() => console.log("clicked")}
 		>
 			{active === false ? (
 				<XIcon className="w-5 h-5 text-red-500 stroke-2" />
@@ -51,16 +52,17 @@ export function AbstractNode({
 	totalWidth = 260,
 }: NodeProps) {
 	return (
-		<div className="bg-white font-mono text-xs">
+		<div className="bg-white font-mono text-xs flex-1 max-h-[40px] min-h-[40px]">
 			<div
 				className={cn(
-					"flex w-fit relative rounded-none outline outline-1",
+					"flex w-full relative rounded-none outline outline-1",
 					reverse ? "flex-row-reverse" : "",
 				)}
 			>
 				<Handle
 					type="target"
 					position={reverse ? Position.Right : Position.Left}
+					id={`${id}-target`}
 					style={{
 						background: "none",
 						borderRadius: 0,
@@ -74,7 +76,7 @@ export function AbstractNode({
 					id={id}
 					disabled={true}
 				/>
-				<div className="w-10 h-[39px] border bg-white flex items-center justify-center">
+				<div className="w-10 h-[40px] border bg-white flex items-center justify-center">
 					<div
 						className={cn(
 							"rounded  w-[30px] h-[30px] flex items-center justify-center p-1",
@@ -83,6 +85,9 @@ export function AbstractNode({
 					>
 						<Icon className="text-white" />
 					</div>
+				</div>
+				<div className="h-[40px] w-full border bg-white flex items-center justify-center p-2">
+					{label}
 				</div>
 
 				<EdgeButton
@@ -95,7 +100,7 @@ export function AbstractNode({
 				<Handle
 					type="source"
 					position={reverse ? Position.Left : Position.Right}
-					id="a"
+					id={`${id}-source`}
 					style={{
 						background: "none",
 						borderRadius: 0,

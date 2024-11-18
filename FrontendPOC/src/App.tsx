@@ -1,25 +1,35 @@
-import { useCallback } from "react";
 import {
 	ReactFlow,
 	MiniMap,
 	Controls,
 	Background,
 	useNodesState,
+	BackgroundVariant,
 	useEdgesState,
 	addEdge,
-	BackgroundVariant,
 } from "@xyflow/react";
 
 import "@xyflow/react/dist/style.css";
-
-const initialNodes = [
-	{ id: "1", position: { x: 0, y: 0 }, data: { label: "1" } },
-	{ id: "2", position: { x: 0, y: 100 }, data: { label: "2" } },
-];
-const initialEdges = [{ id: "e1-2", source: "1", target: "2" }];
+import {
+	AbstractionLevelOneNodeMapper,
+	createEdges,
+	entryNode,
+	flattenCustomNodes,
+} from "./functions/NodeCreater";
+import { StackedNodes } from "./components/StackedNodes";
+import { useCallback } from "react";
+import { abstractSnake, testSnake } from "./data/snake";
 
 export default function App() {
-	const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes);
+	if (entryNode.children?.[0]) {
+		entryNode.children[0].children = abstractSnake;
+	}
+	const flattenedNodes = flattenCustomNodes(
+		AbstractionLevelOneNodeMapper([entryNode]),
+	);
+	const initialEdges = createEdges(flattenedNodes);
+
+	const [nodes, setNodes, onNodesChange] = useNodesState(flattenedNodes);
 	const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges);
 
 	const onConnect = useCallback(
@@ -31,10 +41,15 @@ export default function App() {
 		<div style={{ width: "100vw", height: "100vh" }}>
 			<ReactFlow
 				nodes={nodes}
-				edges={edges}
+				nodeTypes={{
+					stacked: StackedNodes,
+				}}
 				onNodesChange={onNodesChange}
+				edges={edges}
 				onEdgesChange={onEdgesChange}
 				onConnect={onConnect}
+				snapToGrid={true}
+				snapGrid={[10, 10]}
 			>
 				<Controls />
 				<MiniMap />

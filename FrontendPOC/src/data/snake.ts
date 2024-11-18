@@ -1,143 +1,239 @@
-export const abstractSnake = [
+import type { output } from "../components/nodes.schema";
+export const myEdges = [
+	{
+		id: "e-2-1",
+		source: "-2",
+		sourceHandle: "-1-source",
+		target: "-1",
+		targetHandle: "0-target",
+	},
+	{
+		id: "e-1-0",
+		source: "-1",
+		sourceHandle: "1-source",
+		target: "1",
+		targetHandle: "2-target",
+	},
+	{
+		id: "e-1-4",
+		source: "-1",
+		sourceHandle: "4-source",
+		target: "4",
+		targetHandle: "5-target",
+	},
+];
+export const testSnake: output[] = [
 	{
 		groupID: 0,
-		label: "Initial Variables and Screen Setup",
-		idRange: [0, 7],
-		children: [],
+		label: "Level 1 Child 1",
+		idRange: [11, 20],
+		type: "expression",
 	},
 	{
 		groupID: 1,
-		label: "Head Initialization",
-		idRange: [8, 14],
-		children: [],
-	},
-	{
-		groupID: 2,
-		label: "Food Initialization",
-		idRange: [15, 20],
-		children: [],
-	},
-	{
-		groupID: 3,
-		label: "Segments and Pen Initialization",
-		idRange: [21, 29],
-		children: [],
-	},
-	{
-		groupID: 4,
-		label: "Keyboard Bindings",
-		idRange: [30, 34],
-		children: [],
-	},
-	{
-		groupID: 5,
-		label: "Main Loop",
-		idRange: [35, 35],
+		label: "Level 1 Child 2",
+		idRange: [11, 20],
+		type: "function_call",
 		children: [
 			{
-				groupID: 6,
-				label: "Update Screen",
-				idRange: [0, 0],
-				children: [],
+				groupID: 2,
+				label: "Level 3 Child 1",
+				idRange: [11, 20],
+				type: "expression",
 			},
 			{
-				groupID: 7,
-				label: "Collision with Border Check",
-				idRange: [1, 1],
-				children: [
-					{
-						groupID: 8,
-						label: "Reset Snake & Score",
-						idRange: [0, 8],
-						children: [
-							{
-								groupID: 9,
-								label: "Hide Segment",
-								idRange: [3, 3],
-								children: [],
-							},
-						],
-					},
-				],
-			},
-			{
-				groupID: 10,
-				label: "Collision with Food Check",
-				idRange: [2, 2],
-				children: [
-					{
-						groupID: 11,
-						label: "Reposition Food & Update Score",
-						idRange: [0, 13],
-						children: [
-							{
-								groupID: 12,
-								label: "Update High Score",
-								idRange: [11, 11],
-								children: [],
-							},
-						],
-					},
-				],
-			},
-			{
-				groupID: 13,
-				label: "Move Segments",
-				idRange: [3, 4],
-				children: [
-					{
-						groupID: 14,
-						label: "Move Body Segments",
-						idRange: [3, 3],
-						children: [],
-					},
-					{
-						groupID: 15,
-						label: "Move First Segment",
-						idRange: [4, 4],
-						children: [],
-					},
-				],
-			},
-			{
-				groupID: 16,
-				label: "Move Head",
-				idRange: [5, 5],
-				children: [],
-			},
-			{
-				groupID: 17,
-				label: "Collision with Body Check",
-				idRange: [6, 6],
-				children: [
-					{
-						groupID: 18,
-						label: "Reset Snake & Score",
-						idRange: [0, 8],
-						children: [
-							{
-								groupID: 19,
-								label: "Hide Segment",
-								idRange: [3, 3],
-								children: [],
-							},
-						],
-					},
-				],
-			},
-			{
-				groupID: 20,
-				label: "Control Game Speed",
-				idRange: [7, 7],
-				children: [],
+				groupID: 3,
+				label: "Level 3 Child 2",
+				idRange: [11, 20],
+				type: "function_call",
 			},
 		],
 	},
 	{
-		groupID: 21,
-		label: "Mainloop",
-		idRange: [36, 36],
-		children: [],
+		groupID: 4,
+		label: "Level 1 Child 3",
+		idRange: [11, 20],
+		type: "expression",
+		children: [
+			{
+				groupID: 5,
+				label: "Level 3 Child 3",
+				idRange: [11, 20],
+				type: "function_call",
+			},
+		],
+	},
+	{
+		groupID: 6,
+		label: "Level 1 Child 4",
+		idRange: [11, 20],
+		type: "function_call",
+	},
+];
+export const abstractSnake: output[] = [
+	{
+		groupID: 1,
+		label: "Initialize variables",
+		idRange: [5, 8],
+		type: "expression",
+	},
+	{
+		groupID: 2,
+		label: "Setup game window",
+		idRange: [10, 14],
+		type: "expression",
+	},
+	{
+		groupID: 3,
+		label: "Initialize snake head",
+		idRange: [17, 23],
+		type: "expression",
+	},
+	{
+		groupID: 4,
+		label: "Initialize food",
+		idRange: [25, 30],
+		type: "expression",
+	},
+	{
+		groupID: 5,
+		label: "Setup segments and pen",
+		idRange: [31, 40],
+		type: "expression",
+	},
+	{
+		groupID: 6,
+		label: "Setup event handlers",
+		idRange: [48, 52],
+		type: "event_handler_setup",
+	},
+	{
+		groupID: 7,
+		label: "Main game loop",
+		idRange: [54, 54],
+		type: "loop",
+		children: [
+			{
+				groupID: 8,
+				label: "Update screen",
+				idRange: [0, 0],
+				type: "function_call",
+			},
+			{
+				groupID: 9,
+				label: "Check wall collision",
+				idRange: [2, 12],
+				type: "conditional",
+				children: [
+					{
+						groupID: 10,
+						label: "Reset on collision",
+						idRange: [0, 12],
+						type: "expression",
+					},
+				],
+			},
+			{
+				groupID: 11,
+				label: "Check food collision",
+				idRange: [4, 16],
+				type: "conditional",
+				children: [
+					{
+						groupID: 12,
+						label: "Relocate food",
+						idRange: [0, 2],
+						type: "function_call",
+					},
+					{
+						groupID: 13,
+						label: "Add segment",
+						idRange: [4, 9],
+						type: "expression",
+					},
+					{
+						groupID: 14,
+						label: "Update score",
+						idRange: [11, 16],
+						type: "expression",
+					},
+				],
+			},
+			{
+				groupID: 15,
+				label: "Move segments",
+				idRange: [6, 6],
+				type: "loop",
+				children: [
+					{
+						groupID: 16,
+						label: "Shift segment positions",
+						idRange: [0, 2],
+						type: "expression",
+					},
+				],
+			},
+			{
+				groupID: 17,
+				label: "Align first segment",
+				idRange: [8, 8],
+				type: "conditional",
+				children: [
+					{
+						groupID: 18,
+						label: "Move first segment",
+						idRange: [0, 2],
+						type: "expression",
+					},
+				],
+			},
+			{
+				groupID: 19,
+				label: "Move snake",
+				idRange: [9, 9],
+				type: "function_call",
+			},
+			{
+				groupID: 20,
+				label: "Check segment collision",
+				idRange: [11, 13],
+				type: "loop",
+				children: [
+					{
+						groupID: 21,
+						label: "Reset on segment collision",
+						idRange: [0, 13],
+						type: "conditional",
+						children: [
+							{
+								groupID: 22,
+								label: "Clear segments",
+								idRange: [0, 10],
+								type: "expression",
+							},
+							{
+								groupID: 23,
+								label: "Reset score display",
+								idRange: [12, 13],
+								type: "expression",
+							},
+						],
+					},
+				],
+			},
+			{
+				groupID: 24,
+				label: "Delay game loop",
+				idRange: [12, 12],
+				type: "function_call",
+			},
+		],
+	},
+	{
+		groupID: 25,
+		label: "Start main loop",
+		idRange: [55, 55],
+		type: "function_call",
 	},
 ];
 
@@ -269,6 +365,7 @@ export const rawSnake = [
 	{
 		id: 31,
 		text: 'wn.onkeypress(go_up, "w")',
+		references: [{ name: "go_up", id: "1" }],
 	},
 	{
 		id: 32,
