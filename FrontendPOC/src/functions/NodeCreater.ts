@@ -59,10 +59,18 @@ function mapNodeType(type: string): NodeTypes {
 
 export function flattenCustomNodes(nodes: CustomNode[]): CustomNode[] {
 	const flattened: CustomNode[] = [];
+	const padding = 10;
+	const yPerDepth: number[] = [];
 
-	function flattenNode(node: CustomNode, depth: number, verticalDepth: number) {
+	function flattenNode(node: CustomNode, depth: number) {
+		if (yPerDepth[depth] === undefined) {
+			yPerDepth[depth] = 0;
+		}
 		node.id = node.data.id; // Ensure the node ID is set to its groupID
-		node.position = { x: 300 * depth, y: 100 * verticalDepth }; // Adjust position based on depth and verticalDepth to avoid overlap
+		node.position = {
+			x: 300 * depth,
+			y: yPerDepth[depth],
+		}; // Adjust position based on depth and verticalDepth to avoid overlap
 		if (node.data.children.length > 0) {
 			flattened.push(node);
 		}
@@ -73,12 +81,15 @@ export function flattenCustomNodes(nodes: CustomNode[]): CustomNode[] {
 				id: childData.id, // Set the child node ID to its groupID
 				data: childData,
 			};
-			flattenNode(childNode, depth + 1, verticalDepth + i); // Keep verticalDepth the same for the first child and increment for subsequent children
+			flattenNode(childNode, depth + 1); // Keep verticalDepth the same for the first child and increment for subsequent children
+			yPerDepth[depth + 1] += 40 * childNode.data.children.length + padding;
 		}
 	}
 
+	yPerDepth.push(0);
 	for (let i = 0; i < nodes.length; i++) {
-		flattenNode(nodes[i], 1, i); // Start verticalDepth from the same level as the root
+		flattenNode(nodes[i], 1); // Start verticalDepth from the same level as the root
+		yPerDepth[0] += 40 * nodes[i].data.children.length + padding;
 	}
 
 	return flattened;

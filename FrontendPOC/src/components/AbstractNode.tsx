@@ -52,7 +52,7 @@ export function AbstractNode({
 	totalWidth = 260,
 }: NodeProps) {
 	return (
-		<div className="bg-white font-mono text-xs flex-1 max-h-[40px] min-h-[40px]">
+		<div className="bg-white font-mono text-xs flex-1 max-h-[40px] min-h-[40px] max-w-[260px]">
 			<div
 				className={cn(
 					"flex w-full relative rounded-none outline outline-1",

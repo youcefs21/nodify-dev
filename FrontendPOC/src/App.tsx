@@ -17,8 +17,7 @@ import {
 	flattenCustomNodes,
 } from "./functions/NodeCreater";
 import { StackedNodes } from "./components/StackedNodes";
-import { useCallback } from "react";
-import { abstractSnake, testSnake } from "./data/snake";
+import { abstractSnake } from "./data/snake";
 
 export default function App() {
 	if (entryNode.children?.[0]) {
@@ -29,16 +28,11 @@ export default function App() {
 	);
 	const initialEdges = createEdges(flattenedNodes);
 
-	const [nodes, setNodes, onNodesChange] = useNodesState(flattenedNodes);
-	const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges);
-
-	const onConnect = useCallback(
-		(params) => setEdges((eds) => addEdge(params, eds)),
-		[setEdges],
-	);
+	const [nodes, _setNodes, onNodesChange] = useNodesState(flattenedNodes);
+	const [edges, _setEdges, onEdgesChange] = useEdgesState(initialEdges);
 
 	return (
-		<div style={{ width: "100vw", height: "100vh" }}>
+		<div className="w-screen h-screen">
 			<ReactFlow
 				nodes={nodes}
 				nodeTypes={{
@@ -47,7 +41,6 @@ export default function App() {
 				onNodesChange={onNodesChange}
 				edges={edges}
 				onEdgesChange={onEdgesChange}
-				onConnect={onConnect}
 				snapToGrid={true}
 				snapGrid={[10, 10]}
 			>
