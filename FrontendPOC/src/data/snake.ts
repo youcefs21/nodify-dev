@@ -69,7 +69,8 @@ export const testSnake: output[] = [
 		idRange: [11, 20],
 		type: "function_call",
 	},
-];
+].map((child) => addExpanded(child as output));
+
 export const abstractSnake: output[] = [
 	{
 		groupID: 1,
@@ -235,7 +236,15 @@ export const abstractSnake: output[] = [
 		idRange: [55, 55],
 		type: "function_call",
 	},
-];
+].map((child) => addExpanded(child as output));
+
+function addExpanded(node: output): output {
+	return {
+		...node,
+		expanded: true,
+		children: node.children?.map((child) => addExpanded(child)),
+	};
+}
 
 export const rawSnake = [
 	{

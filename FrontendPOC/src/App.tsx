@@ -6,40 +6,40 @@ import {
 	useNodesState,
 	BackgroundVariant,
 	useEdgesState,
-	addEdge,
 } from "@xyflow/react";
 
 import "@xyflow/react/dist/style.css";
-import {
-	AbstractionLevelOneNodeMapper,
-	createEdges,
-	entryNode,
-	flattenCustomNodes,
-} from "./functions/NodeCreater";
 import { StackedNodes } from "./components/StackedNodes";
-import { abstractSnake } from "./data/snake";
+import { useAtomValue } from "jotai";
+import { edgesAtom, nodesAtom } from "./data/nodesAtom";
+import { useEffect } from "react";
 
 export default function App() {
-	if (entryNode.children?.[0]) {
-		entryNode.children[0].children = abstractSnake;
-	}
-	const flattenedNodes = flattenCustomNodes(
-		AbstractionLevelOneNodeMapper([entryNode]),
-	);
-	const initialEdges = createEdges(flattenedNodes);
+	const nodes = useAtomValue(nodesAtom);
+	const edges = useAtomValue(edgesAtom);
 
-	const [nodes, _setNodes, onNodesChange] = useNodesState(flattenedNodes);
-	const [edges, _setEdges, onEdgesChange] = useEdgesState(initialEdges);
+	const [renderedNodes, setNodes, onNodesChange] = useNodesState(nodes);
+	const [renderedEdges, setEdges, onEdgesChange] = useEdgesState(edges);
+
+	useEffect(() => {
+		console.log("nodes changed", nodes);
+		setNodes(nodes);
+	}, [nodes, setNodes]);
+
+	useEffect(() => {
+		console.log("edges changed", edges);
+		setEdges(edges);
+	}, [edges, setEdges]);
 
 	return (
 		<div className="w-screen h-screen">
 			<ReactFlow
-				nodes={nodes}
+				nodes={renderedNodes}
 				nodeTypes={{
 					stacked: StackedNodes,
 				}}
 				onNodesChange={onNodesChange}
-				edges={edges}
+				edges={renderedEdges}
 				onEdgesChange={onEdgesChange}
 				snapToGrid={true}
 				snapGrid={[10, 10]}

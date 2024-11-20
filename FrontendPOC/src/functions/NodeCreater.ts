@@ -1,13 +1,21 @@
 import type { Edge } from "@xyflow/react";
 import type { CustomNode, NodeTypes, output } from "../components/nodes.schema";
+import type { Map as ImMap } from "immutable";
 
-export function AbstractionLevelOneNodeMapper(output: output[]): CustomNode[] {
+export function AbstractionLevelOneNodeMapper(
+	output: output[],
+	expanded: ImMap<string, boolean>,
+): CustomNode[] {
 	// Map the output nodes recursively, starting with depth 1
-	return output.map((node) => mapSingleNode(node, 1));
+	return output.map((node) => mapSingleNode(node, 1, expanded));
 }
 
 // Helper function to map a single node to CustomNode
-function mapSingleNode(node: output, depth: number): CustomNode {
+function mapSingleNode(
+	node: output,
+	depth: number,
+	expanded: ImMap<string, boolean>,
+): CustomNode {
 	const nodeType: NodeTypes = mapNodeType(node.type);
 
 	return {
@@ -17,22 +25,24 @@ function mapSingleNode(node: output, depth: number): CustomNode {
 			label: node.label,
 			idRange: node.idRange,
 			type: nodeType,
-			children: node.children
-				? node.children.map((child) => {
-						const childNode = mapSingleNode(child, depth + 1);
-						return {
-							...childNode.data,
-							position: childNode.position,
-						};
-					})
-				: [],
+			hasChildren: !!node.children && node.children.length > 0,
+			children:
+				node.children && expanded.get(node.groupID.toString()) === true
+					? node.children.map((child) => {
+							const childNode = mapSingleNode(child, depth + 1, expanded);
+							return {
+								...childNode.data,
+								position: childNode.position,
+							};
+						})
+					: [],
 			reversed: false,
 			active: true,
 			disabled: false,
 		},
 		type: "stacked",
 		position: { x: 300 * depth, y: 0 },
-	};
+	} satisfies CustomNode;
 }
 
 // Helper function to map node type to NodeTypes enum
@@ -129,12 +139,14 @@ export const entryNode: output = {
 	label: "Dummy",
 	idRange: [0, 999],
 	type: "entry",
+	expanded: true,
 	children: [
 		{
 			groupID: -1,
 			label: "Entry",
 			idRange: [0, 999],
 			type: "entry",
+			expanded: true,
 			children: [],
 		},
 	],
