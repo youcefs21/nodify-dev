@@ -4,19 +4,21 @@ import type { LLMBlock } from "../types/llm.types";
 import { handleExpression } from "./expression.handler";
 import type { Scope } from "../types/graph.types";
 import { handleFlows } from "./root.handler";
+import type { ThisModulePath } from "./import.handler";
 
 function handleNodeWithBlock(
 	node: SgNode,
 	id: number,
 	scope: Scope,
 	replaceWith: string,
+	filePath: ThisModulePath,
 ): LLMBlock {
 	const block = node.children().find((x) => x.kind() === "block");
 	if (!block || block.kind() !== "block") {
 		throw "NoBlockFound";
 	}
 
-	const children = handleFlows(block.children(), scope);
+	const children = handleFlows(block.children(), filePath, scope);
 
 	const edit = block.replace(replaceWith);
 	const text = node.commitEdits([edit]);
@@ -28,18 +30,19 @@ export function handleFlow(
 	kind: FlowKind,
 	id: number,
 	scope: Scope,
+	filePath: ThisModulePath,
 ): LLMBlock {
 	switch (kind) {
 		case "if_statement": {
-			return handleNodeWithBlock(node, id, scope, "<if_body/>");
+			return handleNodeWithBlock(node, id, scope, "<if_body/>", filePath);
 		}
 
 		case "for_statement": {
-			return handleNodeWithBlock(node, id, scope, "<for_body/>");
+			return handleNodeWithBlock(node, id, scope, "<for_body/>", filePath);
 		}
 
 		case "while_statement": {
-			return handleNodeWithBlock(node, id, scope, "<while_body/>");
+			return handleNodeWithBlock(node, id, scope, "<while_body/>", filePath);
 		}
 
 		case "expression_statement": {

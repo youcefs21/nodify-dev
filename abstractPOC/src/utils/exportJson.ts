@@ -1,4 +1,4 @@
-export async function exportJson<T>(filename: string, out: T[]) {
+export async function exportJson<T>(filename: string, out: T) {
 	const jsonString = JSON.stringify(out, null, 2);
 	const path = `llmBlob/${filename}.json`;
 	try {

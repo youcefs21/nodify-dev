@@ -47,7 +47,7 @@ type referenceItem = {
 	name: string;
 	description: string;
 };
-type inputList = {
+export type inputList = {
 	input: inputItem[];
 	// references are just for context, not for partitioning
 	references: referenceItem[];
@@ -138,7 +138,7 @@ Note:
 	if (output) exportJson("llm_output", parsed.data.output);
 }
 
-function hasReference(block: inputItem, refID: number): boolean {
+export function hasReference(block: inputItem, refID: number): boolean {
 	// Check current block's references
 	if (block.references?.some((r) => r.ref_id === refID)) {
 		return true;
@@ -154,19 +154,5 @@ function hasReference(block: inputItem, refID: number): boolean {
 	return false;
 }
 
-const flowInput = handleFile("PythonQuest/snake.py");
-
-const input: inputList = {
-	input: flowInput.blocks,
-	references: flowInput.scope
-		.map((x, i) => ({
-			refID: i,
-			name: x.name,
-			description: x.kind,
-		}))
-		.filter((ref) =>
-			flowInput.blocks.some((block) => hasReference(block, ref.refID)),
-		),
-};
-console.log(JSON.stringify(input, null, 2));
+// console.log(JSON.stringify(input, null, 2));
 // await main(input);

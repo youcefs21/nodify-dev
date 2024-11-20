@@ -7,7 +7,15 @@ import { handleFile } from "./parsers/root.handler";
 const app = new Hono();
 
 app.get("/", (c) => c.text("Welcome to nodify!"));
-app.get("/snake", (c) => c.json(handleFile("PythonQuest/snake.py")));
+app.get("/snake", (c) =>
+	c.json(
+		handleFile({
+			rootPath: "PythonQuest",
+			currentPath: "PythonQuest",
+			fileName: "snake.py",
+		}),
+	),
+);
 app.get("/snake_ast", (c) =>
 	c.json(parse(Lang.Python, fs.readFileSync("PythonQuest/snake.py", "utf-8"))),
 );

@@ -9,16 +9,20 @@ import {
 	importKinds,
 } from "../types/ast.schema";
 import type { FlowOutput, LLMBlock, Reference } from "../types/llm.types";
-import { handleImport } from "./import.handler";
+import { handleImport, type ThisModulePath } from "./import.handler";
 import { handleFlow } from "./flow.handler";
 import type { Scope } from "../types/graph.types";
-
+import path from "node:path";
 // const filePath = "PythonQuest/expression_test.py";
 // const source = fs.readFileSync(filePath, "utf-8");
 // const ast = parse(Lang.Python, source);
 // const root = ast.root();
 
-function handleFlows(nodes: SgNode[], scope: Scope = []): FlowOutput {
+export function handleFlows(
+	nodes: SgNode[],
+	thisModulePath: ThisModulePath,
+	scope: Scope = [],
+): FlowOutput {
 	const blocks: LLMBlock[] = [];
 
 	for (let i = 0; i < nodes.length; i++) {
@@ -45,24 +49,27 @@ function handleFlows(nodes: SgNode[], scope: Scope = []): FlowOutput {
 		// handle imports
 		if (importKinds.some((impKinds) => impKinds === kind)) {
 			// changes scope in place
-			handleImport(nodes[i], kind as ImportKind, scope);
+			handleImport(nodes[i], kind as ImportKind, scope, thisModulePath);
 			continue;
 		}
 
 		// handle flows
 		if (flowKinds.some((flowKinds) => flowKinds === kind)) {
-			blocks.push(handleFlow(nodes[i], kind as FlowKind, i, scope));
+			blocks.push(
+				handleFlow(nodes[i], kind as FlowKind, i, scope, thisModulePath),
+			);
 		}
 	}
 
 	return { scope, blocks };
 }
 
-function handleFile(filePath: string): FlowOutput {
-	const source = fs.readFileSync(filePath, "utf-8");
+export function handleFile(filePath: ThisModulePath): FlowOutput {
+	const source = fs.readFileSync(
+		path.join(filePath.currentPath, filePath.fileName),
+		"utf-8",
+	);
 	const ast = parse(Lang.Python, source);
 	const root = ast.root();
-	return handleFlows(root.children());
+	return handleFlows(root.children(), filePath);
 }
-
-export { handleFlows, handleImport, handleFile };
