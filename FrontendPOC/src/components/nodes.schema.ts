@@ -10,6 +10,7 @@ import ConditionNode from "./ConditionNode";
 
 export type CustomData = {
 	id: string;
+	hasChildren: boolean;
 	label: string;
 	idRange: [number, number];
 	children: CustomData[];
@@ -42,6 +43,7 @@ export type output = {
 	groupID: number;
 	label: string;
 	idRange: [number, number];
+	expanded: boolean;
 	type:
 		| "function_call"
 		| "expression"

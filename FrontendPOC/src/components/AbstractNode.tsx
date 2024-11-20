@@ -2,35 +2,48 @@ import { Handle, Position } from "@xyflow/react";
 import {
 	ChevronLeft,
 	ChevronRight,
-	XIcon,
+	Minus,
 	type LucideIcon,
 } from "lucide-react";
 import { cn } from "../utils/cn";
 import type { CustomData } from "./nodes.schema";
+import { astExpandedAtom } from "../data/nodesAtom";
+import { useAtom } from "jotai";
+import { useMemo } from "react";
 
 interface EdgeButtonProps {
 	direction: "left" | "right";
 	index: number;
 	id: string;
-	active?: boolean | undefined;
+	hasChildren: boolean;
 	disabled?: boolean | undefined;
 }
 
-export function EdgeButton({ direction, active, disabled }: EdgeButtonProps) {
+export function EdgeButton({ direction, id, hasChildren }: EdgeButtonProps) {
+	const [expanded, setExpanded] = useAtom(astExpandedAtom);
+	const realDirection = useMemo(() => {
+		const isExpanded = expanded.get(id);
+		if (direction === "left") {
+			return isExpanded ? "right" : "left";
+		}
+		return isExpanded ? "left" : "right";
+	}, [expanded, id, direction]);
 	// if direction is left, swap the index
 	return (
 		<button
-			className="w-[10px] border border-border bg-white flex items-center justify-center"
+			className="w-[20px] border border-border bg-white flex items-center justify-center"
 			type="button"
-			disabled={disabled}
-			onClick={() => console.log("clicked")}
+			disabled={!hasChildren}
+			onClick={() => {
+				setExpanded((expanded) => expanded.set(id, !expanded.get(id)));
+			}}
 		>
-			{active === false ? (
-				<XIcon className="w-5 h-5 text-red-500 stroke-2" />
-			) : direction === "left" ? (
-				<ChevronLeft className="w-4 h-4" />
+			{hasChildren === false ? (
+				<Minus className="w-4 h-4 rotate-90 text-gray-400" />
+			) : realDirection === "left" ? (
+				<ChevronLeft className="w-4 h-4 stroke-black" />
 			) : (
-				<ChevronRight className="w-4 h-4" />
+				<ChevronRight className="w-4 h-4 stroke-black" />
 			)}
 		</button>
 	);
@@ -41,18 +54,16 @@ interface NodeProps {
 	Icon: LucideIcon;
 	className: string;
 	children?: JSX.Element;
-	totalWidth?: number;
 }
 
 export function AbstractNode({
-	data: { label, id, active, disabled, reversed: reverse },
+	data: { label, id, hasChildren, disabled, reversed: reverse },
 	Icon,
 	className,
 	children,
-	totalWidth = 260,
 }: NodeProps) {
 	return (
-		<div className="bg-white font-mono text-xs flex-1 max-h-[40px] min-h-[40px]">
+		<div className="bg-white font-mono text-xs flex-1 max-h-[40px] min-h-[40px] max-w-[260px]">
 			<div
 				className={cn(
 					"flex w-full relative rounded-none outline outline-1",
@@ -69,14 +80,15 @@ export function AbstractNode({
 						borderWidth: 0,
 						left: 10,
 					}}
+					isConnectable={false}
 				/>
-				<EdgeButton
+				{/* <EdgeButton
 					direction={reverse ? "left" : "right"}
 					index={0}
 					id={id}
 					disabled={true}
-				/>
-				<div className="w-10 h-[40px] border bg-white flex items-center justify-center">
+				/> */}
+				<div className="w-10 h-[40px] p-1 border bg-white flex items-center justify-center">
 					<div
 						className={cn(
 							"rounded  w-[30px] h-[30px] flex items-center justify-center p-1",
@@ -94,13 +106,14 @@ export function AbstractNode({
 					direction={reverse ? "left" : "right"}
 					index={1}
 					id={id}
-					active={active}
 					disabled={disabled}
+					hasChildren={hasChildren}
 				/>
 				<Handle
 					type="source"
 					position={reverse ? Position.Left : Position.Right}
 					id={`${id}-source`}
+					isConnectable={false}
 					style={{
 						background: "none",
 						borderRadius: 0,
