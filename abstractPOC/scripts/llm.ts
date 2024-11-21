@@ -1,13 +1,13 @@
-import { hasReference, type inputList } from "./llm";
-import { handleFile } from "./parsers/root.handler";
-import { exportJson } from "./utils/exportJson";
-
 // const out = handleFile("PythonQuest/import_test/main.py");
 
+import { hasReference, runLLM, type inputList } from "../src/llm";
+import { handleFile } from "../src/parsers/root.handler";
+import { exportJson } from "../src/utils/exportJson";
+
 const flowInput = handleFile({
-	rootPath: "PythonQuest/minGPT",
-	currentPath: "PythonQuest/minGPT",
-	fileName: "chargpt.py",
+	rootPath: "python-code/snake",
+	currentPath: "python-code/snake",
+	fileName: "snake.py",
 });
 
 const input: inputList = {
@@ -23,4 +23,6 @@ const input: inputList = {
 		),
 };
 
-exportJson("ref_test", input);
+const output = await runLLM(input);
+
+exportJson("output", output);

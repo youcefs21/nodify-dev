@@ -53,7 +53,7 @@ export type inputList = {
 	references: referenceItem[];
 };
 
-async function main(input: inputList) {
+export async function runLLM(input: inputList) {
 	const chatCompletion = await openai.chat.completions.create({
 		messages: [
 			{
@@ -121,6 +121,7 @@ Note:
 			},
 		],
 		model: "gpt-4o",
+		temperature: 0,
 		response_format: {
 			type: "json_object",
 		},
@@ -135,7 +136,7 @@ Note:
 		console.error(parsed.error);
 		return;
 	}
-	if (output) exportJson("llm_output", parsed.data.output);
+	return parsed.data.output;
 }
 
 export function hasReference(block: inputItem, refID: number): boolean {
