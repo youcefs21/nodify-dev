@@ -31,7 +31,7 @@ export function EdgeButton({ direction, id, hasChildren }: EdgeButtonProps) {
 	// if direction is left, swap the index
 	return (
 		<button
-			className="w-[20px] border border-border bg-white flex items-center justify-center"
+			className="w-[20px] box-border border border-border bg-white flex items-center justify-center"
 			type="button"
 			disabled={!hasChildren}
 			onClick={() => {
@@ -60,69 +60,66 @@ export function AbstractNode({
 	data: { label, id, hasChildren, disabled, reversed: reverse },
 	Icon,
 	className,
-	children,
 }: NodeProps) {
 	return (
-		<div className="bg-white font-mono text-xs flex-1 max-h-[40px] min-h-[40px] max-w-[260px]">
-			<div
-				className={cn(
-					"flex w-full relative rounded-none outline outline-1",
-					reverse ? "flex-row-reverse" : "",
-				)}
-			>
-				<Handle
-					type="target"
-					position={reverse ? Position.Right : Position.Left}
-					id={`${id}-target`}
-					style={{
-						background: "none",
-						borderRadius: 0,
-						borderWidth: 0,
-						left: 10,
-					}}
-					isConnectable={false}
-				/>
-				{/* <EdgeButton
+		<div
+			className={cn(
+				"bg-white font-mono text-xs flex-1 max-h-[40px] min-h-[40px] max-w-[260px]",
+				"flex w-full relative rounded-none box-border border-x border-b border-black",
+				reverse ? "flex-row-reverse" : "",
+			)}
+		>
+			<Handle
+				type="target"
+				position={reverse ? Position.Right : Position.Left}
+				id={`${id}-target`}
+				style={{
+					background: "none",
+					borderRadius: 0,
+					borderWidth: 0,
+					left: 10,
+				}}
+				isConnectable={false}
+			/>
+			{/* <EdgeButton
 					direction={reverse ? "left" : "right"}
 					index={0}
 					id={id}
 					disabled={true}
 				/> */}
-				<div className="w-10 h-[40px] p-1 border bg-white flex items-center justify-center">
-					<div
-						className={cn(
-							"rounded  w-[30px] h-[30px] flex items-center justify-center p-1",
-							className,
-						)}
-					>
-						<Icon className="text-white" />
-					</div>
+			<div className="w-10 h-[40px] p-1 flex items-center justify-center">
+				<div
+					className={cn(
+						"rounded  w-[30px] h-[30px] flex items-center justify-center p-1",
+						className,
+					)}
+				>
+					<Icon className="text-white" />
 				</div>
-				<div className="h-[40px] w-full border bg-white flex items-center justify-center p-2">
-					{label}
-				</div>
-
-				<EdgeButton
-					direction={reverse ? "left" : "right"}
-					index={1}
-					id={id}
-					disabled={disabled}
-					hasChildren={hasChildren}
-				/>
-				<Handle
-					type="source"
-					position={reverse ? Position.Left : Position.Right}
-					id={`${id}-source`}
-					isConnectable={false}
-					style={{
-						background: "none",
-						borderRadius: 0,
-						borderWidth: 0,
-						right: 10,
-					}}
-				/>
 			</div>
-			{children ? <div className="outline outline-1">{children}</div> : null}
+			<div className="h-[40px] w-full flex items-center justify-center p-2">
+				{label}
+			</div>
+
+			<EdgeButton
+				direction={reverse ? "left" : "right"}
+				index={1}
+				id={id}
+				disabled={disabled}
+				hasChildren={hasChildren}
+			/>
+			<Handle
+				type="source"
+				position={reverse ? Position.Left : Position.Right}
+				id={`${id}-source`}
+				isConnectable={false}
+				style={{
+					background: "none",
+					borderRadius: 0,
+					borderWidth: 0,
+					right: 10,
+				}}
+			/>
 		</div>
 	);
 }

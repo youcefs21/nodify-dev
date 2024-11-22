@@ -1,10 +1,8 @@
 import { type CustomData, nodeTypes } from "./nodes.schema";
-import { AbstractNode } from "./AbstractNode";
-import { Variable } from "lucide-react";
 
 export function StackedNodes({ data }: { data: CustomData }) {
 	return (
-		<div className="bg-transparent rounded-lg p-2 overflow-hidden">
+		<div className="bg-transparent rounded-lg p-3">
 			{(() => {
 				if (data.id === "-2") return null;
 
@@ -21,15 +19,21 @@ export function StackedNodes({ data }: { data: CustomData }) {
 				} satisfies CustomData;
 
 				const Component = nodeTypes[nodeData.type];
-				return <Component key={nodeData.id} data={nodeData} />;
+				return (
+					<div key={nodeData.id} className="border-t border-black box-border">
+						<Component data={nodeData} />
+					</div>
+				);
 			})()}
-			<div className="pl-4 flex flex-col">
-				{data.children.map((n) => {
-					const Component = nodeTypes[n.type];
+			{data.children.map((n) => {
+				const Component = nodeTypes[n.type];
 
-					return <Component key={n.id} data={n} />;
-				})}
-			</div>
+				return (
+					<div key={n.id} className="pl-4">
+						<Component data={n} />
+					</div>
+				);
+			})}
 		</div>
 	);
 }
