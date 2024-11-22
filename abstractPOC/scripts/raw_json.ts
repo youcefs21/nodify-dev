@@ -4,10 +4,11 @@ import { hasReference, type inputList } from "../src/llm";
 import { handleFile } from "../src/parsers/root.handler";
 import { exportJson } from "../src/utils/exportJson";
 
+const path = "python-code/minGPT";
 const flowInput = handleFile({
-	rootPath: "python-code/snake",
-	currentPath: "python-code/snake",
-	fileName: "snake.py",
+	rootPath: path,
+	currentPath: path,
+	fileName: "chargpt.py",
 });
 
 const input: inputList = {

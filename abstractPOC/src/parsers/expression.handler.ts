@@ -102,25 +102,6 @@ export function handleExpression(node: SgNode, scope: Scope): Reference[] {
 			const identifier = node
 				.children()
 				.find((x) => x.kind() === "identifier" || x.kind() === "attribute");
-			// This is what an attribute looks like
-			// {
-			// 	kind: "attribute",
-			// 	text: "turtle.Screen",
-			// 	children: [
-			// 		{
-			// 			kind: "identifier",
-			// 			text: "turtle",
-			// 		},
-			// 		{
-			// 			kind: ".",
-			// 			text: ".",
-			// 		},
-			// 		{
-			// 			kind: "identifier",
-			// 			text: "Screen",
-			// 		},
-			// 	],
-			// };
 			if (!identifier) {
 				console.error(
 					"No identifier or attribute found for call",

@@ -24,9 +24,9 @@ export function EdgeButton({ direction, id, hasChildren }: EdgeButtonProps) {
 	const realDirection = useMemo(() => {
 		const isExpanded = expanded.get(id);
 		if (direction === "left") {
-			return isExpanded ? "right" : "left";
+			return isExpanded ? "left" : "right";
 		}
-		return isExpanded ? "left" : "right";
+		return isExpanded ? "right" : "left";
 	}, [expanded, id, direction]);
 	// if direction is left, swap the index
 	return (
