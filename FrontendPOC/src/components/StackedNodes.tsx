@@ -1,6 +1,4 @@
 import { type CustomData, nodeTypes } from "./nodes.schema";
-import { AbstractNode } from "./AbstractNode";
-import { Variable } from "lucide-react";
 
 export function StackedNodes({ data }: { data: CustomData }) {
 	return (
