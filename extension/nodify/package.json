@@ -6,16 +6,31 @@
 	"engines": {
 		"vscode": "^1.22.0"
 	},
-	"categories": ["Other"],
-	"activationEvents": [],
+	"categories": ["Programming Languages", "Other"],
+	"activationEvents": ["onLanguage:python"],
 	"main": "./dist/extension.js",
 	"contributes": {
 		"commands": [
 			{
 				"command": "nodify.helloWorld",
 				"title": "Hello World"
+			},
+			{
+				"command": "nodify.analyzePythonAST",
+				"title": "Analyze Python AST"
 			}
-		]
+		],
+		"configuration": {
+			"type": "object",
+			"title": "Python AST Analysis",
+			"properties": {
+				"nodify.pythonPath": {
+					"type": "string",
+					"default": "python",
+					"description": "Path to Python interpreter"
+				}
+			}
+		}
 	},
 	"scripts": {
 		"vscode:prepublish": "bun run package",
@@ -31,6 +46,9 @@
 		"lint": "eslint src",
 		"format": "bunx biome format --write .",
 		"test": "vscode-test"
+	},
+	"dependencies": {
+		"vscode-languageclient": "^9.0.1"
 	},
 	"devDependencies": {
 		"@biomejs/biome": "1.9.4",
