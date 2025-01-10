@@ -14,6 +14,15 @@ interface SymbolInfo {
 	references: vscode.Location[];
 }
 
+interface ImportInfo {
+	name: string;
+	fromModule?: string;
+	alias?: string;
+	location: vscode.Location;
+	definition?: vscode.Location;
+	resolvedSymbols?: vscode.SymbolInformation[];
+}
+
 export async function getPythonExtension(): Promise<
 	vscode.Extension<PythonExtensionApi> | undefined
 > {
@@ -26,6 +35,89 @@ export async function getPythonExtension(): Promise<
 		return extension;
 	}
 	return undefined;
+}
+
+async function findImports(
+	document: vscode.TextDocument,
+): Promise<ImportInfo[]> {
+	const imports: ImportInfo[] = [];
+	const text = document.getText();
+
+	// Find all import statements using regex
+	const importRegex =
+		/^(?:from\s+([\w.]+)\s+)?import\s+((?:[\w.]+(?:\s+as\s+\w+)?(?:\s*,\s*)?)+)/gm;
+
+	for (
+		let match = importRegex.exec(text);
+		match !== null;
+		match = importRegex.exec(text)
+	) {
+		const fromModule = match[1];
+		const importList = match[2].split(",").map((i) => i.trim());
+
+		for (const importItem of importList) {
+			const [name, alias] = importItem.split(/\s+as\s+/).map((s) => s.trim());
+			const startPos = document.positionAt(match.index);
+			const endPos = document.positionAt(match.index + match[0].length);
+
+			// Find the exact position of the imported symbol name in the text
+			const fullText = match[0];
+			const nameIndex = fullText.indexOf(name);
+			if (nameIndex === -1) {
+				continue;
+			}
+
+			const symbolPos = document.positionAt(match.index + nameIndex);
+
+			// Try to find the actual definition of the imported symbol
+			let definition: vscode.Location | undefined;
+			try {
+				// If it's a from import, we need to look up the full path
+				const lookupName = fromModule ? `${fromModule}.${name}` : name;
+
+				// First try to get definition at the symbol position
+				const definitions = await vscode.commands.executeCommand<
+					vscode.Location[]
+				>("vscode.executeDefinitionProvider", document.uri, symbolPos);
+
+				if (!definitions?.length) {
+					// If that fails, try to find it in workspace symbols
+					const workspaceSymbols = await vscode.commands.executeCommand<
+						vscode.SymbolInformation[]
+					>("vscode.executeWorkspaceSymbolProvider", lookupName);
+
+					// Filter to exact matches only
+					const exactMatches = workspaceSymbols?.filter(
+						(s) =>
+							s.name === name ||
+							s.name === lookupName ||
+							s.name.endsWith(`.${name}`),
+					);
+
+					if (exactMatches?.length) {
+						definition = exactMatches[0].location;
+					}
+				} else {
+					definition = definitions[0];
+				}
+			} catch (e) {
+				console.warn(`Failed to get definition for import ${name}:`, e);
+			}
+
+			imports.push({
+				name,
+				fromModule,
+				alias,
+				location: new vscode.Location(
+					document.uri,
+					new vscode.Range(startPos, endPos),
+				),
+				definition,
+			});
+		}
+	}
+
+	return imports;
 }
 
 export async function analyzePythonAST(document: vscode.TextDocument) {
@@ -41,10 +133,14 @@ export async function analyzePythonAST(document: vscode.TextDocument) {
 			document.uri,
 		);
 
+		// Get imports (already analyzed in findImports)
+		const imports = await findImports(document);
+
 		// Create a tree-like structure that resembles an AST
 		const ast = {
 			type: "Module",
 			path: document.uri.fsPath,
+			imports,
 			symbols: symbols || [],
 			semanticTokens: tokens || null,
 			definitions: [] as SymbolInfo[],
