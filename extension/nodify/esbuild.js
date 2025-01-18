@@ -14,12 +14,12 @@ const esbuildProblemMatcherPlugin = {
 			console.log("[watch] build started");
 		});
 		build.onEnd((result) => {
-			result.errors.forEach(({ text, location }) => {
+			for (const { text, location } of result.errors) {
 				console.error(`✘ [ERROR] ${text}`);
 				console.error(
 					`    ${location.file}:${location.line}:${location.column}:`,
 				);
-			});
+			}
 			console.log("[watch] build finished");
 		});
 	},
@@ -35,8 +35,11 @@ async function main() {
 		sourcesContent: false,
 		platform: "node",
 		outfile: "dist/extension.js",
-		external: ["vscode"],
+		external: ["vscode", "*.node"],
 		logLevel: "silent",
+		loader: {
+			".node": "copy",
+		},
 		plugins: [
 			/* add to the end of plugins array */
 			esbuildProblemMatcherPlugin,

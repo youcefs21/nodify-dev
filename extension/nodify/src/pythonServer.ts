@@ -1,10 +1,6 @@
 import * as vscode from "vscode";
-
-interface PythonExtensionApi {
-	environments: {
-		getActiveEnvironmentPath: () => Promise<{ path: string }>;
-	};
-}
+import { getDefinition, getSymbols } from "./vsc-commands/builtin";
+import { getAST } from "./ast/flow";
 
 interface SymbolInfo {
 	name: string;
@@ -21,20 +17,6 @@ interface ImportInfo {
 	location: vscode.Location;
 	definition?: vscode.Location;
 	resolvedSymbols?: vscode.SymbolInformation[];
-}
-
-export async function getPythonExtension(): Promise<
-	vscode.Extension<PythonExtensionApi> | undefined
-> {
-	const extension =
-		vscode.extensions.getExtension<PythonExtensionApi>("ms-python.python");
-	if (extension) {
-		if (!extension.isActive) {
-			await extension.activate();
-		}
-		return extension;
-	}
-	return undefined;
 }
 
 async function findImports(
@@ -121,17 +103,13 @@ async function findImports(
 }
 
 export async function analyzePythonAST(document: vscode.TextDocument) {
+	const ast = getAST(document);
+	console.log("ast: ", ast);
 	try {
 		// Get document symbols as a tree-like structure
-		const symbols = await vscode.commands.executeCommand<
-			vscode.DocumentSymbol[]
-		>("vscode.executeDocumentSymbolProvider", document.uri);
-
-		// Get semantic tokens
-		const tokens = await vscode.commands.executeCommand<vscode.SemanticTokens>(
-			"vscode.provideDocumentSemanticTokens",
-			document.uri,
-		);
+		// this basically gets the names of all things defined like functions, classes, etc.
+		// children are symbols defined inside the scope of the parent symbol
+		const symbols = await getSymbols(document.uri);
 
 		// Get imports (already analyzed in findImports)
 		const imports = await findImports(document);
@@ -142,17 +120,19 @@ export async function analyzePythonAST(document: vscode.TextDocument) {
 			path: document.uri.fsPath,
 			imports,
 			symbols: symbols || [],
-			semanticTokens: tokens || null,
 			definitions: [] as SymbolInfo[],
 		};
+
+		//
 
 		// Get all symbol locations
 		for (const symbol of symbols || []) {
 			try {
 				// Get definitions for each symbol
-				const definitions = await vscode.commands.executeCommand<
-					vscode.Location[]
-				>("vscode.executeDefinitionProvider", document.uri, symbol.range.start);
+				const definitions = await getDefinition(
+					document.uri,
+					symbol.range.start,
+				);
 
 				// Get references for each symbol
 				const references = await vscode.commands.executeCommand<

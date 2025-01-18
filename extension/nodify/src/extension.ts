@@ -1,7 +1,27 @@
 // The module 'vscode' contains the VS Code extensibility API
 // Import the module and reference it with the alias vscode in your code below
 import * as vscode from "vscode";
-import { analyzePythonAST, getPythonExtension } from "./pythonServer";
+import { analyzePythonAST } from "./pythonServer";
+
+interface PythonExtensionApi {
+	environments: {
+		getActiveEnvironmentPath: () => Promise<{ path: string }>;
+	};
+}
+
+export async function getPythonExtension(): Promise<
+	vscode.Extension<PythonExtensionApi> | undefined
+> {
+	const extension =
+		vscode.extensions.getExtension<PythonExtensionApi>("ms-python.python");
+	if (extension) {
+		if (!extension.isActive) {
+			await extension.activate();
+		}
+		return extension;
+	}
+	return undefined;
+}
 
 // This method is called when your extension is activated
 // Your extension is activated the very first time the command is executed

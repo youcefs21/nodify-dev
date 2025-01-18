@@ -48,6 +48,7 @@
 		"test": "vscode-test"
 	},
 	"dependencies": {
+		"@ast-grep/napi": "^0.33.1",
 		"vscode-languageclient": "^9.0.1"
 	},
 	"devDependencies": {
