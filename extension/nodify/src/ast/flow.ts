@@ -1,7 +1,6 @@
 import * as vscode from "vscode";
 import { parse, Lang, type SgNode, type SgRoot } from "@ast-grep/napi";
 import { type FlowKind, flowKinds } from "./ast.schema";
-import fs from "node:fs";
 import { handleExpression } from "./expressions";
 
 export type Reference = {
@@ -10,21 +9,19 @@ export type Reference = {
 	file: vscode.Uri;
 };
 
-export type LLMBlock = {
+export type CodeBlock = {
 	id: number;
 	text: string;
+	location: vscode.Range;
+	file: vscode.Uri;
 	references?: Reference[];
-	children?: LLMBlock[];
+	children?: CodeBlock[];
 };
 
 export async function getAST(document: vscode.TextDocument) {
 	const text = document.getText();
 	const root = parse(Lang.Python, text).root();
 	const flows = await handleFlows(root.children(), document);
-	// save the flows to a file
-	const filePath = `${vscode.workspace.workspaceFolders?.[0]?.uri.fsPath}/flows.json`;
-	console.log("saving flows to file: ", filePath);
-	fs.writeFileSync(filePath, JSON.stringify(flows, null, 2));
 	return flows;
 }
 
@@ -33,7 +30,7 @@ async function handleNodeWithBlock(
 	id: number,
 	replaceWith: string,
 	document: vscode.TextDocument,
-): Promise<LLMBlock> {
+): Promise<CodeBlock> {
 	const block = node.children().find((x) => x.kind() === "block");
 	if (!block || block.kind() !== "block") {
 		throw new Error("NoBlockFound");
@@ -43,7 +40,22 @@ async function handleNodeWithBlock(
 
 	const edit = block.replace(replaceWith);
 	const text = node.commitEdits([edit]);
-	return { id, text, children };
+	return {
+		id,
+		text,
+		location: getRange(node),
+		file: document.uri,
+		children,
+	};
+}
+
+function getRange(node: SgNode) {
+	const raw_range = node.range();
+	const range = new vscode.Range(
+		new vscode.Position(raw_range.start.line, raw_range.start.column),
+		new vscode.Position(raw_range.end.line, raw_range.end.column),
+	);
+	return range;
 }
 
 export async function handleFlow(
@@ -51,7 +63,7 @@ export async function handleFlow(
 	kind: FlowKind,
 	id: number,
 	document: vscode.TextDocument,
-): Promise<LLMBlock> {
+): Promise<CodeBlock> {
 	switch (kind) {
 		case "if_statement": {
 			return handleNodeWithBlock(node, id, "<if_body/>", document);
@@ -72,11 +84,18 @@ export async function handleFlow(
 			}
 			const refs = await handleExpression(children[0], document);
 
+			const location = getRange(node);
 			if (refs.length === 0) {
-				return { id, text: node.text() };
+				return { id, text: node.text(), location, file: document.uri };
 			}
 
-			return { id, text: node.text(), references: refs };
+			return {
+				id,
+				text: node.text(),
+				location,
+				file: document.uri,
+				references: refs,
+			};
 		}
 
 		default: {
@@ -90,7 +109,7 @@ export async function handleFlows(
 	nodes: SgNode[],
 	document: vscode.TextDocument,
 ) {
-	const blocks: LLMBlock[] = [];
+	const blocks: CodeBlock[] = [];
 
 	for (let id = 0; id < nodes.length; id++) {
 		const kind = nodes[id].kind();
