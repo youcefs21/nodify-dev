@@ -47,8 +47,10 @@ export async function activate(context: vscode.ExtensionContext) {
 		},
 	);
 
-	// Register webview command
+	// !! anthony !!
 	// TODO: webview should also open using [CodeLens](https://code.visualstudio.com/api/references/vscode-api#CodeLens)
+
+	// Register webview command
 	const webviewCommand = vscode.commands.registerCommand(
 		"nodify.openWebview",
 		() => {
