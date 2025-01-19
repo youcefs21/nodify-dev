@@ -103,7 +103,7 @@ async function findImports(
 }
 
 export async function analyzePythonAST(document: vscode.TextDocument) {
-	const ast = getAST(document);
+	const ast = await getAST(document);
 	console.log("ast: ", ast);
 	try {
 		// Get document symbols as a tree-like structure

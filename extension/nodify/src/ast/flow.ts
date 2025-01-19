@@ -17,10 +17,10 @@ export type LLMBlock = {
 	children?: LLMBlock[];
 };
 
-export function getAST(document: vscode.TextDocument) {
+export async function getAST(document: vscode.TextDocument) {
 	const text = document.getText();
 	const root = parse(Lang.Python, text).root();
-	const flows = handleFlows(root.children(), document);
+	const flows = await handleFlows(root.children(), document);
 	// save the flows to a file
 	const filePath = `${vscode.workspace.workspaceFolders?.[0]?.uri.fsPath}/flows.json`;
 	console.log("saving flows to file: ", filePath);
@@ -28,30 +28,30 @@ export function getAST(document: vscode.TextDocument) {
 	return flows;
 }
 
-function handleNodeWithBlock(
+async function handleNodeWithBlock(
 	node: SgNode,
 	id: number,
 	replaceWith: string,
 	document: vscode.TextDocument,
-): LLMBlock {
+): Promise<LLMBlock> {
 	const block = node.children().find((x) => x.kind() === "block");
 	if (!block || block.kind() !== "block") {
 		throw new Error("NoBlockFound");
 	}
 
-	const children = handleFlows(block.children(), document);
+	const children = await handleFlows(block.children(), document);
 
 	const edit = block.replace(replaceWith);
 	const text = node.commitEdits([edit]);
 	return { id, text, children };
 }
 
-export function handleFlow(
+export async function handleFlow(
 	node: SgNode,
 	kind: FlowKind,
 	id: number,
 	document: vscode.TextDocument,
-): LLMBlock {
+): Promise<LLMBlock> {
 	switch (kind) {
 		case "if_statement": {
 			return handleNodeWithBlock(node, id, "<if_body/>", document);
@@ -70,7 +70,7 @@ export function handleFlow(
 			if (children.length !== 1) {
 				throw new Error("InvalidExpressionStatement");
 			}
-			const refs = handleExpression(children[0], document);
+			const refs = await handleExpression(children[0], document);
 
 			if (refs.length === 0) {
 				return { id, text: node.text() };
@@ -86,14 +86,17 @@ export function handleFlow(
 	}
 }
 
-export function handleFlows(nodes: SgNode[], document: vscode.TextDocument) {
+export async function handleFlows(
+	nodes: SgNode[],
+	document: vscode.TextDocument,
+) {
 	const blocks: LLMBlock[] = [];
 
 	for (let id = 0; id < nodes.length; id++) {
 		const kind = nodes[id].kind();
 		// handle flows
 		if (flowKinds.some((flowKind) => flowKind === kind)) {
-			blocks.push(handleFlow(nodes[id], kind as FlowKind, id, document));
+			blocks.push(await handleFlow(nodes[id], kind as FlowKind, id, document));
 		}
 	}
 
