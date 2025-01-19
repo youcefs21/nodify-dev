@@ -30,6 +30,23 @@ export async function getDefinition(
 }
 
 /**
+ * Get references for a given URI and position.
+ * @param uri - Uri of a text document.
+ * @param position - A position in a text document. You can make a position object with `new vscode.Position(line, character)`
+ * @returns A promise that resolves to an array of Location instances.
+ */
+export async function getReferences(
+	uri: vscode.Uri,
+	position: vscode.Position,
+) {
+	return await vscode.commands.executeCommand<vscode.Location[]>(
+		"vscode.executeReferenceProvider",
+		uri,
+		position,
+	);
+}
+
+/**
  * Provide semantic tokens legend for a document.
  * @param uri - Uri of a text document.
  * @returns A promise that resolves to SemanticTokensLegend.

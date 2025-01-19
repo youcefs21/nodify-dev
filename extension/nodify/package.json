@@ -18,6 +18,10 @@
 			{
 				"command": "nodify.analyzePythonAST",
 				"title": "Analyze Python AST"
+			},
+			{
+				"command": "nodify.openWebview",
+				"title": "Open Nodify Webview"
 			}
 		],
 		"configuration": {
@@ -38,7 +42,8 @@
 		"watch": "npm-run-all -p watch:*",
 		"watch:esbuild": "node esbuild.js --watch",
 		"watch:tsc": "tsc --noEmit --watch --project tsconfig.json",
-		"package": "bun run check-types && bun run lint && node esbuild.js --production",
+		"package": "bun run build-webview && bun run check-types && bun run lint && node esbuild.js --production",
+		"build-webview": "cd webview-ui && bun install && bun run build",
 		"compile-tests": "tsc -p . --outDir out",
 		"watch-tests": "tsc -p . -w --outDir out",
 		"pretest": "bun run compile-tests && bun run compile && bun run lint",
