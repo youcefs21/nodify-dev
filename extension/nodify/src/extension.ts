@@ -48,6 +48,7 @@ export async function activate(context: vscode.ExtensionContext) {
 	);
 
 	// Register webview command
+	// TODO: webview should also open using [CodeLens](https://code.visualstudio.com/api/references/vscode-api#CodeLens)
 	const webviewCommand = vscode.commands.registerCommand(
 		"nodify.openWebview",
 		() => {
@@ -88,13 +89,27 @@ export async function activate(context: vscode.ExtensionContext) {
 
 			// Handle messages from the webview
 			panel.webview.onDidReceiveMessage(
-				(message) => {
+				// TODO: we should add some type safety to both the frontend and backend message receivers/senders
+				async (message) => {
 					switch (message.type) {
-						case "hello":
+						// sent when the webview is loaded
+						case "hello": {
 							vscode.window.showInformationMessage(message.value);
 							// Send a message back to the webview
-							panel.webview.postMessage("Hello from the extension!");
+							const editor = vscode.window.activeTextEditor;
+							if (editor && editor.document.languageId === "python") {
+								const flows = await analyzePythonAST(editor.document);
+								panel.webview.postMessage({
+									type: "flows",
+									value: flows,
+								});
+							} else {
+								vscode.window.showErrorMessage(
+									"Please open a Python file first",
+								);
+							}
 							return;
+						}
 					}
 				},
 				undefined,
