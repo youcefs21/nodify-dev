@@ -1,5 +1,5 @@
 import type { SgNode } from "@ast-grep/napi";
-import type { Reference } from "./flow";
+import type { CodeBlock, Reference } from "./flow";
 import * as vscode from "vscode";
 import { getDefinition } from "../vsc-commands/builtin";
 
@@ -162,4 +162,15 @@ export async function handleExpression(
 	// 	`Unknown Expression Type (no switch statements activated): ${node.kind()}`,
 	// );
 	return [];
+}
+
+export function extractCodeBlock(reference: Reference, id: number): CodeBlock {
+
+    return {
+        id,
+        text: reference.symbol,
+        location: reference.location.range,
+        file: reference.file,
+        references: [reference]
+    };
 }
