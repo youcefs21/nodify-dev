@@ -165,12 +165,11 @@ export async function handleExpression(
 }
 
 export function extractCodeBlock(reference: Reference, id: number): CodeBlock {
-
-    return {
-        id,
-        text: reference.symbol,
-        location: reference.location.range,
-        file: reference.file,
-        references: [reference]
-    };
+	return {
+		id,
+		text: reference.symbol,
+		location: reference.location.range,
+		file: reference.file,
+		references: [reference],
+	};
 }

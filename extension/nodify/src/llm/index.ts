@@ -1,5 +1,6 @@
 import OpenAI from "openai";
 import { z } from "zod";
+import { outputSchema, type inputList } from "./llm.types";
 
 const openai = new OpenAI({
 	baseURL: "http://100.89.180.124:11434/v1",
@@ -7,36 +8,6 @@ const openai = new OpenAI({
 });
 
 const model = "phi4:14b-q8_0";
-
-// output type
-const baseItemSchema = z.object({
-	groupID: z.number(),
-	label: z.string(),
-	idRange: z.tuple([z.number(), z.number()]),
-	type: z.string(),
-});
-
-type Item = z.infer<typeof baseItemSchema> & {
-	children?: Item[];
-};
-
-const itemSchema: z.ZodType<Item> = baseItemSchema.extend({
-	children: z.lazy(() => itemSchema.array()).optional(),
-});
-
-const outputSchema = z.object({
-	output: z.array(itemSchema),
-});
-
-// Input type
-export type inputItem = {
-	id: number;
-	text: string;
-	children?: inputItem[];
-};
-export type inputList = {
-	input: inputItem[];
-};
 
 export async function runLLM(input: inputList) {
 	const chatCompletion = await openai.chat.completions.create({
@@ -65,7 +36,7 @@ type outputItem = {
   // an incrementing id for each group of code
   groupID: number;           
 
-  // a short description 2-6 word description of the code
+  // a short description 2-8 word description of the code
   label: string;              
 
   // the range of ids that this code represents, from the input list

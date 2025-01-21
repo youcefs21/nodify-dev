@@ -23,6 +23,56 @@ export async function getPythonExtension(): Promise<
 	return undefined;
 }
 
+export function createWebview(
+	context: vscode.ExtensionContext,
+	onClientMessage: (message: any, panel: vscode.WebviewPanel) => void,
+) {
+	const panel = vscode.window.createWebviewPanel(
+		"nodifyWebview",
+		"Nodify",
+		vscode.ViewColumn.One,
+		{
+			enableScripts: true,
+			localResourceRoots: [
+				vscode.Uri.joinPath(context.extensionUri, "webview-ui/dist"),
+			],
+		},
+	);
+
+	// Get path to resource on disk
+	const reactDistPath = vscode.Uri.joinPath(
+		context.extensionUri,
+		"webview-ui/dist",
+	);
+
+	// And get the special URI to use with the webview
+	const webviewUri = panel.webview.asWebviewUri(reactDistPath);
+
+	panel.webview.html = `<!DOCTYPE html>
+			<html lang="en">
+			<head>
+				<meta charset="UTF-8" />
+				<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+				<title>Nodify</title>
+				<script type="module" crossorigin src="${webviewUri}/assets/index.js"></script>
+				<link rel="stylesheet" href="${webviewUri}/assets/index.css">
+			</head>
+			<body>
+				<div id="root"></div>
+			</body>
+			</html>`;
+
+	// Handle messages from the webview
+	panel.webview.onDidReceiveMessage(
+		// TODO: we should add some type safety to both the frontend and backend message receivers/senders
+		async (message) => {
+			onClientMessage(message, panel);
+		},
+		undefined,
+		context.subscriptions,
+	);
+}
+
 // This method is called when your extension is activated
 // Your extension is activated the very first time the command is executed
 export async function activate(context: vscode.ExtensionContext) {
@@ -53,70 +103,27 @@ export async function activate(context: vscode.ExtensionContext) {
 	// Register webview command
 	const webviewCommand = vscode.commands.registerCommand(
 		"nodify.openWebview",
-		() => {
-			const panel = vscode.window.createWebviewPanel(
-				"nodifyWebview",
-				"Nodify",
-				vscode.ViewColumn.One,
-				{
-					enableScripts: true,
-					localResourceRoots: [
-						vscode.Uri.joinPath(context.extensionUri, "webview-ui/dist"),
-					],
-				},
-			);
-
-			// Get path to resource on disk
-			const reactDistPath = vscode.Uri.joinPath(
-				context.extensionUri,
-				"webview-ui/dist",
-			);
-
-			// And get the special URI to use with the webview
-			const webviewUri = panel.webview.asWebviewUri(reactDistPath);
-
-			panel.webview.html = `<!DOCTYPE html>
-			<html lang="en">
-			<head>
-				<meta charset="UTF-8" />
-				<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-				<title>Nodify</title>
-				<script type="module" crossorigin src="${webviewUri}/assets/index.js"></script>
-				<link rel="stylesheet" href="${webviewUri}/assets/index.css">
-			</head>
-			<body>
-				<div id="root"></div>
-			</body>
-			</html>`;
-
-			// Handle messages from the webview
-			panel.webview.onDidReceiveMessage(
-				// TODO: we should add some type safety to both the frontend and backend message receivers/senders
-				async (message) => {
-					switch (message.type) {
-						// sent when the webview is loaded
-						case "hello": {
-							vscode.window.showInformationMessage(message.value);
-							// Send a message back to the webview
-							const editor = vscode.window.activeTextEditor;
-							if (editor && editor.document.languageId === "python") {
-								const flows = await analyzePythonAST(editor.document);
-								panel.webview.postMessage({
-									type: "flows",
-									value: flows,
-								});
-							} else {
-								vscode.window.showErrorMessage(
-									"Please open a Python file first",
-								);
-							}
-							return;
+		async () => {
+			createWebview(context, async (message, panel) => {
+				switch (message.type) {
+					// sent when the webview is loaded
+					case "hello": {
+						vscode.window.showInformationMessage(message.value);
+						// Send a message back to the webview
+						const editor = vscode.window.activeTextEditor;
+						if (editor && editor.document.languageId === "python") {
+							const flows = await analyzePythonAST(editor.document);
+							panel.webview.postMessage({
+								type: "flows",
+								value: flows,
+							});
+						} else {
+							vscode.window.showErrorMessage("Please open a Python file first");
 						}
+						return;
 					}
-				},
-				undefined,
-				context.subscriptions,
-			);
+				}
+			});
 		},
 	);
 
