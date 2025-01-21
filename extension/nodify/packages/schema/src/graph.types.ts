@@ -18,6 +18,7 @@ export type NodeProps = {
 	reversed: boolean;
 	active: boolean;
 	disabled: boolean;
+	expanded: boolean;
 	icon: IconProps["name"];
 	iconBackgroundColor: string;
 };

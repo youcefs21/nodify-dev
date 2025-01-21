@@ -6,6 +6,10 @@ import type {
 	ClientToServerEvents,
 	ServerToClientEvents,
 } from "@nodify/schema";
+import {
+	AbstractionLevelOneNodeMapper,
+	flattenCustomNodes,
+} from "./graph/NodeCreater";
 
 interface PythonExtensionApi {
 	environments: {
@@ -111,7 +115,7 @@ export async function activate(context: vscode.ExtensionContext) {
 	const webviewCommand = vscode.commands.registerCommand(
 		"nodify.openWebview",
 		async () => {
-			createWebview(context, async (message, postMessage, panel) => {
+			createWebview(context, async (message, postMessage) => {
 				switch (message.type) {
 					// sent when the webview is loaded
 					case "hello": {
@@ -120,9 +124,15 @@ export async function activate(context: vscode.ExtensionContext) {
 						const editor = vscode.window.activeTextEditor;
 						if (editor && editor.document.languageId === "python") {
 							const flows = await analyzePythonAST(editor.document);
+							const expanded = new Map<string, boolean>([
+								["-1", true],
+								["-2", true],
+							]);
 							postMessage({
-								type: "flows",
-								value: flows ?? [],
+								type: "nodes",
+								value: flattenCustomNodes(
+									AbstractionLevelOneNodeMapper(flows, expanded),
+								),
 							});
 						} else {
 							vscode.window.showErrorMessage("Please open a Python file first");

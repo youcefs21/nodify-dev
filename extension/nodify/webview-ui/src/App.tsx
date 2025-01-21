@@ -1,7 +1,6 @@
 import { useEffect } from "react";
 import {
 	ReactFlow,
-	MiniMap,
 	Controls,
 	Background,
 	BackgroundVariant,
@@ -55,7 +54,14 @@ function App() {
 	};
 
 	return (
-		<div className="flex flex-1 w-screen h-screen overflow-hidden">
+		<div className="flex flex-1 w-[calc(100vw-3rem)] h-screen overflow-hidden">
+			<button
+				className="absolute z-40 p-2 text-white bg-black top-20 left-20"
+				type="button"
+				onClick={handleClick}
+			>
+				Click me
+			</button>
 			<div className="flex-grow">
 				<ReactFlow
 					nodes={renderedNodes}
@@ -73,7 +79,6 @@ function App() {
 					selectionMode={SelectionMode.Partial}
 				>
 					<Controls />
-					<MiniMap />
 					<Background variant={BackgroundVariant.Dots} gap={12} size={1} />
 				</ReactFlow>
 			</div>

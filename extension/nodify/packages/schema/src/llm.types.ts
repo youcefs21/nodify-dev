@@ -6,6 +6,7 @@ const baseItemSchema = z.object({
 	label: z.string(),
 	idRange: z.tuple([z.number(), z.number()]),
 	type: z.string(),
+	expanded: z.boolean().optional(),
 });
 
 const itemSchema: z.ZodType<LLMOutput> = baseItemSchema.extend({

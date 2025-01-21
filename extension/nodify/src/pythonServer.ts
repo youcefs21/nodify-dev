@@ -3,6 +3,7 @@ import { getAST, type CodeBlock } from "./ast/flow";
 import fs from "node:fs";
 import { runLLM } from "./llm";
 import type { inputItem, inputList } from "@nodify/schema";
+import { entryNode } from "./graph/NodeCreater";
 
 function cleanAST(ast: CodeBlock[]): inputItem[] {
 	// remove all children from the ast
@@ -26,5 +27,16 @@ export async function analyzePythonAST(document: vscode.TextDocument) {
 	// TODO: try reading the file first before even trying to analyze the AST
 	fs.writeFileSync(filePath, JSON.stringify(output, null, 2));
 
-	return output;
+	return [
+		{
+			...entryNode,
+			children: [
+				{
+					// biome-ignore lint/style/noNonNullAssertion: entryNode.children is not null
+					...entryNode.children![0],
+					children: output,
+				},
+			],
+		},
+	];
 }

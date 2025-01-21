@@ -1,6 +1,5 @@
 import type { Edge } from "@xyflow/react";
 import type { CustomNode } from "./src/graph.types";
-import type { LLMOutput } from "./src/llm.types";
 export * from "./src/llm.types";
 export * from "./src/graph.types";
 

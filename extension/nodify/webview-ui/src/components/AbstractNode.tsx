@@ -6,7 +6,6 @@ import {
 	type LucideIcon,
 } from "lucide-react";
 import { cn } from "../utils/cn";
-import { astExpandedAtom } from "../data/nodesAtom";
 import { useAtom } from "jotai";
 import { useMemo } from "react";
 import type { CustomData } from "@nodify/schema";
@@ -18,18 +17,22 @@ interface EdgeButtonProps {
 	index: number;
 	id: string;
 	hasChildren: boolean;
+	isExpanded: boolean;
 	disabled?: boolean | undefined;
 }
 
-export function EdgeButton({ direction, id, hasChildren }: EdgeButtonProps) {
-	const [expanded, setExpanded] = useAtom(astExpandedAtom);
+export function EdgeButton({
+	direction,
+	id,
+	hasChildren,
+	isExpanded,
+}: EdgeButtonProps) {
 	const realDirection = useMemo(() => {
-		const isExpanded = expanded.get(id);
 		if (direction === "left") {
 			return isExpanded ? "left" : "right";
 		}
 		return isExpanded ? "right" : "left";
-	}, [expanded, id, direction]);
+	}, [isExpanded, direction]);
 	// if direction is left, swap the index
 	return (
 		<button
@@ -37,7 +40,7 @@ export function EdgeButton({ direction, id, hasChildren }: EdgeButtonProps) {
 			type="button"
 			disabled={!hasChildren}
 			onClick={() => {
-				setExpanded((expanded) => expanded.set(id, !expanded.get(id)));
+				console.log("clicked");
 			}}
 		>
 			{hasChildren === false ? (
@@ -59,7 +62,14 @@ interface NodeProps {
 }
 
 export function AbstractNode({
-	data: { label, id, hasChildren, disabled, reversed: reverse },
+	data: {
+		label,
+		id,
+		hasChildren,
+		disabled,
+		reversed: reverse,
+		expanded: isExpanded,
+	},
 	iconName,
 	iconBackgroundColor,
 }: NodeProps) {
@@ -109,6 +119,7 @@ export function AbstractNode({
 				id={id}
 				disabled={disabled}
 				hasChildren={hasChildren}
+				isExpanded={isExpanded}
 			/>
 			<Handle
 				type="source"
