@@ -105,7 +105,9 @@ Note:
 	const output = chatCompletion.choices[0].message.content;
 	console.log(output);
 
-	if (!output) return;
+	if (!output) {
+		return;
+	}
 	const parsed = outputSchema.safeParse(JSON.parse(output));
 
 	if (!parsed.success) {

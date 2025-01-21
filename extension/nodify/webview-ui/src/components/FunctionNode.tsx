@@ -9,7 +9,6 @@ const FunctionNode = ({ data }: { data: CustomData }) => {
 			data={data}
 			Icon={SquareFunction} // Using ChevronRight as an example icon
 			className="bg-blue-500"
-			totalWidth={300}
 		/>
 	);
 };

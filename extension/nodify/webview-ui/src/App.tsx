@@ -11,12 +11,12 @@ import {
 	useNodesState,
 } from "@xyflow/react";
 
-import "@xyflow/react/dist/style.css";
+import "./reactflow.css";
 import { StackedNodes } from "./components/StackedNodes";
 
 function App() {
 	// TODO: type safety this
-	const [flows, setFlows] = useState<any>(null);
+	const [flows, setFlows] = useState([]);
 	const [renderedNodes, setNodes, onNodesChange] = useNodesState([]);
 	const [renderedEdges, setEdges, onEdgesChange] = useEdgesState([]);
 
@@ -51,7 +51,7 @@ function App() {
 	// TODO: match theming to vscode
 	// https://code.visualstudio.com/api/extension-guides/webview#theming-webview-content
 	return (
-		<div className="w-screen h-screen flex flex-1 overflow-hidden">
+		<div className="flex flex-1 w-screen h-screen overflow-hidden">
 			<div className="flex-grow">
 				<ReactFlow
 					nodes={renderedNodes}

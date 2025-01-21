@@ -9,7 +9,6 @@ const ExpressionNode = ({ data }: { data: CustomData }) => {
 			data={data}
 			Icon={Variable} // Using ChevronRight as an example icon
 			className="bg-zinc-500"
-			totalWidth={300}
 		/>
 	);
 };

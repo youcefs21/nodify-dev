@@ -9,7 +9,6 @@ const ExpressionNode = ({ data }: { data: CustomData }) => {
 			data={data}
 			Icon={Split} // Using ChevronRight as an example icon
 			className="bg-amber-500"
-			totalWidth={300}
 		/>
 	);
 };

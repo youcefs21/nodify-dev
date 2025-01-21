@@ -9,7 +9,6 @@ const EntryNode = ({ data }: { data: CustomData }) => {
 			data={data}
 			Icon={LogIn} // Using ChevronRight as an example icon
 			className="bg-lime-500"
-			totalWidth={300}
 		/>
 	);
 };

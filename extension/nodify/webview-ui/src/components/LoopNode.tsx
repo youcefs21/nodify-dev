@@ -9,7 +9,6 @@ const LoopNode = ({ data }: { data: CustomData }) => {
 			data={data}
 			Icon={Repeat2} // Using ChevronRight as an example icon
 			className="bg-teal-500"
-			totalWidth={300}
 		/>
 	);
 };

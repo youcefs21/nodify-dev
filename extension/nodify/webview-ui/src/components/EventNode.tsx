@@ -9,7 +9,6 @@ const EventNode = ({ data }: { data: CustomData }) => {
 			data={data}
 			Icon={Webhook} // Using ChevronRight as an example icon
 			className="bg-purple-500"
-			totalWidth={300}
 		/>
 	);
 };
