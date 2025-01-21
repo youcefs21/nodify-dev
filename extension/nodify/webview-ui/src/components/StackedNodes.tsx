@@ -1,36 +1,33 @@
-import { type CustomData, nodeTypes } from "./nodes.schema";
+import type { CustomData } from "@nodify/schema";
+import { AbstractNode } from "./AbstractNode";
 
 export function StackedNodes({ data }: { data: CustomData }) {
 	return (
-		<div className="bg-transparent rounded-lg p-3">
+		<div className="p-3 bg-transparent rounded-lg">
 			{(() => {
 				if (data.id === "-2") return null;
 
-				const nodeData = {
-					label: data.label,
-					id: `${data.children[0].id}-root`,
-					hasChildren: false,
-					idRange: data.idRange,
-					children: [],
-					reversed: false,
-					active: false,
-					disabled: false,
-					type: data.type,
-				} satisfies CustomData;
-
-				const Component = nodeTypes[nodeData.type];
 				return (
-					<div key={nodeData.id} className="border-t border-black box-border">
-						<Component data={nodeData} />
+					<div
+						key={`${data.children[0].id}-root`}
+						className="box-border border-t border-black"
+					>
+						<AbstractNode
+							data={data}
+							iconName={data.icon}
+							iconBackgroundColor={data.iconBackgroundColor}
+						/>
 					</div>
 				);
 			})()}
 			{data.children.map((n) => {
-				const Component = nodeTypes[n.type];
-
 				return (
 					<div key={n.id} className="pl-4">
-						<Component data={n} />
+						<AbstractNode
+							data={n}
+							iconName={n.icon}
+							iconBackgroundColor={n.iconBackgroundColor}
+						/>
 					</div>
 				);
 			})}

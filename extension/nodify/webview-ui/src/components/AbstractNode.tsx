@@ -6,10 +6,12 @@ import {
 	type LucideIcon,
 } from "lucide-react";
 import { cn } from "../utils/cn";
-import type { CustomData } from "./nodes.schema";
 import { astExpandedAtom } from "../data/nodesAtom";
 import { useAtom } from "jotai";
 import { useMemo } from "react";
+import type { CustomData } from "@nodify/schema";
+import type dynamicIconImports from "lucide-react/dynamicIconImports";
+import { Icon } from "./Icon";
 
 interface EdgeButtonProps {
 	direction: "left" | "right";
@@ -39,7 +41,7 @@ export function EdgeButton({ direction, id, hasChildren }: EdgeButtonProps) {
 			}}
 		>
 			{hasChildren === false ? (
-				<Minus className="w-4 h-4 rotate-90 text-gray-400" />
+				<Minus className="w-4 h-4 text-gray-400 rotate-90" />
 			) : realDirection === "left" ? (
 				<ChevronLeft className="w-4 h-4 stroke-black" />
 			) : (
@@ -51,15 +53,15 @@ export function EdgeButton({ direction, id, hasChildren }: EdgeButtonProps) {
 
 interface NodeProps {
 	data: CustomData;
-	Icon: LucideIcon;
-	className: string;
+	iconName: keyof typeof dynamicIconImports;
+	iconBackgroundColor: string;
 	children?: JSX.Element;
 }
 
 export function AbstractNode({
 	data: { label, id, hasChildren, disabled, reversed: reverse },
-	Icon,
-	className,
+	iconName,
+	iconBackgroundColor,
 }: NodeProps) {
 	return (
 		<div
@@ -91,10 +93,10 @@ export function AbstractNode({
 				<div
 					className={cn(
 						"rounded  w-[30px] h-[30px] flex items-center justify-center p-1",
-						className,
 					)}
+					style={{ backgroundColor: iconBackgroundColor }}
 				>
-					<Icon className="text-white" />
+					<Icon name={iconName} className="text-white" />
 				</div>
 			</div>
 			<div className="h-[40px] w-full flex items-center justify-center p-2">

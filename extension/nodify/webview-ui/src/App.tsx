@@ -1,5 +1,4 @@
-import { useState, useEffect } from "react";
-import { vscode } from "./utilities/vscode";
+import { useEffect } from "react";
 import {
 	ReactFlow,
 	MiniMap,
@@ -9,47 +8,52 @@ import {
 	SelectionMode,
 	useEdgesState,
 	useNodesState,
+	type Edge,
 } from "@xyflow/react";
 
 import "./reactflow.css";
 import { StackedNodes } from "./components/StackedNodes";
+import type { CustomNode, ServerToClientEvents } from "@nodify/schema";
+import { sendToServer } from "./utils/sendToServer";
 
 function App() {
-	// TODO: type safety this
-	const [flows, setFlows] = useState([]);
-	const [renderedNodes, setNodes, onNodesChange] = useNodesState([]);
-	const [renderedEdges, setEdges, onEdgesChange] = useEdgesState([]);
+	const [renderedNodes, setNodes, onNodesChange] = useNodesState<CustomNode>(
+		[],
+	);
+	const [renderedEdges, setEdges, onEdgesChange] = useEdgesState<Edge>([]);
 
 	useEffect(() => {
 		// Handle messages from the extension
-		const messageHandler = (event: MessageEvent) => {
-			const message = event.data; // TODO: type safety this
-			if (message.type === "flows") {
-				setFlows(message.value);
-			}
-		};
-
-		window.addEventListener("message", messageHandler);
+		const abortController = new AbortController();
+		window.addEventListener(
+			"message",
+			(event) => {
+				const message = event.data as ServerToClientEvents;
+				if (message.type === "nodes") {
+					setNodes(message.value);
+				} else if (message.type === "edges") {
+					setEdges(message.value);
+				}
+			},
+			{ signal: abortController.signal },
+		);
 
 		// Cleanup
 		return () => {
-			window.removeEventListener("message", messageHandler);
+			abortController.abort();
 		};
-	}, []);
+	}, [setNodes, setEdges]);
 
 	// TODO: send all click events to the extension, including node expansion/collapse. Maybe even node hovers?
 	// will be used to highlight code in the editor.
 	const handleClick = () => {
 		// Send a message to the extension
-		vscode.postMessage({
+		sendToServer({
 			type: "hello",
 			value: "Hello from React!",
 		});
 	};
 
-	// TODO: migrate reactflow stuff here.
-	// TODO: match theming to vscode
-	// https://code.visualstudio.com/api/extension-guides/webview#theming-webview-content
 	return (
 		<div className="flex flex-1 w-screen h-screen overflow-hidden">
 			<div className="flex-grow">
