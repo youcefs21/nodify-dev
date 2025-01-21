@@ -1,6 +1,5 @@
 import OpenAI from "openai";
-import { z } from "zod";
-import { outputSchema, type inputList } from "./llm.types";
+import { outputSchema, type inputList } from "@nodify/schema";
 
 const openai = new OpenAI({
 	baseURL: "http://100.89.180.124:11434/v1",

@@ -2,6 +2,10 @@
 // Import the module and reference it with the alias vscode in your code below
 import * as vscode from "vscode";
 import { analyzePythonAST } from "./pythonServer";
+import type {
+	ClientToServerEvents,
+	ServerToClientEvents,
+} from "@nodify/schema";
 
 interface PythonExtensionApi {
 	environments: {
@@ -25,7 +29,11 @@ export async function getPythonExtension(): Promise<
 
 export function createWebview(
 	context: vscode.ExtensionContext,
-	onClientMessage: (message: any, panel: vscode.WebviewPanel) => void,
+	onClientMessage: (
+		message: ClientToServerEvents,
+		postMessage: (message: ServerToClientEvents) => void,
+		panel: vscode.WebviewPanel,
+	) => void,
 ) {
 	const panel = vscode.window.createWebviewPanel(
 		"nodifyWebview",
@@ -64,9 +72,8 @@ export function createWebview(
 
 	// Handle messages from the webview
 	panel.webview.onDidReceiveMessage(
-		// TODO: we should add some type safety to both the frontend and backend message receivers/senders
 		async (message) => {
-			onClientMessage(message, panel);
+			onClientMessage(message, panel.webview.postMessage, panel);
 		},
 		undefined,
 		context.subscriptions,
@@ -104,7 +111,7 @@ export async function activate(context: vscode.ExtensionContext) {
 	const webviewCommand = vscode.commands.registerCommand(
 		"nodify.openWebview",
 		async () => {
-			createWebview(context, async (message, panel) => {
+			createWebview(context, async (message, postMessage, panel) => {
 				switch (message.type) {
 					// sent when the webview is loaded
 					case "hello": {
@@ -113,9 +120,9 @@ export async function activate(context: vscode.ExtensionContext) {
 						const editor = vscode.window.activeTextEditor;
 						if (editor && editor.document.languageId === "python") {
 							const flows = await analyzePythonAST(editor.document);
-							panel.webview.postMessage({
+							postMessage({
 								type: "flows",
-								value: flows,
+								value: flows ?? [],
 							});
 						} else {
 							vscode.window.showErrorMessage("Please open a Python file first");

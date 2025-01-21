@@ -2,7 +2,7 @@ import * as vscode from "vscode";
 import { getAST, type CodeBlock } from "./ast/flow";
 import fs from "node:fs";
 import { runLLM } from "./llm";
-import type { inputItem, inputList } from "./llm/llm.types";
+import type { inputItem, inputList } from "@nodify/schema";
 
 function cleanAST(ast: CodeBlock[]): inputItem[] {
 	// remove all children from the ast
