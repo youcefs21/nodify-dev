@@ -8,6 +8,7 @@ import type {
 	Class,
 	ClassKind,
 	InModuleDef,
+	DecoratorRef,
 } from "../types/graph.types";
 import { isFunc, isVar } from "../types/graph.types";
 import { parseLocation } from "./module.handler";
@@ -252,17 +253,46 @@ function parseArgs(node: SgNode, id: number): Args {
 	};
 }
 
+function parseDecorator(node: SgNode): DecoratorRef {
+	// The decorator node structure is typically: @ + identifier/attribute
+	const decoratorExpr = node.children()[1];
+	
+	if (decoratorExpr.kind() === "identifier") {
+		// Simple decorator like @staticmethod
+		return {
+			name: decoratorExpr.text(),
+			kind: "local", // Default to local, can be refined later
+			node: decoratorExpr
+		};
+	} else if (decoratorExpr.kind() === "attribute") {
+		// Decorator from module like @pytest.fixture
+		const parts = decoratorExpr.text().split('.');
+		return {
+			name: parts[parts.length - 1],
+			path: parts.slice(0, -1).join('.'),
+			kind: "imported",
+			node: decoratorExpr
+		};
+	}
+	
+	// Fall back for other cases
+	return {
+		name: decoratorExpr.text(),
+		kind: "local",
+		node: decoratorExpr
+	};
+}
+
 function parseFunction(node: SgNode, id: number): Func {
 	// assert(node.kind() === "function_definition");
 	// console.log(node.children().map((x) => x.kind()));
 	const location = parseLocation(node);
 	let pointer = 0;
 
-	// Handle decorators
-	// TODO make this a reference?
-	const decorator_list = [];
+	// Handle decorators with full reference information
+	const decorator_list: DecoratorRef[] = [];
 	while (node.children()[pointer].kind() === "decorator") {
-		decorator_list.push(node.children()[pointer].children()[1].text());
+		decorator_list.push(parseDecorator(node.children()[pointer]));
 		pointer++;
 	}
 

@@ -65,7 +65,7 @@ interface Func extends GraphAST {
 	name: string;
 	return_type: string | null;
 	args: Args;
-	decorators: string[];
+	decorators: DecoratorRef[];
 	modifier: "async" | null;
 	docstr: string | null;
 	body: SgNode;
@@ -154,6 +154,13 @@ export type ScopeItem =
  * A collection of items that are accessible within a particular scope.
  */
 export type Scope = ScopeItem[];
+
+export interface DecoratorRef {
+	name: string;
+	path?: string;          // Import path or 'builtins'
+	kind: 'builtin' | 'imported' | 'local';
+	node: SgNode;          // Original AST node for reference
+}
 
 export type {
 	ID,
