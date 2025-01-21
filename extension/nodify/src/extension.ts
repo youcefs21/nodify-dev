@@ -77,7 +77,11 @@ export function createWebview(
 	// Handle messages from the webview
 	panel.webview.onDidReceiveMessage(
 		async (message) => {
-			onClientMessage(message, panel.webview.postMessage, panel);
+			onClientMessage(
+				message,
+				(message) => panel.webview.postMessage(JSON.stringify(message)),
+				panel,
+			);
 		},
 		undefined,
 		context.subscriptions,
@@ -120,10 +124,14 @@ export async function activate(context: vscode.ExtensionContext) {
 					// sent when the webview is loaded
 					case "hello": {
 						vscode.window.showInformationMessage(message.value);
-						// Send a message back to the webview
-						const editor = vscode.window.activeTextEditor;
-						if (editor && editor.document.languageId === "python") {
-							const flows = await analyzePythonAST(editor.document);
+						// Find Python file in visible editors
+						const visibleEditors = vscode.window.visibleTextEditors;
+						const pythonEditor = visibleEditors.find(
+							(editor) => editor.document.languageId === "python",
+						);
+
+						if (pythonEditor) {
+							const flows = await analyzePythonAST(pythonEditor.document);
 							const expanded = new Map<string, boolean>([
 								["-1", true],
 								["-2", true],
@@ -135,7 +143,9 @@ export async function activate(context: vscode.ExtensionContext) {
 								),
 							});
 						} else {
-							vscode.window.showErrorMessage("Please open a Python file first");
+							vscode.window.showErrorMessage(
+								"Please open a Python file in another editor pane",
+							);
 						}
 						return;
 					}

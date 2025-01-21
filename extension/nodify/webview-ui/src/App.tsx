@@ -27,7 +27,7 @@ function App() {
 		window.addEventListener(
 			"message",
 			(event) => {
-				const message = event.data as ServerToClientEvents;
+				const message = JSON.parse(event.data) as ServerToClientEvents;
 				if (message.type === "nodes") {
 					setNodes(message.value);
 				} else if (message.type === "edges") {
