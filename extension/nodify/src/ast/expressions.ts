@@ -170,22 +170,67 @@ export async function handleExpression(
 export async function extractCodeBlock(reference: Reference, id: number): Promise<CodeBlock> {
 	const document = await vscode.workspace.openTextDocument(reference.file);
 	const text = document.getText();
-	const root = parse(Lang.Python, text).root();
-	const flows = await handleFlows(root.children(), document);
-	
-	const matchingBlock = flows.find(block => block.text.startsWith(reference.symbol));
-	if (matchingBlock) {
-		return {
-			id,
-			text: matchingBlock.text,
-			location: matchingBlock.location,
-			file: reference.file
-		};
+
+	// Split the file into lines for easier processing
+	const lines = text.split(/\r?\n/);
+
+	// Get the starting line of the symbol from the reference's location
+	const startLine = reference.location.range.start.line;
+
+	// Extract the name of the symbol to search for
+	const symbolName = reference.symbol;
+
+	// Initialize variables to locate the code block
+	let startIndex = -1;
+	let endIndex = -1;
+	let indentLevel = -1;
+
+	// Find the definition line of the symbol
+	for (let i = startLine; i < lines.length; i++) {
+		const line = lines[i];
+		if (line.trim().startsWith(`def ${symbolName}(`) || line.trim().startsWith(`class ${symbolName}`)) {
+			startIndex = i;
+			indentLevel = line.search(/\S|$/); // Determine the indentation level
+			break;
+		}
 	}
+
+	if (startIndex === -1) {
+		throw new Error(`Symbol '${symbolName}' not found in the file.`);
+	}
+
+	// Find the end of the code block based on indentation
+	for (let i = startIndex + 1; i < lines.length; i++) {
+		const line = lines[i];
+		const currentIndent = line.search(/\S|$/);
+		if (line.trim() === '' || currentIndent > indentLevel) {
+			continue;
+		} else if (currentIndent <= indentLevel && line.trim() !== '') {
+			endIndex = i - 1;
+			break;
+		}
+	}
+
+	// If endIndex is still -1, it means the block goes till the end of the file
+	if (endIndex === -1) {
+		endIndex = lines.length - 1;
+	}
+
+	// Extract the code block
+	const codeLines = lines.slice(startIndex, endIndex + 1);
+	const codeText = codeLines.join('\n');
+
+	// Create the range for the code block
+	const range = new vscode.Range(
+		new vscode.Position(startIndex, 0),
+		new vscode.Position(endIndex, lines[endIndex].length)
+	);
+
+	// Return the CodeBlock
 	return {
-		id,
-		text: reference.symbol,
-		location: reference.location.range,
+		id: id, // Unique ID for the code block
+		text: codeText,
+		location: range,
 		file: reference.file
 	};
 }
