@@ -1,5 +1,5 @@
-import type { SgNode } from "@ast-grep/napi";
-import type { CodeBlock, Reference } from "./flow";
+import { parse, Lang, type SgNode, type SgRoot } from "@ast-grep/napi";
+import { getAST, handleFlows, type CodeBlock, type Reference } from "./flow";
 import * as vscode from "vscode";
 import { getDefinition } from "../vsc-commands/builtin";
 
@@ -69,7 +69,7 @@ const ignoreKinds = [
 	// maybe, check again later
 	"pattern_list",
 ];
-
+var counter: number = 0;
 export async function handleExpression(
 	node: SgNode,
 	document: vscode.TextDocument,
@@ -108,13 +108,16 @@ export async function handleExpression(
 			// if (ref_id === -1) {
 			// 	return [];
 			// }
-			return [
-				{
-					symbol: identifier.text(),
-					file: document.uri,
-					location: definitions[0],
-				},
-			];
+			const reference:Reference = {
+				symbol: identifier.text(),
+				file: document.uri,
+				location: definitions[0],
+			}
+			if (node.kind() == "call" && counter == 0){
+				counter++;
+				extractCodeBlock(reference,1)
+			}
+			return [reference];
 		}
 
 		case "lambda":
@@ -164,12 +167,25 @@ export async function handleExpression(
 	return [];
 }
 
-export function extractCodeBlock(reference: Reference, id: number): CodeBlock {
+export async function extractCodeBlock(reference: Reference, id: number): Promise<CodeBlock> {
+	const document = await vscode.workspace.openTextDocument(reference.file);
+	const text = document.getText();
+	const root = parse(Lang.Python, text).root();
+	const flows = await handleFlows(root.children(), document);
+	
+	const matchingBlock = flows.find(block => block.text.startsWith(reference.symbol));
+	if (matchingBlock) {
+		return {
+			id,
+			text: matchingBlock.text,
+			location: matchingBlock.location,
+			file: reference.file
+		};
+	}
 	return {
 		id,
 		text: reference.symbol,
 		location: reference.location.range,
-		file: reference.file,
-		references: [reference],
+		file: reference.file
 	};
 }
