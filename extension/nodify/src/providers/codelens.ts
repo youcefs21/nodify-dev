@@ -35,7 +35,7 @@ export class NodifyCodeLensProvider implements vscode.CodeLensProvider {
 		);
 
 		codeLens.command = {
-			title: `Open Nodify at ${node.kind()}, ${identifierName}`,
+			title: `Open Nodify at ${identifierName}`,
 			command: "nodify.openWebview",
 			arguments: [
 				identifierName,

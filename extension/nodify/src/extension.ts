@@ -11,7 +11,6 @@ import {
 	flattenCustomNodes,
 } from "./graph/NodeCreater";
 import { NodifyCodeLensProvider } from "./providers/codelens";
-import { NodifyHoverProvider } from "./providers/hover";
 
 interface PythonExtensionApi {
 	environments: {
@@ -122,10 +121,11 @@ export async function activate(context: vscode.ExtensionContext) {
 		"python",
 		new NodifyCodeLensProvider(),
 	);
-	const hoverProvider = vscode.languages.registerHoverProvider(
-		"python",
-		new NodifyHoverProvider(),
-	);
+	// TODO maybe?
+	// const hoverProvider = vscode.languages.registerHoverProvider(
+	// 	"python",
+	// 	new NodifyHoverProvider(),
+	// );
 
 	// Register webview command
 	const webviewCommand = vscode.commands.registerCommand(
@@ -166,12 +166,7 @@ export async function activate(context: vscode.ExtensionContext) {
 		},
 	);
 
-	context.subscriptions.push(
-		analyzeCommand,
-		webviewCommand,
-		codeLensProvider,
-		hoverProvider,
-	);
+	context.subscriptions.push(analyzeCommand, webviewCommand, codeLensProvider);
 }
 
 // This method is called when your extension is deactivated
