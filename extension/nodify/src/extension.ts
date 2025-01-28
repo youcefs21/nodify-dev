@@ -10,6 +10,8 @@ import {
 	AbstractionLevelOneNodeMapper,
 	flattenCustomNodes,
 } from "./graph/NodeCreater";
+import { NodifyCodeLensProvider } from "./providers/codelens";
+import { NodifyHoverProvider } from "./providers/hover";
 
 interface PythonExtensionApi {
 	environments: {
@@ -114,6 +116,16 @@ export async function activate(context: vscode.ExtensionContext) {
 
 	// !! anthony !!
 	// TODO: webview should also open using [CodeLens](https://code.visualstudio.com/api/references/vscode-api#CodeLens)
+	// Note: tried to enable ctrl+shift+alt+click functionality like Go To References, but vscode doesnt allow you to detect whether ctrl is held down.
+	// So, hover option it is
+	const codeLensProvider = vscode.languages.registerCodeLensProvider(
+		"python",
+		new NodifyCodeLensProvider(),
+	);
+	const hoverProvider = vscode.languages.registerHoverProvider(
+		"python",
+		new NodifyHoverProvider(),
+	);
 
 	// Register webview command
 	const webviewCommand = vscode.commands.registerCommand(
@@ -154,7 +166,12 @@ export async function activate(context: vscode.ExtensionContext) {
 		},
 	);
 
-	context.subscriptions.push(analyzeCommand, webviewCommand);
+	context.subscriptions.push(
+		analyzeCommand,
+		webviewCommand,
+		codeLensProvider,
+		hoverProvider,
+	);
 }
 
 // This method is called when your extension is deactivated

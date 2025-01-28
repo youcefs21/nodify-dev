@@ -35,7 +35,19 @@
 					"description": "Path to Python interpreter"
 				}
 			}
-		}
+		},
+		"languages":[
+			{
+				"id": "python",
+				"aliases": [
+					"Python"
+				],
+				"extensions": [
+					".py"
+				],
+				"configuration": "./language-configuration.json"
+			}
+		]
 	},
 	"scripts": {
 		"vscode:prepublish": "bun run package",
@@ -44,7 +56,7 @@
 		"watch:esbuild": "node esbuild.js --watch",
 		"watch:tsc": "tsc --noEmit --watch --project tsconfig.json",
 		"package": "bun run build-webview && bun run check-types && bun run lint && node esbuild.js --production",
-		"build-webview": "cd src/webview-ui && bun install && bun run build",
+		"build-webview": "cd webview-ui && bun install && bun run build",
 		"compile-tests": "tsc -p . --outDir out",
 		"watch-tests": "tsc -p . -w --outDir out",
 		"pretest": "bun run compile-tests && bun run compile && bun run lint",

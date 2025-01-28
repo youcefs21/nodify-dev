@@ -108,14 +108,14 @@ export async function handleExpression(
 			// if (ref_id === -1) {
 			// 	return [];
 			// }
-			const reference:Reference = {
+			const reference: Reference = {
 				symbol: identifier.text(),
 				file: document.uri,
 				location: definitions[0],
-			}
-			if (node.kind() == "call" && counter == 0){
+			};
+			if (node.kind() === "call" && counter === 0) {
 				counter++;
-				extractCodeBlock(reference,1)
+				extractCodeBlock(reference, 1);
 			}
 			return [reference];
 		}
@@ -167,7 +167,10 @@ export async function handleExpression(
 	return [];
 }
 
-export async function extractCodeBlock(reference: Reference, id: number): Promise<CodeBlock> {
+export async function extractCodeBlock(
+	reference: Reference,
+	id: number,
+): Promise<CodeBlock> {
 	const document = await vscode.workspace.openTextDocument(reference.file);
 	const text = document.getText();
 
@@ -188,7 +191,10 @@ export async function extractCodeBlock(reference: Reference, id: number): Promis
 	// Find the definition line of the symbol
 	for (let i = startLine; i < lines.length; i++) {
 		const line = lines[i];
-		if (line.trim().startsWith(`def ${symbolName}(`) || line.trim().startsWith(`class ${symbolName}`)) {
+		if (
+			line.trim().startsWith(`def ${symbolName}(`) ||
+			line.trim().startsWith(`class ${symbolName}`)
+		) {
 			startIndex = i;
 			indentLevel = line.search(/\S|$/); // Determine the indentation level
 			break;
@@ -203,9 +209,10 @@ export async function extractCodeBlock(reference: Reference, id: number): Promis
 	for (let i = startIndex + 1; i < lines.length; i++) {
 		const line = lines[i];
 		const currentIndent = line.search(/\S|$/);
-		if (line.trim() === '' || currentIndent > indentLevel) {
+		if (line.trim() === "" || currentIndent > indentLevel) {
 			continue;
-		} else if (currentIndent <= indentLevel && line.trim() !== '') {
+		}
+		if (currentIndent <= indentLevel && line.trim() !== "") {
 			endIndex = i - 1;
 			break;
 		}
@@ -218,12 +225,12 @@ export async function extractCodeBlock(reference: Reference, id: number): Promis
 
 	// Extract the code block
 	const codeLines = lines.slice(startIndex, endIndex + 1);
-	const codeText = codeLines.join('\n');
+	const codeText = codeLines.join("\n");
 
 	// Create the range for the code block
 	const range = new vscode.Range(
 		new vscode.Position(startIndex, 0),
-		new vscode.Position(endIndex, lines[endIndex].length)
+		new vscode.Position(endIndex, lines[endIndex].length),
 	);
 
 	// Return the CodeBlock
@@ -231,6 +238,6 @@ export async function extractCodeBlock(reference: Reference, id: number): Promis
 		id: id, // Unique ID for the code block
 		text: codeText,
 		location: range,
-		file: reference.file
+		file: reference.file,
 	};
 }
