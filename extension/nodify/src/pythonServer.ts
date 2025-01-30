@@ -2,7 +2,7 @@ import * as vscode from "vscode";
 import { getAST, type CodeBlock } from "./ast/flow";
 import fs from "node:fs";
 import { runLLM } from "./llm";
-import type { inputItem, inputList } from "@nodify/schema";
+import type { inputItem, inputList, LLMOutput } from "@nodify/schema";
 import { entryNode } from "./graph/NodeCreater";
 
 function cleanAST(ast: CodeBlock[]): inputItem[] {
@@ -19,13 +19,21 @@ export async function analyzePythonAST(document: vscode.TextDocument) {
 	const input: inputList = {
 		input: cleanAST(ast),
 	};
-	const output = await runLLM(input);
-	console.log("ast: ", ast);
-	// save the flows to a file
 	const filePath = `${vscode.workspace.workspaceFolders?.[0]?.uri.fsPath}/flows.json`;
-	console.log("saving flows to file: ", filePath);
-	// TODO: try reading the file first before even trying to analyze the AST
-	fs.writeFileSync(filePath, JSON.stringify(output, null, 2));
+	let output: LLMOutput[] | undefined = undefined;
+	if (fs.existsSync(filePath)) {
+		const file = fs.readFileSync(filePath, { encoding: "utf8" });
+		output = JSON.parse(file);
+	} else {
+		console.warn(`File not found: ${filePath}`);
+
+		const output = await runLLM(input);
+		console.log("ast: ", ast);
+		// save the flows to a file
+		console.log("saving flows to file: ", filePath);
+		// TODO: try reading the file first before even trying to analyze the AST
+		fs.writeFileSync(filePath, JSON.stringify(output, null, 2));
+	}
 
 	return [
 		{

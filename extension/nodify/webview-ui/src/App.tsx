@@ -30,6 +30,7 @@ function App() {
 				const message = JSON.parse(event.data) as ServerToClientEvents;
 				if (message.type === "nodes") {
 					setNodes(message.value);
+					console.log("nodes", message.value);
 				} else if (message.type === "edges") {
 					setEdges(message.value);
 				}
@@ -55,13 +56,6 @@ function App() {
 
 	return (
 		<div className="flex flex-1 w-[calc(100vw-3rem)] h-screen overflow-hidden">
-			<button
-				className="absolute z-40 p-2 text-white bg-black top-20 left-20"
-				type="button"
-				onClick={handleClick}
-			>
-				Click me
-			</button>
 			<div className="flex-grow">
 				<ReactFlow
 					nodes={renderedNodes}

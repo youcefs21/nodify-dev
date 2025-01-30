@@ -9,7 +9,7 @@ import {
 	flattenCustomNodes,
 } from "../graph/NodeCreater";
 
-export function createWebview(
+export async function createWebview(
 	context: vscode.ExtensionContext,
 	onClientMessage: (
 		message: ClientToServerEvents,
@@ -28,6 +28,8 @@ export function createWebview(
 			],
 		},
 	);
+	const postMessage = (message: ServerToClientEvents) =>
+		panel.webview.postMessage(JSON.stringify(message));
 
 	// Get path to resource on disk
 	const reactDistPath = vscode.Uri.joinPath(
@@ -55,49 +57,47 @@ export function createWebview(
 	// Handle messages from the webview
 	panel.webview.onDidReceiveMessage(
 		async (message) => {
-			onClientMessage(
-				message,
-				(message) => panel.webview.postMessage(JSON.stringify(message)),
-				panel,
-			);
+			onClientMessage(message, postMessage, panel);
 		},
 		undefined,
 		context.subscriptions,
 	);
+
+	const visibleEditors = vscode.window.visibleTextEditors;
+	const pythonEditor = visibleEditors.find(
+		(editor) => editor.document.languageId === "python",
+	);
+
+	if (pythonEditor) {
+		const flows = await analyzePythonAST(pythonEditor.document);
+		const expanded = new Map<string, boolean>([
+			["-1", true],
+			["-2", true],
+		]);
+		const nodes = flattenCustomNodes(
+			AbstractionLevelOneNodeMapper(flows, expanded),
+		);
+		postMessage({
+			type: "nodes",
+			value: nodes,
+		});
+	} else {
+		vscode.window.showErrorMessage(
+			"Please open a Python file in another editor pane",
+		);
+	}
 }
 
 export function registerWebview(context: vscode.ExtensionContext) {
 	//
 	// Register webview command
 	return vscode.commands.registerCommand("nodify.openWebview", async () => {
-		createWebview(context, async (message, postMessage) => {
+		await createWebview(context, async (message, postMessage) => {
 			switch (message.type) {
 				// sent when the webview is loaded
 				case "hello": {
 					vscode.window.showInformationMessage(message.value);
 					// Find Python file in visible editors
-					const visibleEditors = vscode.window.visibleTextEditors;
-					const pythonEditor = visibleEditors.find(
-						(editor) => editor.document.languageId === "python",
-					);
-
-					if (pythonEditor) {
-						const flows = await analyzePythonAST(pythonEditor.document);
-						const expanded = new Map<string, boolean>([
-							["-1", true],
-							["-2", true],
-						]);
-						postMessage({
-							type: "nodes",
-							value: flattenCustomNodes(
-								AbstractionLevelOneNodeMapper(flows, expanded),
-							),
-						});
-					} else {
-						vscode.window.showErrorMessage(
-							"Please open a Python file in another editor pane",
-						);
-					}
 					return;
 				}
 			}
