@@ -10,11 +10,45 @@ import {
 	flattenCustomNodes,
 } from "../graph/NodeCreater";
 
+const postMessageToPanel =
+	(panel: vscode.WebviewPanel) => (message: ServerToClientEvents) =>
+		panel.webview.postMessage(JSON.stringify(message));
+
+async function refreshNodes(panel: vscode.WebviewPanel) {
+	const visibleEditors = vscode.window.visibleTextEditors;
+	const pythonEditor = visibleEditors.find(
+		(editor) => editor.document.languageId === "python",
+	);
+
+	if (pythonEditor) {
+		const flows = await analyzePythonAST(pythonEditor.document);
+		const expanded = new Map<string, boolean>([
+			["-1", true],
+			["-2", true],
+		]);
+		const nodes = flattenCustomNodes(
+			AbstractionLevelOneNodeMapper(flows, expanded),
+		);
+		postMessageToPanel(panel)({
+			type: "nodes",
+			value: nodes,
+		});
+		const edges = createEdges(nodes);
+		postMessageToPanel(panel)({
+			type: "edges",
+			value: edges,
+		});
+	} else {
+		vscode.window.showErrorMessage(
+			"Please open a Python file in another editor pane",
+		);
+	}
+}
+
 export async function createWebview(
 	context: vscode.ExtensionContext,
 	onClientMessage: (
 		message: ClientToServerEvents,
-		postMessage: (message: ServerToClientEvents) => void,
 		panel: vscode.WebviewPanel,
 	) => void,
 ) {
@@ -29,8 +63,6 @@ export async function createWebview(
 			],
 		},
 	);
-	const postMessage = (message: ServerToClientEvents) =>
-		panel.webview.postMessage(JSON.stringify(message));
 
 	// Get path to resource on disk
 	const reactDistPath = vscode.Uri.joinPath(
@@ -58,52 +90,24 @@ export async function createWebview(
 	// Handle messages from the webview
 	panel.webview.onDidReceiveMessage(
 		async (message) => {
-			onClientMessage(message, postMessage, panel);
+			onClientMessage(message, panel);
 		},
 		undefined,
 		context.subscriptions,
 	);
-
-	const visibleEditors = vscode.window.visibleTextEditors;
-	const pythonEditor = visibleEditors.find(
-		(editor) => editor.document.languageId === "python",
-	);
-
-	if (pythonEditor) {
-		const flows = await analyzePythonAST(pythonEditor.document);
-		const expanded = new Map<string, boolean>([
-			["-1", true],
-			["-2", true],
-		]);
-		const nodes = flattenCustomNodes(
-			AbstractionLevelOneNodeMapper(flows, expanded),
-		);
-		postMessage({
-			type: "nodes",
-			value: nodes,
-		});
-		const edges = createEdges(nodes);
-		postMessage({
-			type: "edges",
-			value: edges,
-		});
-	} else {
-		vscode.window.showErrorMessage(
-			"Please open a Python file in another editor pane",
-		);
-	}
+	await refreshNodes(panel);
 }
 
 export function registerWebview(context: vscode.ExtensionContext) {
 	//
 	// Register webview command
 	return vscode.commands.registerCommand("nodify.openWebview", async () => {
-		await createWebview(context, async (message, postMessage) => {
+		await createWebview(context, async (message, panel) => {
 			switch (message.type) {
 				// sent when the webview is loaded
-				case "hello": {
-					vscode.window.showInformationMessage(message.value);
-					// Find Python file in visible editors
+				// vscode.window.showInformationMessage(message.value);
+				case "on-render": {
+					await refreshNodes(panel);
 					return;
 				}
 			}

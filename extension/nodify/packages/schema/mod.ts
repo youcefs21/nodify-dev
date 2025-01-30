@@ -18,7 +18,11 @@ export type ServerToClientEvents =
 // 	withAck: (d: string, callback: (e: number) => void) => void;
 // }
 
-export type ClientToServerEvents = {
-	type: "hello";
-	value: string;
-};
+export type ClientToServerEvents =
+	| {
+			type: "on-render";
+	  }
+	| {
+			type: "node-toggle";
+			nodeId: string;
+	  };

@@ -22,6 +22,10 @@ function App() {
 	const [renderedEdges, setEdges, onEdgesChange] = useEdgesState<Edge>([]);
 
 	useEffect(() => {
+		sendToServer({
+			type: "on-render",
+		});
+
 		// Handle messages from the extension
 		const abortController = new AbortController();
 		window.addEventListener(
@@ -47,13 +51,6 @@ function App() {
 
 	// TODO: send all click events to the extension, including node expansion/collapse. Maybe even node hovers?
 	// will be used to highlight code in the editor.
-	const handleClick = () => {
-		// Send a message to the extension
-		sendToServer({
-			type: "hello",
-			value: "Hello from React!",
-		});
-	};
 
 	return (
 		<div className="flex flex-1 w-[calc(100vw-3rem)] h-screen overflow-hidden mocha">
