@@ -11,6 +11,7 @@ import { useMemo } from "react";
 import type { CustomData } from "@nodify/schema";
 import type dynamicIconImports from "lucide-react/dynamicIconImports";
 import { Icon } from "./Icon";
+import { sendToServer } from "../utils/sendToServer";
 
 interface EdgeButtonProps {
 	direction: "left" | "right";
@@ -40,7 +41,10 @@ export function EdgeButton({
 			type="button"
 			disabled={!hasChildren}
 			onClick={() => {
-				console.log("clicked");
+				sendToServer({
+					type: "node-toggle",
+					nodeId: id,
+				});
 			}}
 		>
 			{hasChildren === false ? (

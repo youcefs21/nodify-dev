@@ -14,6 +14,11 @@ const postMessageToPanel =
 	(panel: vscode.WebviewPanel) => (message: ServerToClientEvents) =>
 		panel.webview.postMessage(JSON.stringify(message));
 
+const expanded = new Map<string, boolean>([
+	["-1", true],
+	["-2", true],
+]);
+
 async function refreshNodes(panel: vscode.WebviewPanel) {
 	const visibleEditors = vscode.window.visibleTextEditors;
 	const pythonEditor = visibleEditors.find(
@@ -22,10 +27,6 @@ async function refreshNodes(panel: vscode.WebviewPanel) {
 
 	if (pythonEditor) {
 		const flows = await analyzePythonAST(pythonEditor.document);
-		const expanded = new Map<string, boolean>([
-			["-1", true],
-			["-2", true],
-		]);
 		const nodes = flattenCustomNodes(
 			AbstractionLevelOneNodeMapper(flows, expanded),
 		);
@@ -107,6 +108,13 @@ export function registerWebview(context: vscode.ExtensionContext) {
 				// sent when the webview is loaded
 				// vscode.window.showInformationMessage(message.value);
 				case "on-render": {
+					await refreshNodes(panel);
+					return;
+				}
+
+				case "node-toggle": {
+					// expand nodeId, and refresh nodes
+					expanded.set(message.nodeId, !expanded.get(message.nodeId));
 					await refreshNodes(panel);
 					return;
 				}
