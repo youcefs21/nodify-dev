@@ -1,14 +1,17 @@
 import * as vscode from "vscode";
-import { analyzePythonAST } from "../pythonServer";
+import { analyzePythonDocument } from "./analyze-document";
 import type {
 	ClientToServerEvents,
+	LLMOutput,
 	ServerToClientEvents,
 } from "@nodify/schema";
 import {
 	AbstractionLevelOneNodeMapper,
 	createEdges,
+	entryNode,
 	flattenCustomNodes,
 } from "../graph/NodeCreater";
+import { readLLMCache, readLLMCacheFromAST } from "../db/jsonDB";
 
 const postMessageToPanel =
 	(panel: vscode.WebviewPanel) => (message: ServerToClientEvents) =>
@@ -19,31 +22,57 @@ const expanded = new Map<string, boolean>([
 	["-2", true],
 ]);
 
-async function refreshNodes(panel: vscode.WebviewPanel) {
-	const visibleEditors = vscode.window.visibleTextEditors;
-	const pythonEditor = visibleEditors.find(
-		(editor) => editor.document.languageId === "python",
-	);
+export const activeHashRef = {
+	current: "",
+};
 
-	if (pythonEditor) {
-		const flows = await analyzePythonAST(pythonEditor.document);
-		const nodes = flattenCustomNodes(
-			AbstractionLevelOneNodeMapper(flows, expanded),
+async function refreshNodes(panel: vscode.WebviewPanel) {
+	let flows: LLMOutput[] = [];
+	if (activeHashRef.current === "") {
+		const visibleEditors = vscode.window.visibleTextEditors;
+		const pythonEditor = visibleEditors.find(
+			(editor) => editor.document.languageId === "python",
 		);
-		postMessageToPanel(panel)({
-			type: "nodes",
-			value: nodes,
-		});
-		const edges = createEdges(nodes);
-		postMessageToPanel(panel)({
-			type: "edges",
-			value: edges,
-		});
+		if (pythonEditor) {
+			flows = await analyzePythonDocument(pythonEditor.document);
+		} else {
+			vscode.window.showErrorMessage(
+				"Please open a Python file in another editor pane",
+			);
+		}
 	} else {
-		vscode.window.showErrorMessage(
-			"Please open a Python file in another editor pane",
-		);
+		const output = await readLLMCache(activeHashRef.current);
+		if (!output) {
+			vscode.window.showErrorMessage("invalid llm cache entry");
+			return;
+		}
+
+		flows = [
+			{
+				...entryNode,
+				children: [
+					{
+						// biome-ignore lint/style/noNonNullAssertion: entryNode.children is not null
+						...entryNode.children![0],
+						children: output,
+					},
+				],
+			},
+		];
 	}
+
+	const nodes = flattenCustomNodes(
+		AbstractionLevelOneNodeMapper(flows, expanded),
+	);
+	postMessageToPanel(panel)({
+		type: "nodes",
+		value: nodes,
+	});
+	const edges = createEdges(nodes);
+	postMessageToPanel(panel)({
+		type: "edges",
+		value: edges,
+	});
 }
 
 export async function createWebview(
@@ -97,6 +126,8 @@ export async function createWebview(
 		context.subscriptions,
 	);
 	await refreshNodes(panel);
+
+	return panel;
 }
 
 export function registerWebview(context: vscode.ExtensionContext) {

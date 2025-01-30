@@ -1,9 +1,10 @@
 import type * as vscode from "vscode";
-import { getAST, type CodeBlock } from "./ast/flow";
-import { runLLM } from "./llm";
-import type { inputItem, inputList } from "@nodify/schema";
-import { entryNode } from "./graph/NodeCreater";
-import { readLLMCache, writeLLMCache } from "./db/jsonDB";
+import { getAST, type CodeBlock } from "../ast/flow";
+import { runLLM } from "../llm";
+import type { inputItem, inputList, LLMOutput } from "@nodify/schema";
+import { entryNode } from "../graph/NodeCreater";
+import { readLLMCacheFromAST, writeLLMCache } from "../db/jsonDB";
+import { activeHashRef } from "./webview-command";
 
 function cleanAST(ast: CodeBlock[]): inputItem[] {
 	// remove all children from the ast
@@ -14,12 +15,14 @@ function cleanAST(ast: CodeBlock[]): inputItem[] {
 	}));
 }
 
-export async function analyzePythonAST(document: vscode.TextDocument) {
+export async function analyzePythonDocument(
+	document: vscode.TextDocument,
+): Promise<LLMOutput[]> {
 	const ast = await getAST(document);
 	const input: inputList = {
 		input: cleanAST(ast),
 	};
-	let { output, cacheFilePath } = await readLLMCache(
+	let { output, cacheFilePath } = await readLLMCacheFromAST(
 		JSON.stringify(input.input),
 	);
 
@@ -31,6 +34,7 @@ export async function analyzePythonAST(document: vscode.TextDocument) {
 			await writeLLMCache(cacheFilePath, output);
 		}
 	}
+	activeHashRef.current = cacheFilePath;
 
 	return [
 		{

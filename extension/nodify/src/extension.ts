@@ -1,10 +1,10 @@
 // The module 'vscode' contains the VS Code extensibility API
 // Import the module and reference it with the alias vscode in your code below
 import * as vscode from "vscode";
-import { analyzePythonAST } from "./pythonServer";
 import { NodifyCodeLensProvider } from "./providers/codelens";
 import { registerWebview } from "./vsc-commands/webview-command";
 import { initDB } from "./db/jsonDB";
+import { analyzePythonDocument } from "./vsc-commands/analyze-document";
 
 interface PythonExtensionApi {
 	environments: {
@@ -43,21 +43,20 @@ export async function activate(context: vscode.ExtensionContext) {
 		async () => {
 			const editor = vscode.window.activeTextEditor;
 			if (editor && editor.document.languageId === "python") {
-				await analyzePythonAST(editor.document);
+				await analyzePythonDocument(editor.document);
 			} else {
 				vscode.window.showErrorMessage("Please open a Python file first");
 			}
 		},
 	);
 
-	// !! anthony !!
-	// TODO: webview should also open using [CodeLens](https://code.visualstudio.com/api/references/vscode-api#CodeLens)
-	// Note: tried to enable ctrl+shift+alt+click functionality like Go To References, but vscode doesnt allow you to detect whether ctrl is held down.
-	// So, hover option it is
 	const codeLensProvider = vscode.languages.registerCodeLensProvider(
 		"python",
 		new NodifyCodeLensProvider(),
 	);
+
+	// Note: tried to enable ctrl+shift+alt+click functionality like Go To References, but vscode doesnt allow you to detect whether ctrl is held down.
+	// So, hover option it is
 	// TODO maybe?
 	// const hoverProvider = vscode.languages.registerHoverProvider(
 	// 	"python",

@@ -43,7 +43,7 @@ export async function initDB() {
 	}
 }
 
-export async function readLLMCache(cleanAST: string) {
+export async function readLLMCacheFromAST(cleanAST: string) {
 	const dirPath = getDirPath();
 	const hash = await hashString(cleanAST);
 
@@ -67,6 +67,18 @@ export async function readLLMCache(cleanAST: string) {
 	}
 
 	return { output: flows, cacheFilePath: flowsPath };
+}
+
+export async function readLLMCache(cacheFilePath: string) {
+	try {
+		const data = await fs.readFile(cacheFilePath, { encoding: "utf8" });
+		return JSON.parse(data) as LLMOutput[];
+	} catch (error) {
+		vscode.window.showErrorMessage(
+			`Failed to read cache: ${error instanceof Error ? error.message : error}`,
+		);
+	}
+	return undefined;
 }
 
 export async function writeLLMCache(cacheFilePath: string, flows: LLMOutput[]) {
