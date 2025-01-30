@@ -134,6 +134,7 @@ export function registerWebview(context: vscode.ExtensionContext) {
 	//
 	// Register webview command
 	return vscode.commands.registerCommand("nodify.openWebview", async () => {
+		activeHashRef.current = "";
 		await createWebview(context, async (message, panel) => {
 			switch (message.type) {
 				// sent when the webview is loaded

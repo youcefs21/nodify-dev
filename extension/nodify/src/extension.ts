@@ -2,7 +2,7 @@
 // Import the module and reference it with the alias vscode in your code below
 import * as vscode from "vscode";
 import { NodifyCodeLensProvider } from "./providers/codelens";
-import { registerWebview } from "./vsc-commands/webview-command";
+import { activeHashRef, registerWebview } from "./vsc-commands/webview-command";
 import { initDB } from "./db/jsonDB";
 import { analyzePythonDocument } from "./vsc-commands/analyze-document";
 
@@ -41,6 +41,7 @@ export async function activate(context: vscode.ExtensionContext) {
 	const analyzeCommand = vscode.commands.registerCommand(
 		"nodify.analyzePythonAST",
 		async () => {
+			activeHashRef.current = "";
 			const editor = vscode.window.activeTextEditor;
 			if (editor && editor.document.languageId === "python") {
 				await analyzePythonDocument(editor.document);
