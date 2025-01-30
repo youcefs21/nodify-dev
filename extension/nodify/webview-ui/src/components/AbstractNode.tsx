@@ -73,6 +73,7 @@ export function AbstractNode({
 	iconName,
 	iconBackgroundColor,
 }: NodeProps) {
+	console.log("handle id", id);
 	return (
 		<div
 			className={cn(

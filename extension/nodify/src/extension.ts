@@ -2,14 +2,6 @@
 // Import the module and reference it with the alias vscode in your code below
 import * as vscode from "vscode";
 import { analyzePythonAST } from "./pythonServer";
-import type {
-	ClientToServerEvents,
-	ServerToClientEvents,
-} from "@nodify/schema";
-import {
-	AbstractionLevelOneNodeMapper,
-	flattenCustomNodes,
-} from "./graph/NodeCreater";
 import { NodifyCodeLensProvider } from "./providers/codelens";
 import { registerWebview } from "./vsc-commands/webview-command";
 

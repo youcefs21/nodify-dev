@@ -33,6 +33,7 @@ function App() {
 					console.log("nodes", message.value);
 				} else if (message.type === "edges") {
 					setEdges(message.value);
+					console.log("edges", message.value);
 				}
 			},
 			{ signal: abortController.signal },

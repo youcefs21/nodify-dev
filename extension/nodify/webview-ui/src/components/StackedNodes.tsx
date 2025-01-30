@@ -13,7 +13,10 @@ export function StackedNodes({ data }: { data: CustomData }) {
 						className="box-border border-t border-crust"
 					>
 						<AbstractNode
-							data={data}
+							data={{
+								...data,
+								id: `${data.children[0].id}-root`,
+							}}
 							iconName={data.icon}
 							iconBackgroundColor={data.iconBackgroundColor}
 						/>

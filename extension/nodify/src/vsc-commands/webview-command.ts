@@ -6,6 +6,7 @@ import type {
 } from "@nodify/schema";
 import {
 	AbstractionLevelOneNodeMapper,
+	createEdges,
 	flattenCustomNodes,
 } from "../graph/NodeCreater";
 
@@ -80,6 +81,11 @@ export async function createWebview(
 		postMessage({
 			type: "nodes",
 			value: nodes,
+		});
+		const edges = createEdges(nodes);
+		postMessage({
+			type: "edges",
+			value: edges,
 		});
 	} else {
 		vscode.window.showErrorMessage(
