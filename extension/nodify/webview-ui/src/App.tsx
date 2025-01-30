@@ -55,7 +55,7 @@ function App() {
 	};
 
 	return (
-		<div className="flex flex-1 w-[calc(100vw-3rem)] h-screen overflow-hidden">
+		<div className="flex flex-1 w-[calc(100vw-3rem)] h-screen overflow-hidden mocha">
 			<div className="flex-grow">
 				<ReactFlow
 					nodes={renderedNodes}

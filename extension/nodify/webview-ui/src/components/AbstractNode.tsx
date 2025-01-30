@@ -36,7 +36,7 @@ export function EdgeButton({
 	// if direction is left, swap the index
 	return (
 		<button
-			className="w-[20px] box-border border border-border bg-white flex items-center justify-center"
+			className="w-[20px] box-border border border-crust bg-mantle flex items-center justify-center"
 			type="button"
 			disabled={!hasChildren}
 			onClick={() => {
@@ -44,11 +44,11 @@ export function EdgeButton({
 			}}
 		>
 			{hasChildren === false ? (
-				<Minus className="w-4 h-4 text-gray-400 rotate-90" />
+				<Minus className="w-4 h-4 rotate-90 text-text" />
 			) : realDirection === "left" ? (
-				<ChevronLeft className="w-4 h-4 stroke-black" />
+				<ChevronLeft className="w-4 h-4 stroke-text" />
 			) : (
-				<ChevronRight className="w-4 h-4 stroke-black" />
+				<ChevronRight className="w-4 h-4 stroke-text" />
 			)}
 		</button>
 	);
@@ -76,7 +76,7 @@ export function AbstractNode({
 	return (
 		<div
 			className={cn(
-				"bg-white font-mono text-xs flex-1 max-h-[40px] min-h-[40px] max-w-[260px]",
+				"bg-mantle font-mono text-xs flex-1 max-h-[40px] min-h-[40px] max-w-[260px]",
 				"flex w-full relative rounded-none box-border border-x border-b border-black",
 				reverse ? "flex-row-reverse" : "",
 			)}
@@ -106,7 +106,7 @@ export function AbstractNode({
 					)}
 					style={{ backgroundColor: iconBackgroundColor }}
 				>
-					<Icon name={iconName} className="text-white" />
+					<Icon name={iconName} className="text-text" />
 				</div>
 			</div>
 			<div className="h-[40px] w-full flex items-center justify-center p-2">

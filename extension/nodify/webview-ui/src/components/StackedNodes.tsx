@@ -10,7 +10,7 @@ export function StackedNodes({ data }: { data: CustomData }) {
 				return (
 					<div
 						key={`${data.children[0].id}-root`}
-						className="box-border border-t border-black"
+						className="box-border border-t border-crust"
 					>
 						<AbstractNode
 							data={data}
