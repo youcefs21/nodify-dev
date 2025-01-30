@@ -4,6 +4,7 @@ import * as vscode from "vscode";
 import { analyzePythonAST } from "./pythonServer";
 import { NodifyCodeLensProvider } from "./providers/codelens";
 import { registerWebview } from "./vsc-commands/webview-command";
+import { initDB } from "./db/jsonDB";
 
 interface PythonExtensionApi {
 	environments: {
@@ -64,6 +65,8 @@ export async function activate(context: vscode.ExtensionContext) {
 	// );
 
 	const webviewCommand = registerWebview(context);
+
+	await initDB();
 
 	context.subscriptions.push(analyzeCommand, webviewCommand, codeLensProvider);
 }
