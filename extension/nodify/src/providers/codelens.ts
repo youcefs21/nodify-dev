@@ -14,7 +14,7 @@ export class NodifyCodeLensProvider implements vscode.CodeLensProvider {
 		const allowedNodeKinds = [
 			"class_definition",
 			"function_definition",
-			"call",
+			"call", // TODO make settings to toggle these
 		];
 
 		if (!allowedNodeKinds.includes(String(node.kind()))) {

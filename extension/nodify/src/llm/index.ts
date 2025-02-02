@@ -2,7 +2,7 @@ import OpenAI from "openai";
 import { outputSchema, type inputList } from "@nodify/schema";
 
 const openai = new OpenAI({
-	baseURL: "http://100.89.180.124:11434/v1",
+	baseURL: "http://127.0.0.1:11434/v1",
 	apiKey: "ollama", // required but unused
 });
 
@@ -33,20 +33,20 @@ your output type must match the following:
 \`\`\`ts
 type outputItem = {
   // an incrementing id for each group of code
-  groupID: number;           
+  groupID: number;
 
   // a short description 2-8 word description of the code
-  label: string;              
+  label: string;
 
   // the range of ids that this code represents, from the input list
-  idRange: [number, number]; 
+  idRange: [number, number];
 
   // a one word category of the code chunk, for example "event_handler_setup"
   // try to be as broad as possible for this field
   type: string;
 
   // any nested code blocks. Only include children if the corresponding input item has children.
-  children?: outputItem[]; 
+  children?: outputItem[];
 }
 
 // your actual output will be an array of these items
