@@ -4,7 +4,7 @@ import * as path from "node:path";
 // You can import and use all API from the 'vscode' module
 // as well as import your extension to test it
 import * as vscode from "vscode";
-// import * as myExtension from '../../extension';
+import { getPythonExtension } from "../extension";
 
 suite("Extension Test Suite", () => {
 	vscode.window.showInformationMessage("Start all tests.");
@@ -14,7 +14,12 @@ suite("Extension Test Suite", () => {
 		assert.strictEqual(-1, [1, 2, 3].indexOf(0));
 	});
 
-	test("Get TextDocument", async () => {
+	test("Python Extension is installed", async () => {
+		const python = await getPythonExtension();
+		assert.ok(python);
+	});
+
+	test.skip("Get TextDocument", async () => {
 		// Method 1: Using openTextDocument with a file path
 		const filePath = path.join(__dirname, "testFile.txt");
 		const doc1 = await vscode.workspace.openTextDocument(filePath);

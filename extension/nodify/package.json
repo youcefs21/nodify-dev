@@ -6,6 +6,9 @@
 	"engines": {
 		"vscode": "^1.22.0"
 	},
+	"extensionDependencies": [
+		"ms-python.python"
+	],
 	"workspaces": ["packages/*", "webview-ui"],
 	"categories": ["Programming Languages", "Other"],
 	"activationEvents": ["onLanguage:python"],
