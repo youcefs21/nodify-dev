@@ -12,7 +12,7 @@ import {
 
 import "./reactflow.css";
 import { StackedNodes } from "./components/StackedNodes";
-import type { CustomNode, ServerToClientEvents } from "@nodify/schema";
+import type { CustomNode, ServerToClientEvents } from "../../src/types";
 import { sendToServer } from "./utils/sendToServer";
 
 function App() {

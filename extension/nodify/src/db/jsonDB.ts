@@ -1,7 +1,7 @@
 // we'll temporary use JSON to store our data, but I'm planning on moving to
 // https://github.com/tursodatabase/libsql-client-ts
 // when we get the chance
-import type { LLMOutput } from "@nodify/schema";
+import type { LLMOutput } from "../types";
 import fs from "node:fs/promises";
 import * as vscode from "vscode";
 import { hashString } from "./hash";

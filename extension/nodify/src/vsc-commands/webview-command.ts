@@ -4,7 +4,7 @@ import type {
 	ClientToServerEvents,
 	LLMOutput,
 	ServerToClientEvents,
-} from "@nodify/schema";
+} from "../types";
 import {
 	AbstractionLevelOneNodeMapper,
 	createEdges,

@@ -1,7 +1,7 @@
 import type { Edge } from "@xyflow/react";
-import type { CustomNode } from "./src/graph.types";
-export * from "./src/llm.types";
-export * from "./src/graph.types";
+import type { CustomNode } from "./graph.types";
+export * from "./llm.types";
+export * from "./graph.types";
 
 export type ServerToClientEvents =
 	| {

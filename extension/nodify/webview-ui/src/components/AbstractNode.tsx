@@ -8,7 +8,7 @@ import {
 import { cn } from "../utils/cn";
 import { useAtom } from "jotai";
 import { useMemo } from "react";
-import type { CustomData } from "@nodify/schema";
+import type { CustomData } from "../../../src/types";
 import type dynamicIconImports from "lucide-react/dynamicIconImports";
 import { Icon } from "./Icon";
 import { sendToServer } from "../utils/sendToServer";

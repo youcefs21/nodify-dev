@@ -1,4 +1,4 @@
-import type { CustomData } from "@nodify/schema";
+import type { CustomData } from "../../../src/types";
 import { AbstractNode } from "./AbstractNode";
 
 export function StackedNodes({ data }: { data: CustomData }) {

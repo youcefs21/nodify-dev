@@ -1,4 +1,4 @@
-import type { CustomNode, LLMOutput } from "@nodify/schema";
+import type { CustomNode, LLMOutput } from "../types";
 import type { Edge } from "@xyflow/react";
 
 export type NodeTypes =

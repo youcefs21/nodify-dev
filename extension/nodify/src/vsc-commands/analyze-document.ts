@@ -1,7 +1,7 @@
 import type * as vscode from "vscode";
 import { getAST, type CodeBlock } from "../ast/flow";
 import { runLLM } from "../llm";
-import type { inputItem, inputList, LLMOutput } from "@nodify/schema";
+import type { inputItem, inputList, LLMOutput } from "../types";
 import { entryNode } from "../graph/NodeCreater";
 import { readLLMCacheFromAST, writeLLMCache } from "../db/jsonDB";
 import { activeHashRef } from "./webview-command";
