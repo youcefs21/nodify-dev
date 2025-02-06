@@ -13,35 +13,46 @@ import {
 } from "../graph/NodeCreater";
 import { readLLMCache, readLLMCacheFromAST } from "../db/jsonDB";
 
-const postMessageToPanel =
-	(panel: vscode.WebviewPanel) => (message: ServerToClientEvents) =>
-		panel.webview.postMessage(JSON.stringify(message));
+const panelRef = {
+	current: null as vscode.WebviewPanel | null,
+};
+
+export const postMessageToPanel = (message: ServerToClientEvents) =>
+	panelRef.current?.webview.postMessage(JSON.stringify(message));
 
 const expanded = new Map<string, boolean>([
 	["-1", true],
 	["-2", true],
 ]);
 
-export const activeHashRef = {
-	current: "",
-};
+export function getActiveHash(context: vscode.ExtensionContext): string {
+	return context.workspaceState.get<string>("activeHashRef", "");
+}
 
-async function refreshNodes(panel: vscode.WebviewPanel) {
+export async function setActiveHash(
+	context: vscode.ExtensionContext,
+	hash: string,
+) {
+	await context.workspaceState.update("activeHashRef", hash);
+}
+
+export async function refreshNodes(context: vscode.ExtensionContext) {
 	let flows: LLMOutput[] = [];
-	if (activeHashRef.current === "") {
+	const currentHash = getActiveHash(context);
+	if (currentHash === "") {
 		const visibleEditors = vscode.window.visibleTextEditors;
 		const pythonEditor = visibleEditors.find(
 			(editor) => editor.document.languageId === "python",
 		);
 		if (pythonEditor) {
-			flows = await analyzePythonDocument(pythonEditor.document);
+			flows = await analyzePythonDocument(pythonEditor.document, context);
 		} else {
 			vscode.window.showErrorMessage(
 				"Please open a Python file in another editor pane",
 			);
 		}
 	} else {
-		const output = await readLLMCache(activeHashRef.current);
+		const output = await readLLMCache(currentHash);
 		if (!output) {
 			vscode.window.showErrorMessage("invalid llm cache entry");
 			return;
@@ -64,12 +75,12 @@ async function refreshNodes(panel: vscode.WebviewPanel) {
 	const nodes = flattenCustomNodes(
 		AbstractionLevelOneNodeMapper(flows, expanded),
 	);
-	postMessageToPanel(panel)({
+	postMessageToPanel({
 		type: "nodes",
 		value: nodes,
 	});
 	const edges = createEdges(nodes);
-	postMessageToPanel(panel)({
+	postMessageToPanel({
 		type: "edges",
 		value: edges,
 	});
@@ -92,6 +103,17 @@ export async function createWebview(
 				vscode.Uri.joinPath(context.extensionUri, "webview-ui/dist"),
 			],
 		},
+	);
+
+	panelRef.current = panel;
+
+	// Handle panel disposal
+	panel.onDidDispose(
+		() => {
+			panelRef.current = null;
+		},
+		null,
+		context.subscriptions,
 	);
 
 	// Get path to resource on disk
@@ -125,7 +147,7 @@ export async function createWebview(
 		undefined,
 		context.subscriptions,
 	);
-	await refreshNodes(panel);
+	await refreshNodes(context);
 
 	return panel;
 }
@@ -134,20 +156,26 @@ export function registerWebview(context: vscode.ExtensionContext) {
 	//
 	// Register webview command
 	return vscode.commands.registerCommand("nodify.openWebview", async () => {
-		activeHashRef.current = "";
+		// If we already have a panel, show it instead of creating a new one
+		if (panelRef.current) {
+			panelRef.current.reveal(vscode.ViewColumn.Beside);
+			return;
+		}
+
+		await setActiveHash(context, "");
 		await createWebview(context, async (message, panel) => {
 			switch (message.type) {
 				// sent when the webview is loaded
 				// vscode.window.showInformationMessage(message.value);
 				case "on-render": {
-					await refreshNodes(panel);
+					await refreshNodes(context);
 					return;
 				}
 
 				case "node-toggle": {
 					// expand nodeId, and refresh nodes
 					expanded.set(message.nodeId, !expanded.get(message.nodeId));
-					await refreshNodes(panel);
+					await refreshNodes(context);
 					return;
 				}
 			}

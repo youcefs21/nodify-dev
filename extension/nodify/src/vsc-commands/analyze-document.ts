@@ -4,7 +4,8 @@ import { runLLM } from "../llm";
 import type { inputItem, inputList, LLMOutput } from "../types";
 import { entryNode } from "../graph/NodeCreater";
 import { readLLMCacheFromAST, writeLLMCache } from "../db/jsonDB";
-import { activeHashRef } from "./webview-command";
+import { getActiveHash, setActiveHash } from "./webview-command";
+import { hashString } from "../db/hash";
 
 function cleanAST(ast: CodeBlock[]): inputItem[] {
 	// remove all children from the ast
@@ -17,6 +18,7 @@ function cleanAST(ast: CodeBlock[]): inputItem[] {
 
 export async function analyzePythonDocument(
 	document: vscode.TextDocument,
+	context: vscode.ExtensionContext,
 ): Promise<LLMOutput[]> {
 	const ast = await getAST(document);
 	const input: inputList = {
@@ -34,7 +36,7 @@ export async function analyzePythonDocument(
 			await writeLLMCache(cacheFilePath, output);
 		}
 	}
-	activeHashRef.current = cacheFilePath;
+	await setActiveHash(context, cacheFilePath);
 
 	return [
 		{
