@@ -5,7 +5,11 @@
 	"tasks": [
 		{
 			"label": "watch",
-			"dependsOn": ["npm: watch:tsc", "npm: watch:esbuild"],
+			"dependsOn": [
+				"npm: watch:tsc",
+				"npm: watch:esbuild",
+				"npm: build:webview"
+			],
 			"presentation": {
 				"reveal": "never"
 			},
@@ -72,6 +76,21 @@
 			"label": "tasks: watch-tests",
 			"dependsOn": ["npm: watch", "npm: watch-tests"],
 			"problemMatcher": []
+		},
+		{
+			"type": "npm",
+			"script": "build",
+			"group": "build",
+			"isBackground": false,
+			"label": "npm: build:webview",
+			"problemMatcher": [],
+			"presentation": {
+				"group": "watch",
+				"reveal": "never"
+			},
+			"options": {
+				"cwd": "${workspaceFolder}/webview-ui"
+			}
 		}
 	]
 }
