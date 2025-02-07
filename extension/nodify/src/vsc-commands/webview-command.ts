@@ -1,5 +1,5 @@
 import * as vscode from "vscode";
-import { analyzePythonDocument } from "./analyze-document";
+import { analyzePythonDocument, analyzePythonBlock } from "./analyze-document";
 import type {
 	ClientToServerEvents,
 	LLMOutput,
@@ -12,7 +12,8 @@ import {
 	flattenCustomNodes,
 } from "../graph/NodeCreater";
 import { readLLMCache, readLLMCacheFromAST } from "../db/jsonDB";
-
+import type { Reference } from "../ast/flow";
+import { extractCodeBlock } from "../ast/expressions";
 const panelRef = {
 	current: null as vscode.WebviewPanel | null,
 };
@@ -155,30 +156,38 @@ export async function createWebview(
 export function registerWebview(context: vscode.ExtensionContext) {
 	//
 	// Register webview command
-	return vscode.commands.registerCommand("nodify.openWebview", async () => {
-		// If we already have a panel, show it instead of creating a new one
-		if (panelRef.current) {
-			panelRef.current.reveal(vscode.ViewColumn.Beside);
-			return;
-		}
-
-		await setActiveHash(context, "");
-		await createWebview(context, async (message, panel) => {
-			switch (message.type) {
-				// sent when the webview is loaded
-				// vscode.window.showInformationMessage(message.value);
-				case "on-render": {
-					await refreshNodes(context);
-					return;
-				}
-
-				case "node-toggle": {
-					// expand nodeId, and refresh nodes
-					expanded.set(message.nodeId, !expanded.get(message.nodeId));
-					await refreshNodes(context);
-					return;
-				}
+	return vscode.commands.registerCommand(
+		"nodify.openWebview",
+		async (ref?: Reference) => {
+			// If we already have a panel, show it instead of creating a new one
+			if (panelRef.current) {
+				panelRef.current.reveal(vscode.ViewColumn.Beside);
+				return;
 			}
-		});
-	});
+
+			if (ref) {
+				//
+				const document = await vscode.workspace.openTextDocument(ref.file);
+				analyzePythonBlock(document, ref, context);
+			}
+
+			await createWebview(context, async (message) => {
+				switch (message.type) {
+					// sent when the webview is loaded
+					// vscode.window.showInformationMessage(message.value);
+					case "on-render": {
+						await refreshNodes(context);
+						return;
+					}
+
+					case "node-toggle": {
+						// expand nodeId, and refresh nodes
+						expanded.set(message.nodeId, !expanded.get(message.nodeId));
+						await refreshNodes(context);
+						return;
+					}
+				}
+			});
+		},
+	);
 }

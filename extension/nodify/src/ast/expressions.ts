@@ -1,8 +1,8 @@
 import { parse, Lang, type SgNode, type SgRoot } from "@ast-grep/napi";
-import { getAST, handleFlows, type CodeBlock, type Reference } from "./flow";
+import type { CodeBlock, Reference } from "./flow";
 import * as vscode from "vscode";
 import { getDefinition } from "../vsc-commands/builtin";
-
+import { findNodeFromRange } from "../vsc-commands/analyze-document";
 const ignoreKinds = [
 	"=",
 	"identifier",
@@ -69,7 +69,7 @@ const ignoreKinds = [
 	// maybe, check again later
 	"pattern_list",
 ];
-var counter: number = 0;
+let counter = 0;
 export async function handleExpression(
 	node: SgNode,
 	document: vscode.TextDocument,

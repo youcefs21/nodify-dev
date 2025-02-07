@@ -18,13 +18,6 @@ export type CodeBlock = {
 	children?: CodeBlock[];
 };
 
-export async function getAST(document: vscode.TextDocument) {
-	const text = document.getText();
-	const root = parse(Lang.Python, text).root();
-	const flows = await handleFlows(root.children(), document);
-	return flows;
-}
-
 async function handleNodeWithBlock(
 	node: SgNode,
 	id: number,

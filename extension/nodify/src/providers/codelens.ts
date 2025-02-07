@@ -1,6 +1,6 @@
 import * as vscode from "vscode";
-import { CodeBlock, getAST } from "../ast/flow";
 import { parse, Lang, type SgNode, type SgRoot } from "@ast-grep/napi";
+import type { Reference } from "../ast/flow";
 
 export class NodifyCodeLensProvider implements vscode.CodeLensProvider {
 	public add_ast_node_to_code_lens(
@@ -14,7 +14,7 @@ export class NodifyCodeLensProvider implements vscode.CodeLensProvider {
 		const allowedNodeKinds = [
 			"class_definition",
 			"function_definition",
-			"call", // TODO make settings to toggle these
+			// "call", // TODO make settings to toggle these
 		];
 
 		if (!allowedNodeKinds.includes(String(node.kind()))) {
@@ -22,26 +22,40 @@ export class NodifyCodeLensProvider implements vscode.CodeLensProvider {
 		}
 
 		// Right now we only care about class defs, function defs, and called functions/classes
-		const definitionRegex = /(class|def) (\w+)/;
-		const callerRegex = /((\w|\.)+)\(/;
+		// TODO: this is not the correct way to do this, ast-grep has a specific way to find all nodes of a certain kind
 		const identifierName =
-			node.text().match(definitionRegex)?.[2] ??
-			node.text().match(callerRegex)?.[1] ??
-			"Unknown";
+			node
+				.children()
+				.find((child) => child.kind() === "identifier")
+				?.text() ?? "Unknown";
 
 		const range = node.range();
 		const codeLens = new vscode.CodeLens(
-			new vscode.Range(range.start.line, 0, range.start.line, 0),
+			new vscode.Range(
+				range.start.line,
+				range.start.column,
+				range.end.line,
+				range.end.column,
+			),
 		);
 
 		codeLens.command = {
 			title: `Open Nodify at ${identifierName}`,
 			command: "nodify.openWebview",
 			arguments: [
-				identifierName,
-				node.text(),
-				node.range().start.line,
-				document.fileName,
+				{
+					symbol: identifierName,
+					location: new vscode.Location(
+						document.uri,
+						new vscode.Range(
+							range.start.line,
+							range.start.column,
+							range.end.line,
+							range.end.column,
+						),
+					),
+					file: document.uri,
+				} satisfies Reference,
 			],
 		};
 		return [codeLens].concat(codeLensChildren);
