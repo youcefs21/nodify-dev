@@ -1,5 +1,6 @@
 import type { Edge } from "@xyflow/react";
 import type { CustomNode } from "./graph.types";
+import type * as vscode from "vscode";
 export * from "./llm.types";
 export * from "./graph.types";
 
@@ -11,6 +12,10 @@ export type ServerToClientEvents =
 	| {
 			type: "edges";
 			value: Edge[];
+	  }
+	| {
+			type: "cursor-position";
+			value: vscode.Position;
 	  };
 // {
 // 	noArg: () => void;

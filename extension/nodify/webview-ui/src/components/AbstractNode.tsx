@@ -73,6 +73,7 @@ export function AbstractNode({
 		disabled,
 		reversed: reverse,
 		expanded: isExpanded,
+		cursorPosition,
 	},
 	iconName,
 	iconBackgroundColor,

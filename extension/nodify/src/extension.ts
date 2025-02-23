@@ -66,6 +66,7 @@ export async function activate(context: vscode.ExtensionContext) {
 		},
 	);
 
+	// Add code lens functionality above every module, function, and class
 	const codeLensProvider = vscode.languages.registerCodeLensProvider(
 		"python",
 		new NodifyCodeLensProvider(),
@@ -79,6 +80,18 @@ export async function activate(context: vscode.ExtensionContext) {
 	// 	new NodifyHoverProvider(),
 	// );
 
+	// Send cursor position to frontend
+	const cursorPositionListener = vscode.window.onDidChangeTextEditorSelection(
+		async (editor) => {
+			if (editor) {
+				await postMessageToPanel({
+					type: "cursor-position",
+					value: editor.selections[0].active,
+				});
+			}
+		},
+	);
+
 	const webviewCommand = registerWebview(context);
 
 	await initDB();
@@ -88,6 +101,7 @@ export async function activate(context: vscode.ExtensionContext) {
 		webviewCommand,
 		codeLensProvider,
 		editorListener,
+		cursorPositionListener,
 	);
 }
 

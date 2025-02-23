@@ -1,6 +1,7 @@
 import type dynamicIconImports from "lucide-react/dynamicIconImports";
 type IconProps = { name: keyof typeof dynamicIconImports };
 import type { Node } from "@xyflow/react";
+import type * as vscode from "vscode";
 
 export type NodeConnection = {
 	sourceId: string;
@@ -25,6 +26,7 @@ export type NodeProps = {
 
 export type CustomData = NodeProps & {
 	id: string;
+	cursorPosition: vscode.Position | null;
 };
 
 export type CustomNode = Node<CustomData> & { type: "stacked" };
