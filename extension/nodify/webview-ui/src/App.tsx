@@ -61,21 +61,18 @@ function App() {
 
 	// TODO: send all click events to the extension, including node expansion/collapse. Maybe even node hovers?
 	// will be used to highlight code in the editor.
+	const onNodeClick = (event: React.MouseEvent, node: CustomNode) => {
+		sendToServer({
+			type: "highlight-node-source",
+			idRange: node.data.idRange,
+		});
+	};
 
 	return (
 		<div className="flex flex-1 w-[calc(100vw-3rem)] h-screen overflow-hidden mocha">
 			<div className="flex-grow">
 				<ReactFlow
-					nodes={
-						renderedNodes
-						// 	.map((node) => ({
-						// 	...node,
-						// 	data: {...node.data, test: "test",
-						// 	// Only add cursor position to nodes at the last second
-						// 	cursorPosition: cursorPosition,
-						// 	nodeLocationMapping: astLocations},
-						// }))
-					}
+					nodes={renderedNodes}
 					nodeTypes={{
 						stacked: StackedNodes,
 					}}
@@ -88,6 +85,7 @@ function App() {
 					selectionOnDrag
 					panOnDrag={false}
 					selectionMode={SelectionMode.Partial}
+					onNodeClick={onNodeClick}
 				>
 					<Controls />
 					<Background variant={BackgroundVariant.Dots} gap={12} size={1} />

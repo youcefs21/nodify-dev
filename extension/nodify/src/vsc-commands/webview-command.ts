@@ -175,8 +175,80 @@ export function registerWebview(context: vscode.ExtensionContext) {
 						await refreshNodes(context);
 						return;
 					}
+
+					case "highlight-node-source": {
+						await highlightNodeSource(context, message.idRange);
+						return;
+					}
 				}
 			});
 		},
 	);
+}
+
+export async function highlightNodeSource(
+	context: vscode.ExtensionContext,
+	idRange: [number, number],
+) {
+	// const activeEditor = vscode.window.activeTextEditor;
+	// if (!activeEditor) {
+	// 	vscode.window.showErrorMessage(
+	// 		"No active text editor (cannot display code highlighting)",
+	// 	);
+	// 	return;
+	// }
+
+	// TODO get this info from elsewhere? we shouldnt need to reanalyze the document just to convert idranges back into locations
+	let ast_locations: AstLocation[] = [];
+	const visibleEditors = vscode.window.visibleTextEditors;
+	const pythonEditor = visibleEditors.find(
+		(editor) => editor.document.languageId === "python",
+	);
+	if (!pythonEditor) {
+		vscode.window.showErrorMessage(
+			"No active text editor (cannot display code highlighting)",
+		);
+		return;
+	}
+
+	const a = await analyzePythonDocument(pythonEditor.document, context);
+	ast_locations = a.ast_locations;
+
+	const highlightingDecoration = vscode.window.createTextEditorDecorationType({
+		backgroundColor: "rgba(100, 100, 100, 0.9)",
+		isWholeLine: false,
+	});
+	const ranges: vscode.Range[] = [];
+	for (const astLocation of ast_locations) {
+		if (astLocation.id >= idRange[0] && astLocation.id <= idRange[1]) {
+			console.log("DEBUG ASTLOCATION FOR NODE 1", astLocation);
+			console.log("DEBUG ASTLOCATION FOR NODE 2", astLocation.location);
+			console.log("DEBUG ASTLOCATION FOR NODE 3", astLocation.location["0"]);
+			console.log("DEBUG ASTLOCATION FOR NODE 4", astLocation.location[1]);
+
+			console.log("DEBUG ASTLOCATION FOR NODE", astLocation);
+			console.log("DEBUG ASTLOCATION FOR NODE LOCATION", astLocation.location);
+			console.log("Type of location:", typeof astLocation.location);
+			console.log("Instance check:", Array.isArray(astLocation.location));
+			console.log("Keys in location:", Object.keys(astLocation.location));
+			console.log("location[0]:", astLocation.location[0]);
+			console.log("location[1]:", astLocation.location[1]);
+			ranges.push(
+				new vscode.Range(
+					new vscode.Position(
+						astLocation.location[0].line,
+						astLocation.location[0].character,
+					),
+					new vscode.Position(
+						astLocation.location[1].line,
+						astLocation.location[1].character,
+					),
+				),
+			);
+		}
+	}
+	pythonEditor.setDecorations(highlightingDecoration, ranges);
+	setTimeout(() => {
+		pythonEditor.setDecorations(highlightingDecoration, []);
+	}, 5000);
 }
