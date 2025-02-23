@@ -6,12 +6,13 @@ import {
 	type LucideIcon,
 } from "lucide-react";
 import { cn } from "../utils/cn";
-import { useAtom } from "jotai";
 import { useMemo } from "react";
 import type { CustomData } from "../../../src/types";
 import type dynamicIconImports from "lucide-react/dynamicIconImports";
 import { Icon } from "./Icon";
 import { sendToServer } from "../utils/sendToServer";
+import { astLocationsAtom, cursorPositionAtom } from "../atoms/cursorAtoms";
+import { useAtom } from "jotai";
 
 interface EdgeButtonProps {
 	direction: "left" | "right";
@@ -73,17 +74,44 @@ export function AbstractNode({
 		disabled,
 		reversed: reverse,
 		expanded: isExpanded,
-		cursorPosition,
 	},
 	iconName,
 	iconBackgroundColor,
 }: NodeProps) {
+	const [cursorPosition, setCursorPosition] = useAtom(cursorPositionAtom);
+	const [astLocations, setAstLocations] = useAtom(astLocationsAtom);
+	let cursorPositionedNodes: number[] = [];
+
+	console.log("AbstractNode Position", cursorPosition);
+	console.log("AbstractNode Locations", astLocations);
+	if (cursorPosition !== null) {
+		const cursorPositionedAstLocations = astLocations.filter((astLocation) => {
+			// These are supposed to be vscode ranges but the types like - see AstLocation.ts:13
+			// return astLocation.location.contains(cursorPosition);
+			return (
+				astLocation.location[0].line <= cursorPosition.line &&
+				cursorPosition.line <= astLocation.location[1].line
+			);
+		});
+		console.log(
+			"AbstractNode cursorPositionedAstLocations",
+			cursorPositionedAstLocations,
+		);
+		cursorPositionedNodes = cursorPositionedAstLocations.map((astLocation) => {
+			return astLocation.id;
+		});
+	}
+	const isCursorOverNode = cursorPositionedNodes.includes(Number.parseInt(id));
+
+	console.log("AbstractNode cursorPositionedNodes", cursorPositionedNodes);
 	console.log("handle id", id);
 	return (
 		<div
 			className={cn(
 				"bg-mantle font-mono text-xs flex-1 max-h-[40px] min-h-[40px] max-w-[260px]",
-				"flex w-full relative rounded-none box-border border-x border-b border-black",
+				"flex w-full relative rounded-none box-border border-x border-b",
+				isCursorOverNode ? "border-white" : "border-black",
+				// "border-black",
 				reverse ? "flex-row-reverse" : "",
 			)}
 		>

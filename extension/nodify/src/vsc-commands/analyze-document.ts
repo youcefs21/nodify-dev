@@ -7,9 +7,11 @@ import { readLLMCacheFromAST, writeLLMCache } from "../db/jsonDB";
 import { setActiveHash } from "./webview-command";
 import { Lang, parse, type SgNode } from "@ast-grep/napi";
 
+type AstLocationPosition = { line: number; character: number };
 export type AstLocation = {
 	id: number;
-	location: vscode.Range;
+	// biome-ignore lint/suspicious/noExplicitAny: AbstractNodes.tsx only works with indexing on AstLocation, even though the expected type should be vscode.Range. Idk
+	location: AstLocationPosition[] | any;
 };
 interface CleanedAST {
 	llm_ast: inputItem[];

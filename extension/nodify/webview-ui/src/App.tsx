@@ -14,17 +14,16 @@ import "./reactflow.css";
 import { StackedNodes } from "./components/StackedNodes";
 import type { CustomNode, ServerToClientEvents } from "../../src/types";
 import { sendToServer } from "./utils/sendToServer";
-import type * as vscode from "vscode";
-import type { AstLocation } from "../../src/vsc-commands/analyze-document";
+import { useAtom } from "jotai";
+import { cursorPositionAtom, astLocationsAtom } from "./atoms/cursorAtoms";
 
 function App() {
 	const [renderedNodes, setNodes, onNodesChange] = useNodesState<CustomNode>(
 		[],
 	);
 	const [renderedEdges, setEdges, onEdgesChange] = useEdgesState<Edge>([]);
-	const [cursorPositionState, setCursorPosition] =
-		useState<vscode.Position | null>(null);
-	const [astLocations, setAstLocations] = useState<AstLocation[]>([]);
+	const [cursorPosition, setCursorPosition] = useAtom(cursorPositionAtom);
+	const [astLocations, setAstLocations] = useAtom(astLocationsAtom);
 
 	useEffect(() => {
 		sendToServer({
@@ -58,7 +57,7 @@ function App() {
 		return () => {
 			abortController.abort();
 		};
-	}, [setNodes, setEdges]);
+	}, [setNodes, setEdges, setCursorPosition, setAstLocations]);
 
 	// TODO: send all click events to the extension, including node expansion/collapse. Maybe even node hovers?
 	// will be used to highlight code in the editor.
@@ -67,11 +66,16 @@ function App() {
 		<div className="flex flex-1 w-[calc(100vw-3rem)] h-screen overflow-hidden mocha">
 			<div className="flex-grow">
 				<ReactFlow
-					nodes={renderedNodes.map((node) => ({
-						...node,
-						// Only add cursor position to nodes at the last second
-						data: { ...node.data, cursorPosition: cursorPositionState },
-					}))}
+					nodes={
+						renderedNodes
+						// 	.map((node) => ({
+						// 	...node,
+						// 	data: {...node.data, test: "test",
+						// 	// Only add cursor position to nodes at the last second
+						// 	cursorPosition: cursorPosition,
+						// 	nodeLocationMapping: astLocations},
+						// }))
+					}
 					nodeTypes={{
 						stacked: StackedNodes,
 					}}

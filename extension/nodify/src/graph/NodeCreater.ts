@@ -47,7 +47,6 @@ function mapSingleNode(
 			reversed: false,
 			active: true,
 			disabled: false,
-			cursorPosition: null,
 		},
 		type: "stacked",
 		position: { x: 300 * depth, y: 0 },
