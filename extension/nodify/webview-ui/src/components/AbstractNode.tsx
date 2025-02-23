@@ -74,6 +74,7 @@ export function AbstractNode({
 		disabled,
 		reversed: reverse,
 		expanded: isExpanded,
+		idRange,
 	},
 	iconName,
 	iconBackgroundColor,
@@ -101,7 +102,14 @@ export function AbstractNode({
 			return astLocation.id;
 		});
 	}
-	const isCursorOverNode = cursorPositionedNodes.includes(Number.parseInt(id));
+	let isCursorOverNode = false;
+	for (const cursorPositionedNode of cursorPositionedNodes) {
+		if (idRange.includes(cursorPositionedNode)) {
+			isCursorOverNode = true;
+			break;
+		}
+	}
+	// const isCursorOverNode = cursorPositionedNodes.includes(Number.parseInt(id));
 
 	console.log("AbstractNode cursorPositionedNodes", cursorPositionedNodes);
 	console.log("handle id", id);
