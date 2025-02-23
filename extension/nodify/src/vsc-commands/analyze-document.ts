@@ -7,13 +7,38 @@ import { readLLMCacheFromAST, writeLLMCache } from "../db/jsonDB";
 import { setActiveHash } from "./webview-command";
 import { Lang, parse, type SgNode } from "@ast-grep/napi";
 
-function cleanAST(ast: CodeBlock[]): inputItem[] {
+type AstLocationPosition = { line: number; character: number };
+export type AstLocation = {
+	id: number;
+	// biome-ignore lint/suspicious/noExplicitAny: AbstractNodes.tsx only works with indexing on AstLocation, even though the expected type should be vscode.Range. Idk
+	location: AstLocationPosition[] | any;
+};
+interface CleanedAST {
+	llm_ast: inputItem[];
+	ast_locations: AstLocation[];
+}
+
+function cleanAST(ast: CodeBlock[]): CleanedAST {
 	// remove all children from the ast
-	return ast.map((x) => ({
-		id: x.id,
-		text: x.text,
-		children: cleanAST(x.children ?? []),
-	}));
+	return {
+		llm_ast: ast.map((x) => ({
+			id: x.id,
+			text: x.text,
+			children: cleanAST(x.children ?? []).llm_ast,
+		})),
+		ast_locations: ast.flatMap((x) => {
+			const locations = [
+				{
+					id: x.id,
+					location: x.location,
+				},
+			];
+			if (x.children) {
+				return [...locations, ...cleanAST(x.children).ast_locations];
+			}
+			return locations;
+		}),
+	};
 }
 
 export async function findNodeFromRange(
@@ -72,8 +97,9 @@ export async function analyzePythonBlock(
 	console.log(block?.children().map((x) => x.text()));
 	const ast = await handleFlows(block?.children() ?? [], document);
 	console.log(ast);
+	const { ast_locations, llm_ast } = cleanAST(ast);
 	const input: inputList = {
-		input: cleanAST(ast),
+		input: llm_ast,
 	};
 	let { output, cacheFilePath } = await readLLMCacheFromAST(
 		JSON.stringify(input.input),
@@ -87,19 +113,21 @@ export async function analyzePythonBlock(
 		}
 	}
 	await setActiveHash(context, cacheFilePath);
-	return output;
+	return { graph: output, ast_locations };
 }
 
 export async function analyzePythonDocument(
 	document: vscode.TextDocument,
 	context: vscode.ExtensionContext,
-): Promise<LLMOutput[]> {
+): Promise<{ graph: LLMOutput[]; ast_locations: AstLocation[] }> {
 	const text = document.getText();
 	const root = parse(Lang.Python, text).root();
 	const ast = await handleFlows(root.children(), document);
 
+	const { llm_ast, ast_locations } = cleanAST(ast);
+
 	const input: inputList = {
-		input: cleanAST(ast),
+		input: llm_ast,
 	};
 	let { output, cacheFilePath } = await readLLMCacheFromAST(
 		JSON.stringify(input.input),
@@ -115,16 +143,19 @@ export async function analyzePythonDocument(
 	}
 	await setActiveHash(context, cacheFilePath);
 
-	return [
-		{
-			...entryNode,
-			children: [
-				{
-					// biome-ignore lint/style/noNonNullAssertion: entryNode.children is not null
-					...entryNode.children![0],
-					children: output,
-				},
-			],
-		},
-	];
+	return {
+		graph: [
+			{
+				...entryNode,
+				children: [
+					{
+						// biome-ignore lint/style/noNonNullAssertion: entryNode.children is not null
+						...entryNode.children![0],
+						children: output,
+					},
+				],
+			},
+		],
+		ast_locations,
+	};
 }

@@ -27,4 +27,6 @@ export type CustomData = NodeProps & {
 	id: string;
 };
 
-export type CustomNode = Node<CustomData> & { type: "stacked" };
+export type CustomNode = Node<CustomData> & {
+	type: "stacked";
+};

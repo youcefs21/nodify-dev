@@ -1,5 +1,9 @@
 import * as vscode from "vscode";
-import { analyzePythonDocument, analyzePythonBlock } from "./analyze-document";
+import {
+	analyzePythonDocument,
+	analyzePythonBlock,
+	type AstLocation,
+} from "./analyze-document";
 import type {
 	ClientToServerEvents,
 	LLMOutput,
@@ -38,43 +42,24 @@ export async function setActiveHash(
 }
 
 export async function refreshNodes(context: vscode.ExtensionContext) {
-	let flows: LLMOutput[] = [];
-	const currentHash = getActiveHash(context);
-	if (currentHash === "") {
-		const visibleEditors = vscode.window.visibleTextEditors;
-		const pythonEditor = visibleEditors.find(
-			(editor) => editor.document.languageId === "python",
-		);
-		if (pythonEditor) {
-			flows = await analyzePythonDocument(pythonEditor.document, context);
-		} else {
-			vscode.window.showErrorMessage(
-				"Please open a Python file in another editor pane",
-			);
-		}
+	let graph: LLMOutput[] = [];
+	let ast_locations: AstLocation[] = [];
+	const visibleEditors = vscode.window.visibleTextEditors;
+	const pythonEditor = visibleEditors.find(
+		(editor) => editor.document.languageId === "python",
+	);
+	if (pythonEditor) {
+		const a = await analyzePythonDocument(pythonEditor.document, context);
+		ast_locations = a.ast_locations;
+		graph = a.graph;
 	} else {
-		const output = await readLLMCache(currentHash);
-		if (!output) {
-			vscode.window.showErrorMessage("invalid llm cache entry");
-			return;
-		}
-
-		flows = [
-			{
-				...entryNode,
-				children: [
-					{
-						// biome-ignore lint/style/noNonNullAssertion: entryNode.children is not null
-						...entryNode.children![0],
-						children: output,
-					},
-				],
-			},
-		];
+		vscode.window.showErrorMessage(
+			"Please open a Python file in another editor pane",
+		);
 	}
 
 	const nodes = flattenCustomNodes(
-		AbstractionLevelOneNodeMapper(flows, expanded),
+		AbstractionLevelOneNodeMapper(graph, expanded),
 	);
 	postMessageToPanel({
 		type: "nodes",
@@ -84,6 +69,10 @@ export async function refreshNodes(context: vscode.ExtensionContext) {
 	postMessageToPanel({
 		type: "edges",
 		value: edges,
+	});
+	postMessageToPanel({
+		type: "ast_locations",
+		value: ast_locations,
 	});
 }
 

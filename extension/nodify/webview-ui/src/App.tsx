@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import {
 	ReactFlow,
 	Controls,
@@ -14,12 +14,16 @@ import "./reactflow.css";
 import { StackedNodes } from "./components/StackedNodes";
 import type { CustomNode, ServerToClientEvents } from "../../src/types";
 import { sendToServer } from "./utils/sendToServer";
+import { useAtom } from "jotai";
+import { cursorPositionAtom, astLocationsAtom } from "./atoms/cursorAtoms";
 
 function App() {
 	const [renderedNodes, setNodes, onNodesChange] = useNodesState<CustomNode>(
 		[],
 	);
 	const [renderedEdges, setEdges, onEdgesChange] = useEdgesState<Edge>([]);
+	const [cursorPosition, setCursorPosition] = useAtom(cursorPositionAtom);
+	const [astLocations, setAstLocations] = useAtom(astLocationsAtom);
 
 	useEffect(() => {
 		sendToServer({
@@ -38,6 +42,12 @@ function App() {
 				} else if (message.type === "edges") {
 					setEdges(message.value);
 					console.log("edges", message.value);
+				} else if (message.type === "cursor-position") {
+					setCursorPosition(message.value);
+					console.log("cursor_position", message.value);
+				} else if (message.type === "ast_locations") {
+					setAstLocations(message.value);
+					console.log("ast_locations", message.value);
 				}
 			},
 			{ signal: abortController.signal },
@@ -47,7 +57,7 @@ function App() {
 		return () => {
 			abortController.abort();
 		};
-	}, [setNodes, setEdges]);
+	}, [setNodes, setEdges, setCursorPosition, setAstLocations]);
 
 	// TODO: send all click events to the extension, including node expansion/collapse. Maybe even node hovers?
 	// will be used to highlight code in the editor.
@@ -56,7 +66,16 @@ function App() {
 		<div className="flex flex-1 w-[calc(100vw-3rem)] h-screen overflow-hidden mocha">
 			<div className="flex-grow">
 				<ReactFlow
-					nodes={renderedNodes}
+					nodes={
+						renderedNodes
+						// 	.map((node) => ({
+						// 	...node,
+						// 	data: {...node.data, test: "test",
+						// 	// Only add cursor position to nodes at the last second
+						// 	cursorPosition: cursorPosition,
+						// 	nodeLocationMapping: astLocations},
+						// }))
+					}
 					nodeTypes={{
 						stacked: StackedNodes,
 					}}
