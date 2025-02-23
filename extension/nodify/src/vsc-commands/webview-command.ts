@@ -215,24 +215,13 @@ export async function highlightNodeSource(
 	ast_locations = a.ast_locations;
 
 	const highlightingDecoration = vscode.window.createTextEditorDecorationType({
-		backgroundColor: "rgba(100, 100, 100, 0.9)",
+		backgroundColor: "rgba(100, 100, 100, 0.8)",
 		isWholeLine: false,
 	});
+
 	const ranges: vscode.Range[] = [];
 	for (const astLocation of ast_locations) {
 		if (astLocation.id >= idRange[0] && astLocation.id <= idRange[1]) {
-			console.log("DEBUG ASTLOCATION FOR NODE 1", astLocation);
-			console.log("DEBUG ASTLOCATION FOR NODE 2", astLocation.location);
-			console.log("DEBUG ASTLOCATION FOR NODE 3", astLocation.location["0"]);
-			console.log("DEBUG ASTLOCATION FOR NODE 4", astLocation.location[1]);
-
-			console.log("DEBUG ASTLOCATION FOR NODE", astLocation);
-			console.log("DEBUG ASTLOCATION FOR NODE LOCATION", astLocation.location);
-			console.log("Type of location:", typeof astLocation.location);
-			console.log("Instance check:", Array.isArray(astLocation.location));
-			console.log("Keys in location:", Object.keys(astLocation.location));
-			console.log("location[0]:", astLocation.location[0]);
-			console.log("location[1]:", astLocation.location[1]);
 			ranges.push(
 				new vscode.Range(
 					new vscode.Position(
@@ -247,8 +236,35 @@ export async function highlightNodeSource(
 			);
 		}
 	}
+	console.log("idRange", idRange);
+	console.log("Ranges", ranges);
 	pythonEditor.setDecorations(highlightingDecoration, ranges);
+
+	// const highlightingDecorationFades = [0.8, 0.6, 0.4, 0.2, 0].map((opacity) =>
+	// 	vscode.window.createTextEditorDecorationType({
+	// 		backgroundColor: `rgba(100, 100, 100, ${opacity})`,
+	// 		isWholeLine: false,
+	// 	}),
+	// );
+	// const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
+	// for (const decoration of highlightingDecorationFades) {
+	// 	await sleep(500);
+	// 	pythonEditor.setDecorations(decoration, []);
+	// 	pythonEditor.setDecorations(decoration, ranges);
+	// }
+	// highlightingDecorationFades.forEach((decoration, index) => {
+	// 	setTimeout(
+	// 		() => {
+	// 			pythonEditor.setDecorations(decoration, []);
+	// 			pythonEditor.setDecorations(decoration, ranges);
+	// 		},
+	// 		500 * (index + 1),
+	// 	);
+	// });
+	// setTimeout(() => {
+	// 	pythonEditor.setDecorations(highlightingDecoration, []);
+	// }, 1000);
 	setTimeout(() => {
 		pythonEditor.setDecorations(highlightingDecoration, []);
-	}, 5000);
+	}, 1000);
 }

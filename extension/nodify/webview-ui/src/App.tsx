@@ -62,6 +62,7 @@ function App() {
 	// TODO: send all click events to the extension, including node expansion/collapse. Maybe even node hovers?
 	// will be used to highlight code in the editor.
 	const onNodeClick = (event: React.MouseEvent, node: CustomNode) => {
+		console.log("Clicked on node", node);
 		sendToServer({
 			type: "highlight-node-source",
 			idRange: node.data.idRange,
