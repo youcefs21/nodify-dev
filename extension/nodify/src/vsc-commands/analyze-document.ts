@@ -10,8 +10,7 @@ import { Lang, parse, type SgNode } from "@ast-grep/napi";
 type AstLocationPosition = { line: number; character: number };
 export type AstLocation = {
 	id: number;
-	// biome-ignore lint/suspicious/noExplicitAny: AbstractNodes.tsx only works with indexing on AstLocation, even though the expected type should be vscode.Range. Idk
-	location: AstLocationPosition[] | any;
+	location: AstLocationPosition[];
 };
 interface CleanedAST {
 	llm_ast: inputItem[];
@@ -30,7 +29,16 @@ function cleanAST(ast: CodeBlock[]): CleanedAST {
 			const locations = [
 				{
 					id: x.id,
-					location: x.location,
+					location: [
+						{
+							line: x.location.start.line,
+							character: x.location.start.character,
+						},
+						{
+							line: x.location.end.line,
+							character: x.location.end.character,
+						},
+					],
 				},
 			];
 			if (x.children) {
