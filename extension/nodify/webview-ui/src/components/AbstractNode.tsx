@@ -83,8 +83,6 @@ export function AbstractNode({
 	const [astLocations, setAstLocations] = useAtom(astLocationsAtom);
 	let cursorPositionedNodes: number[] = [];
 
-	console.log("AbstractNode Position", cursorPosition);
-	console.log("AbstractNode Locations", astLocations);
 	if (cursorPosition !== null) {
 		const cursorPositionedAstLocations = astLocations.filter((astLocation) => {
 			// These are supposed to be vscode ranges but the types like - see AstLocation.ts:13
@@ -94,24 +92,24 @@ export function AbstractNode({
 				cursorPosition.line <= astLocation.location[1].line
 			);
 		});
-		console.log(
-			"AbstractNode cursorPositionedAstLocations",
-			cursorPositionedAstLocations,
-		);
 		cursorPositionedNodes = cursorPositionedAstLocations.map((astLocation) => {
 			return astLocation.id;
 		});
 	}
 	let isCursorOverNode = false;
-	for (const cursorPositionedNode of cursorPositionedNodes) {
-		if (idRange.includes(cursorPositionedNode)) {
-			isCursorOverNode = true;
-			break;
+	if (!id.endsWith("-root")) {
+		for (const cursorPositionedNode of cursorPositionedNodes) {
+			if (
+				idRange[0] <= cursorPositionedNode &&
+				cursorPositionedNode <= idRange[1]
+			) {
+				isCursorOverNode = true;
+				break;
+			}
 		}
 	}
 	// const isCursorOverNode = cursorPositionedNodes.includes(Number.parseInt(id));
 
-	console.log("AbstractNode cursorPositionedNodes", cursorPositionedNodes);
 	console.log("handle id", id);
 	return (
 		<div
