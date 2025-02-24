@@ -7,7 +7,7 @@ import {
 } from "lucide-react";
 import { cn } from "../utils/cn";
 import { useMemo } from "react";
-import type { CustomData } from "../../../src/types";
+import type { CustomData, CustomNode } from "../../../src/types";
 import type dynamicIconImports from "lucide-react/dynamicIconImports";
 import { Icon } from "./Icon";
 import { sendToServer } from "../utils/sendToServer";
@@ -58,6 +58,14 @@ export function EdgeButton({
 		</button>
 	);
 }
+
+const onNodeClick = (event: React.MouseEvent, idRange: [number, number]) => {
+	console.log("Clicked on node", idRange);
+	sendToServer({
+		type: "highlight-node-source",
+		idRange: idRange,
+	});
+};
 
 interface NodeProps {
 	data: CustomData;
@@ -112,6 +120,7 @@ export function AbstractNode({
 
 	console.log("handle id", id);
 	return (
+		// biome-ignore lint/a11y/useKeyWithClickEvents: No real way to navigate this without a mouse, unless we use tabs or arrow keys or smth
 		<div
 			className={cn(
 				"bg-mantle font-mono text-xs flex-1 max-h-[40px] min-h-[40px] max-w-[260px]",
@@ -120,6 +129,9 @@ export function AbstractNode({
 				// "border-black",
 				reverse ? "flex-row-reverse" : "",
 			)}
+			onClick={(event) => {
+				onNodeClick(event, idRange);
+			}}
 		>
 			<Handle
 				type="target"

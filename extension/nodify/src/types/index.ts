@@ -35,4 +35,8 @@ export type ClientToServerEvents =
 	| {
 			type: "node-toggle";
 			nodeId: string;
+	  }
+	| {
+			type: "highlight-node-source";
+			idRange: [number, number];
 	  };

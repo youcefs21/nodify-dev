@@ -66,16 +66,7 @@ function App() {
 		<div className="flex flex-1 w-[calc(100vw-3rem)] h-screen overflow-hidden mocha">
 			<div className="flex-grow">
 				<ReactFlow
-					nodes={
-						renderedNodes
-						// 	.map((node) => ({
-						// 	...node,
-						// 	data: {...node.data, test: "test",
-						// 	// Only add cursor position to nodes at the last second
-						// 	cursorPosition: cursorPosition,
-						// 	nodeLocationMapping: astLocations},
-						// }))
-					}
+					nodes={renderedNodes}
 					nodeTypes={{
 						stacked: StackedNodes,
 					}}

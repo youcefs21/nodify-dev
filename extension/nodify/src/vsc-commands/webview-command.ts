@@ -175,8 +175,96 @@ export function registerWebview(context: vscode.ExtensionContext) {
 						await refreshNodes(context);
 						return;
 					}
+
+					case "highlight-node-source": {
+						await highlightNodeSource(context, message.idRange);
+						return;
+					}
 				}
 			});
 		},
 	);
+}
+
+export async function highlightNodeSource(
+	context: vscode.ExtensionContext,
+	idRange: [number, number],
+) {
+	// const activeEditor = vscode.window.activeTextEditor;
+	// if (!activeEditor) {
+	// 	vscode.window.showErrorMessage(
+	// 		"No active text editor (cannot display code highlighting)",
+	// 	);
+	// 	return;
+	// }
+
+	// TODO get this info from elsewhere? we shouldnt need to reanalyze the document just to convert idranges back into locations
+	let ast_locations: AstLocation[] = [];
+	const visibleEditors = vscode.window.visibleTextEditors;
+	const pythonEditor = visibleEditors.find(
+		(editor) => editor.document.languageId === "python",
+	);
+	if (!pythonEditor) {
+		vscode.window.showErrorMessage(
+			"No active text editor (cannot display code highlighting)",
+		);
+		return;
+	}
+
+	const a = await analyzePythonDocument(pythonEditor.document, context);
+	ast_locations = a.ast_locations;
+
+	const highlightingDecoration = vscode.window.createTextEditorDecorationType({
+		backgroundColor: "rgba(100, 100, 100, 0.8)",
+		isWholeLine: false,
+	});
+
+	const ranges: vscode.Range[] = [];
+	for (const astLocation of ast_locations) {
+		if (astLocation.id >= idRange[0] && astLocation.id <= idRange[1]) {
+			ranges.push(
+				new vscode.Range(
+					new vscode.Position(
+						astLocation.location[0].line,
+						astLocation.location[0].character,
+					),
+					new vscode.Position(
+						astLocation.location[1].line,
+						astLocation.location[1].character,
+					),
+				),
+			);
+		}
+	}
+	console.log("idRange", idRange);
+	console.log("Ranges", ranges);
+	pythonEditor.setDecorations(highlightingDecoration, ranges);
+
+	// const highlightingDecorationFades = [0.8, 0.6, 0.4, 0.2, 0].map((opacity) =>
+	// 	vscode.window.createTextEditorDecorationType({
+	// 		backgroundColor: `rgba(100, 100, 100, ${opacity})`,
+	// 		isWholeLine: false,
+	// 	}),
+	// );
+	// const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
+	// for (const decoration of highlightingDecorationFades) {
+	// 	await sleep(500);
+	// 	pythonEditor.setDecorations(decoration, []);
+	// 	pythonEditor.setDecorations(decoration, ranges);
+	// }
+	// highlightingDecorationFades.forEach((decoration, index) => {
+	// 	setTimeout(
+	// 		() => {
+	// 			pythonEditor.setDecorations(decoration, []);
+	// 			pythonEditor.setDecorations(decoration, ranges);
+	// 		},
+	// 		500 * (index + 1),
+	// 	);
+	// });
+	// setTimeout(() => {
+	// 	pythonEditor.setDecorations(highlightingDecoration, []);
+	// }, 1000);
+	setTimeout(() => {
+		pythonEditor.setDecorations(highlightingDecoration, []);
+	}, 1000);
 }
