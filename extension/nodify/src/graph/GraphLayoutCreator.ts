@@ -22,8 +22,8 @@ export function createGraphLayout(nodes: CustomNode[], edges: Edge[]){
     return {
         nodes: nodes.map((node) => {
         const nodeWithPosition = graph.node(node.id);
-        const x = nodeWithPosition.x //- nodeWidth / 2;
-        const y = nodeWithPosition.y //- (nodeHeight * (1 + node.data.children.length)) / 2;
+        const x = nodeWithPosition.x - nodeWidth / 2 + Math.random() / 1000;
+        const y = nodeWithPosition.y - (nodeHeight * (1 + node.data.children.length)) / 2;
  
         // node.position = {
         //     x: nodeWithPosition.x - nodeWidth / 2,
