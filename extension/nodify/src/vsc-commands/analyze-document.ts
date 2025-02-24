@@ -2,7 +2,7 @@ import * as vscode from "vscode";
 import { handleFlows, type Reference, type CodeBlock } from "../ast/flow";
 import { runLLM } from "../llm";
 import type { inputItem, inputList, LLMOutput } from "../types";
-import { entryNode } from "../graph/NodeCreater";
+import { entryNode } from "../graph/NodeCreator";
 import { readLLMCacheFromAST, writeLLMCache } from "../db/jsonDB";
 import { setActiveHash } from "./webview-command";
 import { Lang, parse, type SgNode } from "@ast-grep/napi";

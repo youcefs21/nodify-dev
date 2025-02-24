@@ -69,7 +69,6 @@ const ignoreKinds = [
 	// maybe, check again later
 	"pattern_list",
 ];
-let counter = 0;
 export async function handleExpression(
 	node: SgNode,
 	document: vscode.TextDocument,
@@ -113,10 +112,6 @@ export async function handleExpression(
 				file: document.uri,
 				location: definitions[0],
 			};
-			if (node.kind() === "call" && counter === 0) {
-				counter++;
-				extractCodeBlock(reference, 1);
-			}
 			return [reference];
 		}
 

@@ -14,10 +14,9 @@ import {
 	createEdges,
 	entryNode,
 	flattenCustomNodes,
-} from "../graph/NodeCreater";
-import { readLLMCache, readLLMCacheFromAST } from "../db/jsonDB";
+} from "../graph/NodeCreator";
 import type { Reference } from "../ast/flow";
-import { extractCodeBlock } from "../ast/expressions";
+import { createGraphLayout } from "../graph/GraphLayoutCreator";
 const panelRef = {
 	current: null as vscode.WebviewPanel | null,
 };
@@ -61,14 +60,16 @@ export async function refreshNodes(context: vscode.ExtensionContext) {
 	const nodes = flattenCustomNodes(
 		AbstractionLevelOneNodeMapper(graph, expanded),
 	);
+	const edges = createEdges(nodes);
+	const layouted = createGraphLayout(nodes, edges);
 	postMessageToPanel({
 		type: "nodes",
-		value: nodes,
+		value: layouted.nodes,
 	});
-	const edges = createEdges(nodes);
+	
 	postMessageToPanel({
 		type: "edges",
-		value: edges,
+		value: layouted.edges,
 	});
 	postMessageToPanel({
 		type: "ast_locations",
