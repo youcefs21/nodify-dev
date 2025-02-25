@@ -66,7 +66,7 @@ export async function refreshNodes(context: vscode.ExtensionContext) {
 		type: "nodes",
 		value: layouted.nodes,
 	});
-	
+
 	postMessageToPanel({
 		type: "edges",
 		value: layouted.edges,
