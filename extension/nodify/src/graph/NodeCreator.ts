@@ -111,6 +111,7 @@ export function createEdges(nodes: CustomNode[]): Edge[] {
 				id: `e${parentId}-${nodes[i].id}`,
 				source: parentId,
 				sourceHandle: `${nodes[i].id}-source`,
+				type: "step",
 				target: nodes[i].id,
 				targetHandle: `${nodes[i].data.children[0].id}-root-target`,
 			} satisfies Edge);

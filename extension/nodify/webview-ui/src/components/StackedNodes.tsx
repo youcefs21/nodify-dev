@@ -5,7 +5,7 @@ import type { AstLocation } from "../../../src/vsc-commands/analyze-document";
 
 export function StackedNodes({ data }: { data: CustomData }) {
 	return (
-		<div className="p-3 bg-transparent rounded-lg">
+		<div className="w-full h-full bg-red-600 rounded-lg">
 			{(() => {
 				if (data.id === "-2") return null;
 
