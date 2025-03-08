@@ -1,6 +1,6 @@
 import type { CustomNode } from "../types";
 import type { Edge } from "@xyflow/react";
-import dagre from '@dagrejs/dagre';
+import dagre from "@dagrejs/dagre";
 
 // Keep track of node positions between renders to prevent movement
 const stablePositions = new Map<string, { x: number, y: number }>();
