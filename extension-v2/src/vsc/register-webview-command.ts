@@ -1,6 +1,7 @@
 import * as vscode from "vscode";
 import { createWebview } from "./create-webview";
 import { NodifyWebviewSerializer } from "./webview-serializer";
+import { onClientMessage } from "./webview-message-callback";
 
 /**
  * a Singleton reference to the webview panel
@@ -29,9 +30,7 @@ export function registerWebview(context: vscode.ExtensionContext) {
 		}
 
 		// 🌱 Create a new Webview
-		createWebview(context, (message) => {
-			console.log(message);
-		});
+		createWebview(context, onClientMessage);
 	});
 
 	return command;
