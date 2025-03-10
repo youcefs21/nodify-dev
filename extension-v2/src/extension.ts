@@ -1,5 +1,5 @@
 import { Effect } from "effect";
-import type * as vscode from "vscode";
+import * as vscode from "vscode";
 import { assertPythonExtension } from "./vsc/assert-python-extension";
 import { registerWebview } from "./vsc/register-webview-command";
 
@@ -9,14 +9,20 @@ import { registerWebview } from "./vsc/register-webview-command";
 export async function activate(context: vscode.ExtensionContext) {
 	const main = Effect.gen(function* () {
 		// Assert that the Python extension is installed and activated
-		yield* assertPythonExtension();
+		yield* assertPythonExtension(true);
 
 		// Initialize the commands
 		const webviewCommand = registerWebview(context);
 
 		// Add the commands to the context
 		context.subscriptions.push(webviewCommand);
-	});
+	}).pipe(
+		Effect.catchAll((error) => {
+			vscode.window.showErrorMessage(error.message);
+			console.error(error);
+			return Effect.void;
+		}),
+	);
 
 	await Effect.runPromiseExit(main);
 }
