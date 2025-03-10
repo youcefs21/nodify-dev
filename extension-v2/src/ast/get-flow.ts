@@ -59,7 +59,7 @@ export function getFlowAST({
 				// recursively get the AST for all the flows in the block
 				const children = yield* getAllFlowASTs({
 					root: block.children(),
-					parent_id: `${parent_id}.${i}`,
+					parent_id: parent_id !== "" ? `${parent_id}.${i}` : `${i}`,
 					url,
 				});
 
@@ -69,7 +69,7 @@ export function getFlowAST({
 
 				// return the AST CodeBlock
 				return yield* Effect.succeed({
-					id: `${parent_id}.${i}`,
+					id: parent_id !== "" ? `${parent_id}.${i}` : `${i}`,
 					text,
 					range: getCodeRangeFromSgNode(node),
 					filePath: url.fsPath,
@@ -91,7 +91,7 @@ export function getFlowAST({
 
 				// create and return the output. Don't include references if there are none
 				const output = {
-					id: `${parent_id}.${i}`,
+					id: parent_id !== "" ? `${parent_id}.${i}` : `${i}`,
 					text: node.text(),
 					range: getCodeRangeFromSgNode(node),
 					filePath: url.fsPath,

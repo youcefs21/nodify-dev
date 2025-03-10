@@ -14,16 +14,10 @@ class NoIdentifierOrAttributeFound {
 	readonly message = "No identifier or attribute found";
 }
 
-class NoDefinitionFound {
-	readonly _tag = "NoDefinitionFound";
-	readonly message = "No definition found";
-}
-
 export type HandleExpressionErrors =
 	| UnknownException
 	| NoParentBodyRangeFound
-	| NoIdentifierOrAttributeFound
-	| NoDefinitionFound;
+	| NoIdentifierOrAttributeFound;
 
 interface Props {
 	node: SgNode;
@@ -68,25 +62,24 @@ export function handleExpression({
 					url,
 					new vscode.Position(location.line, location.column),
 				);
-				if (definitions.length > 1) {
-					console.warn(
-						`Multiple definitions found for ${identifier.text()} at ${url.fsPath}:${location.line}:${location.column}`,
-						definitions,
-					);
-				}
 				if (definitions.length === 0) {
-					return yield* Effect.fail(new NoDefinitionFound());
+					console.warn(
+						`No definitions found for ${identifier.text()} at ${url.fsPath}:${location.line}:${location.column}`,
+					);
+					return [];
 				}
 
 				// Extract the full range of the definition's body for reference mapping
-				const definitionRange = yield* getBodyRange(definitions[0]);
-				return [
-					{
-						symbol: identifier.text(),
-						range: definitionRange,
-						filePath: url.fsPath,
-					},
-				];
+				const definitionRanges = yield* Effect.forEach(
+					definitions,
+					(def) => getBodyRange(def),
+					{ concurrency: 5 },
+				);
+				return definitionRanges.map((range) => ({
+					symbol: identifier.text(),
+					range,
+					filePath: url.fsPath,
+				}));
 			}
 
 			// For compound expressions, recursively process all child nodes
