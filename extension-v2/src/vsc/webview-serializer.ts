@@ -5,6 +5,10 @@ export class NodifyWebviewSerializer implements vscode.WebviewPanelSerializer {
 	constructor(private readonly context: vscode.ExtensionContext) {}
 
 	async deserializeWebviewPanel(webviewPanel: vscode.WebviewPanel) {
-		createWebview(this.context, onClientMessage, webviewPanel);
+		createWebview({
+			context: this.context,
+			onClientMessage,
+			oldPanel: webviewPanel,
+		});
 	}
 }

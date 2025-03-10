@@ -30,7 +30,7 @@ export function registerWebview(context: vscode.ExtensionContext) {
 		}
 
 		// 🌱 Create a new Webview
-		createWebview(context, onClientMessage);
+		createWebview({ context, onClientMessage });
 	});
 
 	return command;

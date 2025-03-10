@@ -7,17 +7,19 @@ type OnClientMessageT = (
 	panel: vscode.WebviewPanel,
 ) => void;
 
+interface props {
+	context: vscode.ExtensionContext;
+	onClientMessage: OnClientMessageT;
+	oldPanel?: vscode.WebviewPanel;
+}
+
 /**
  * Creates a new webview panel
  * @param context The extension context
  * @param onClientMessage Callback function to handle incoming messages from the webview client
  * @returns The created webview panel
  */
-export function createWebview(
-	context: vscode.ExtensionContext,
-	onClientMessage: OnClientMessageT,
-	oldPanel?: vscode.WebviewPanel,
-) {
+export function createWebview({ context, onClientMessage, oldPanel }: props) {
 	// 🌱 Create the Webview Panel
 	const panel = oldPanel
 		? oldPanel

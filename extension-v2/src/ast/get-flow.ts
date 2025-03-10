@@ -1,0 +1,112 @@
+import type { SgNode } from "@ast-grep/napi";
+import type * as vscode from "vscode";
+import { Effect } from "effect";
+import { type FlowKind, flowKinds } from "./ast.schema";
+import { getCodeRangeFromSgNode } from "../utils/get-range";
+import type { CodeBlock } from "./ast.schema";
+import { getAllFlowASTs } from "./get-all-flows";
+import {
+	handleExpression,
+	type HandleExpressionErrors,
+} from "./handle-expressions";
+
+class NoBlockFoundError {
+	readonly _tag = "NoBlockFoundError";
+	readonly message = "No block found";
+}
+class InvalidExpressionStatementError {
+	readonly _tag = "InvalidExpressionStatementError";
+	readonly message = "Invalid expression statement";
+}
+
+// input type
+interface Props {
+	node: SgNode;
+	kind: FlowKind;
+	parent_id: string;
+	i: number;
+	url: vscode.Uri;
+}
+// output type
+type OutputEffect = Effect.Effect<
+	CodeBlock,
+	NoBlockFoundError | InvalidExpressionStatementError | HandleExpressionErrors
+>;
+
+/**
+ * Gets the AST for a single flow SgNode
+ *
+ * @returns an Effect that succeeds with {@link CodeBlock} if the node is successfully parsed
+ */
+export function getFlowAST({
+	node,
+	kind,
+	parent_id,
+	i,
+	url,
+}: Props): OutputEffect {
+	return Effect.gen(function* () {
+		switch (kind) {
+			case "while_statement":
+			case "for_statement":
+			case "if_statement": {
+				// find the block child of the current node
+				const block = node.children().find((x) => x.kind() === "block");
+				if (!block) {
+					return yield* Effect.fail(new NoBlockFoundError());
+				}
+
+				// recursively get the AST for all the flows in the block
+				const children = yield* getAllFlowASTs({
+					root: block.children(),
+					parent_id: `${parent_id}.${i}`,
+					url,
+				});
+
+				// replace the block body with a placeholder
+				const edit = block.replace(`<${kind}_body/>`);
+				const text = node.commitEdits([edit]);
+
+				// return the AST CodeBlock
+				return yield* Effect.succeed({
+					id: `${parent_id}.${i}`,
+					text,
+					range: getCodeRangeFromSgNode(node),
+					filePath: url.fsPath,
+					children,
+				});
+			}
+
+			case "expression_statement": {
+				// `expression_statement` always has a single child
+				// which is the `expression` we care about
+				const children = node.children();
+				if (children.length !== 1) {
+					return yield* Effect.fail(new InvalidExpressionStatementError());
+				}
+
+				// find all the references in the expression
+				// TODO: things like func_c(func_a(), func_b()) aren't really handled
+				const refs = yield* handleExpression({ node: children[0], url });
+
+				// create and return the output. Don't include references if there are none
+				const output = {
+					id: `${parent_id}.${i}`,
+					text: node.text(),
+					range: getCodeRangeFromSgNode(node),
+					filePath: url.fsPath,
+				};
+				return yield* Effect.succeed(
+					refs.length === 0
+						? output
+						: {
+								...output,
+								references: refs,
+							},
+				);
+			}
+		}
+
+		return yield* Effect.fail(new NoBlockFoundError());
+	});
+}
