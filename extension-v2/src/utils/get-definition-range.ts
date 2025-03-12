@@ -14,10 +14,21 @@ export class NoParentBodyRangeFound {
  * Useful for finding the definition of a caller.
  *
  * @param identifierLocation - The {@link vscode.Location} of the identifier to find the parent body for
- * @returns An Effect that resolves to the range of the parent node
+ * @returns An Effect that resolves to the range of the parent node and a flag indicating if it's in the workspace
  */
 export function getBodyRange(identifierLocation: vscode.Location) {
 	return Effect.gen(function* () {
+		// Check if the identifier is within the workspace
+		let isInWorkspace = false;
+		const workspaceFolders = vscode.workspace.workspaceFolders;
+
+		if (workspaceFolders) {
+			const filePath = identifierLocation.uri.fsPath;
+			isInWorkspace = workspaceFolders.some((folder) =>
+				filePath.startsWith(folder.uri.fsPath),
+			);
+		}
+
 		// Parse the document content into an AST using ast-grep
 		const document = yield* Effect.tryPromise(() =>
 			vscode.workspace.openTextDocument(identifierLocation.uri),
@@ -47,10 +58,11 @@ export function getBodyRange(identifierLocation: vscode.Location) {
 			return yield* Effect.fail(new NoParentBodyRangeFound());
 		}
 
-		// Return the range of the parent node
+		// Return the range of the parent node and the workspace flag
 		return {
 			range: getCodeRangeFromSgNode(node),
 			uri: identifierLocation.uri,
+			isInWorkspace,
 		};
 	});
 }

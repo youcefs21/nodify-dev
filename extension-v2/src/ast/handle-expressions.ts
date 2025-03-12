@@ -55,7 +55,7 @@ export function handleExpression({
 				if (!identifier) {
 					return yield* Effect.fail(new NoIdentifierOrAttributeFound());
 				}
-				const location = identifier.range().start;
+				const location = identifier.range().end;
 
 				// Resolve the symbol to its definition using VSCode's definition provider
 				const definitions = yield* getDefinition(
@@ -75,11 +75,13 @@ export function handleExpression({
 					(def) => getBodyRange(def),
 					{ concurrency: 5 },
 				);
-				return definitionRanges.map((range) => ({
-					symbol: identifier.text(),
-					range: range.range,
-					filePath: range.uri.fsPath,
-				}));
+				return definitionRanges
+					.filter((range) => range.isInWorkspace)
+					.map((range) => ({
+						symbol: identifier.text(),
+						range: range.range,
+						filePath: range.uri.fsPath,
+					}));
 			}
 
 			// For compound expressions, recursively process all child nodes
