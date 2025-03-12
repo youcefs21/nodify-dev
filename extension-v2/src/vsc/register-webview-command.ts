@@ -1,7 +1,7 @@
 import * as vscode from "vscode";
 import { createWebview } from "./create-webview";
 import { NodifyWebviewSerializer } from "./webview-serializer";
-import { onClientMessage } from "./webview-message-callback";
+import { onClientMessage } from "./client-message-callback";
 
 /**
  * a Singleton reference to the webview panel
