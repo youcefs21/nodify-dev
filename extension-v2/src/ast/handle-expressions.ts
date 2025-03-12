@@ -77,8 +77,8 @@ export function handleExpression({
 				);
 				return definitionRanges.map((range) => ({
 					symbol: identifier.text(),
-					range,
-					filePath: url.fsPath,
+					range: range.range,
+					filePath: range.uri.fsPath,
 				}));
 			}
 

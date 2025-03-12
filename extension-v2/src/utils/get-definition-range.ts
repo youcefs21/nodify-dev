@@ -48,6 +48,9 @@ export function getBodyRange(identifierLocation: vscode.Location) {
 		}
 
 		// Return the range of the parent node
-		return getCodeRangeFromSgNode(node);
+		return {
+			range: getCodeRangeFromSgNode(node),
+			uri: identifierLocation.uri,
+		};
 	});
 }
