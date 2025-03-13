@@ -2,7 +2,7 @@ import { Effect } from "effect";
 import type { CodeReference, LLMContext } from "../ast/ast.schema";
 import OpenAI from "openai";
 import z from "zod";
-import { zodResponseFormat } from "openai/helpers/zod.mjs";
+import { zodResponseFormat } from "openai/helpers/zod";
 import Anthropic from "@anthropic-ai/sdk";
 
 const claude = new Anthropic();
