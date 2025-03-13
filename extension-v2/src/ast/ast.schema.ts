@@ -162,3 +162,8 @@ export const LLMCodeBlockSchema = Schema.Struct({
 export const decodeLLMCodeBlocks = Schema.decodeUnknown(
 	LLMCodeBlockSchema.pipe(Schema.Array),
 );
+
+export interface LLMContext {
+	ast: ReadonlyArray<LLMCodeBlock>;
+	references: Record<string, { summary: string; symbol: string }>;
+}

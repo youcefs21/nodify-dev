@@ -8,6 +8,7 @@ import { getNodifyWorkspaceDir } from "../utils/get-nodify-workspace-dir";
 import { writeFile } from "node:fs/promises";
 import { dedupeAndSummarizeReferences } from "../ast/references";
 import { getFlatReferencesListFromAST } from "../ast/references";
+import { getAbstractionTree } from "../ast/llm";
 
 class NoPythonFileOpenError {
 	readonly _tag = "NoPythonFileOpenError";
@@ -69,10 +70,10 @@ export function showOpenPythonFile() {
 		const processedRefs = yield* dedupeAndSummarizeReferences(references);
 		const referenceMap = processedRefs.reduce(
 			(map, ref) => {
-				map[ref.id] = ref.summary;
+				map[ref.id] = { summary: ref.summary, symbol: ref.symbol };
 				return map;
 			},
-			{} as Record<string, string>,
+			{} as Record<string, { summary: string; symbol: string }>,
 		);
 
 		// LLM prompt context
@@ -88,5 +89,13 @@ export function showOpenPythonFile() {
 			writeFile(file, JSON.stringify(promptContext)),
 		);
 		console.log(JSON.stringify(promptContext));
+
+		// get the abstraction tree
+		const abstractionTree = yield* getAbstractionTree(promptContext);
+		const file2 = `${dir}/abstraction-tree.json`;
+		yield* Effect.tryPromise(() =>
+			writeFile(file2, JSON.stringify(abstractionTree)),
+		);
+		console.log(JSON.stringify(abstractionTree));
 	});
 }
