@@ -1,8 +1,8 @@
 import { Effect } from "effect";
-import type { ClientToServerEvents } from "../shared-types";
+import type { ClientToServerEvents } from "../../shared-types";
 import { webviewPanelRef } from "./register-webview-command";
 import * as vscode from "vscode";
-import { showOpenPythonFile } from "./show-open-file";
+import { showOpenPythonFile } from "../show-open-file";
 
 type ClientEvent<T extends ClientToServerEvents["type"]> = Extract<
 	ClientToServerEvents,

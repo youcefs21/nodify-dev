@@ -1,5 +1,5 @@
 import * as vscode from "vscode";
-import type { ClientToServerEvents } from "../shared-types";
+import type { ClientToServerEvents } from "../../shared-types";
 import { webviewPanelRef } from "./register-webview-command";
 
 type OnClientMessageT = (
