@@ -25,3 +25,8 @@ export function hashString(
 		return hashHex;
 	});
 }
+
+export function getShortId(fullHash: string): string {
+	// Use first 7 characters like Git does by default
+	return fullHash.substring(0, 7);
+}

@@ -1,5 +1,8 @@
 ////////////////////////////////////////////////////////////
 // Ast Grep Kinds
+
+import { Schema } from "effect";
+
 ////////////////////////////////////////////////////////////
 export const flowKinds = [
 	"expression_statement",
@@ -106,6 +109,9 @@ export const ignoreKinds = [
 
 export type CodeReference = {
 	symbol: string;
+	shortHash: string;
+	fullHash: string;
+	body: string;
 	range: CodeRange;
 	filePath: string;
 };
@@ -129,3 +135,30 @@ export type CodeBlock = {
 	children?: CodeBlock[];
 	references?: CodeReference[];
 };
+
+////////////////////////////////////////////////////////////
+// LLM Code Reference Schema
+////////////////////////////////////////////////////////////
+const LLMCodeReferenceSchema = Schema.Struct({
+	symbol: Schema.String,
+	id: Schema.String,
+});
+
+interface LLMCodeBlock {
+	readonly id: string;
+	readonly text: string;
+	readonly children?: ReadonlyArray<LLMCodeBlock>;
+	readonly references?: ReadonlyArray<typeof LLMCodeReferenceSchema.Type>;
+}
+
+export const LLMCodeBlockSchema = Schema.Struct({
+	id: Schema.String,
+	text: Schema.String,
+	children: Schema.suspend(
+		(): Schema.Schema<LLMCodeBlock> => LLMCodeBlockSchema,
+	).pipe(Schema.Array, Schema.optional),
+	references: LLMCodeReferenceSchema.pipe(Schema.Array, Schema.optional),
+});
+export const decodeLLMCodeBlocks = Schema.decodeUnknown(
+	LLMCodeBlockSchema.pipe(Schema.Array),
+);

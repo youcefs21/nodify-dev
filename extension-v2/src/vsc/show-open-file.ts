@@ -3,11 +3,11 @@ import * as vscode from "vscode";
 import * as astGrep from "@ast-grep/napi";
 import { Lang, type SgNode } from "@ast-grep/napi";
 import { getAllFlowASTs } from "../ast/get-all-flows";
-import {
-	getReferencesForPrompt,
-	processCodeReferences,
-} from "../utils/reference-store";
-import { extractReferencesFromAST } from "../ast/flatten-references";
+import { decodeLLMCodeBlocks } from "../ast/ast.schema";
+import { getNodifyWorkspaceDir } from "../utils/get-nodify-workspace-dir";
+import { writeFile } from "node:fs/promises";
+import { dedupeAndSummarizeReferences } from "../ast/references";
+import { getFlatReferencesListFromAST } from "../ast/references";
 
 class NoPythonFileOpenError {
 	readonly _tag = "NoPythonFileOpenError";
@@ -62,49 +62,30 @@ export function showOpenPythonFile() {
 			url,
 		});
 
-		// for all references, we need to:
-		// 1. get their body
-		// 2. hash the full body, use it as the reference ID
-		//   2.1. in the prompt, use the shortest unique identifier for the reference (similar to a git commit hash)
-		// 3. create a summary of the reference
-		// 4. provide reference summaries with the prompt
-
-		// Extract all references from the AST
-		const references = extractReferencesFromAST(ast);
+		// Process the references
+		const references = getFlatReferencesListFromAST(ast);
 		console.log(`Found ${references.length} references in the AST`);
+		const processedRefs = yield* dedupeAndSummarizeReferences(references);
+		const referenceMap = processedRefs.reduce(
+			(map, ref) => {
+				map[ref.shortId] = ref.summary;
+				return map;
+			},
+			{} as Record<string, string>,
+		);
 
-		// Debug: Log the first few references
-		if (references.length > 0) {
-			console.log(
-				"Sample references:",
-				JSON.stringify(references.slice(0, 3), null, 2),
-			);
-		}
-
-		// Process the references if any were found
-		if (references.length > 0) {
-			const processedRefs = yield* processCodeReferences(references);
-			console.log(`Processed ${processedRefs.length} references`);
-
-			// Debug: Log the first few processed references
-			console.log(
-				"Sample processed references:",
-				JSON.stringify(processedRefs.slice(0, 3), null, 2),
-			);
-		}
-
-		// Get references formatted for the prompt
-		const referenceMap = getReferencesForPrompt();
-
-		// This would be used in the prompt to provide context about references
+		// LLM prompt context
 		const promptContext = {
-			ast,
+			ast: yield* decodeLLMCodeBlocks(ast),
 			references: referenceMap,
 		};
 
-		console.log(
-			"Prompt context references count:",
-			Object.keys(referenceMap).length,
+		// TEMPORARY: write the prompt context to a file
+		const dir = getNodifyWorkspaceDir();
+		const file = `${dir}/prompt.json`;
+		yield* Effect.tryPromise(() =>
+			writeFile(file, JSON.stringify(promptContext)),
 		);
+		console.log(JSON.stringify(promptContext));
 	});
 }

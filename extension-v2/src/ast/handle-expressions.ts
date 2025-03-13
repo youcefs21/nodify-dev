@@ -5,9 +5,9 @@ import { type CodeReference, ignoreKinds } from "./ast.schema";
 import { getDefinition } from "../vsc/builtin";
 import type { UnknownException } from "effect/Cause";
 import {
-	getBodyRange,
+	getIdentifierBody,
 	type NoParentBodyRangeFound,
-} from "../utils/get-definition-range";
+} from "./get-definition";
 
 class NoIdentifierOrAttributeFound {
 	readonly _tag = "NoIdentifierOrAttributeFound";
@@ -72,13 +72,16 @@ export function handleExpression({
 				// Extract the full range of the definition's body for reference mapping
 				const definitionRanges = yield* Effect.forEach(
 					definitions,
-					(def) => getBodyRange(def),
+					(def) => getIdentifierBody(def),
 					{ concurrency: 5 },
 				);
 				return definitionRanges
 					.filter((range) => range.isInWorkspace)
 					.map((range) => ({
 						symbol: identifier.text(),
+						shortHash: range.shortId,
+						fullHash: range.fullHash,
+						body: range.text,
 						range: range.range,
 						filePath: range.uri.fsPath,
 					}));

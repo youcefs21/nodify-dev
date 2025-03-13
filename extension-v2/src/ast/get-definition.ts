@@ -1,7 +1,8 @@
 import { Lang, parse } from "@ast-grep/napi";
 import { Effect } from "effect";
 import * as vscode from "vscode";
-import { getCodeRangeFromSgNode } from "./get-range";
+import { hashString, getShortId } from "../utils/hash";
+import { getCodeRangeFromSgNode } from "../utils/get-range";
 
 export class NoParentBodyRangeFound {
 	readonly _tag = "NoParentBodyRangeFound";
@@ -9,14 +10,18 @@ export class NoParentBodyRangeFound {
 }
 
 /**
- * Retrieves the body range of a parent node for a given identifier location.
+ * Retrieves the body and it's range of a parent node for a given identifier location.
  *
  * Useful for finding the definition of a caller.
  *
  * @param identifierLocation - The {@link vscode.Location} of the identifier to find the parent body for
- * @returns An Effect that resolves to the range of the parent node and a flag indicating if it's in the workspace
+ * @returns An Effect that resolves to
+ * - the body,
+ * - it's range,
+ * - a flag indicating if it's in the workspace,
+ * - and the hash of the body
  */
-export function getBodyRange(identifierLocation: vscode.Location) {
+export function getIdentifierBody(identifierLocation: vscode.Location) {
 	return Effect.gen(function* () {
 		// Check if the identifier is within the workspace
 		let isInWorkspace = false;
@@ -57,12 +62,16 @@ export function getBodyRange(identifierLocation: vscode.Location) {
 		if (!node) {
 			return yield* Effect.fail(new NoParentBodyRangeFound());
 		}
+		const hash = yield* hashString(node.text());
 
 		// Return the range of the parent node and the workspace flag
 		return {
 			range: getCodeRangeFromSgNode(node),
+			text: node.text(),
 			uri: identifierLocation.uri,
 			isInWorkspace,
+			fullHash: hash,
+			shortId: getShortId(hash),
 		};
 	});
 }
