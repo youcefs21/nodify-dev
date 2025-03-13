@@ -61,6 +61,7 @@ export function showOpenPythonFile() {
 			parent_id: "",
 			url,
 		});
+		console.log(`Found AST for ${url}`);
 
 		// Process the references
 		const references = getFlatReferencesListFromAST(ast);
@@ -68,7 +69,7 @@ export function showOpenPythonFile() {
 		const processedRefs = yield* dedupeAndSummarizeReferences(references);
 		const referenceMap = processedRefs.reduce(
 			(map, ref) => {
-				map[ref.shortId] = ref.summary;
+				map[ref.id] = ref.summary;
 				return map;
 			},
 			{} as Record<string, string>,

@@ -109,7 +109,7 @@ export const ignoreKinds = [
 
 export type CodeReference = {
 	symbol: string;
-	shortHash: string;
+	id: string;
 	fullHash: string;
 	body: string;
 	range: CodeRange;

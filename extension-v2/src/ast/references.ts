@@ -6,7 +6,7 @@ import { summarizeCodeReference } from "./llm";
 // This will be replaced with a database later
 interface ReferenceInfo {
 	id: string;
-	shortId: string;
+	fullHash: string;
 	body: string;
 	summary: string;
 }
@@ -33,8 +33,8 @@ export function dedupeAndSummarizeReferences(references: CodeReference[]) {
 			}
 			visitedRefHashes.add(ref.fullHash);
 			uniqueProcessedRefs.push({
-				id: ref.fullHash,
-				shortId: ref.shortHash,
+				id: ref.id,
+				fullHash: ref.fullHash,
 				body: ref.body,
 				summary: ref.summary,
 			});

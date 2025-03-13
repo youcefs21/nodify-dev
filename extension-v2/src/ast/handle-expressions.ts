@@ -79,7 +79,7 @@ export function handleExpression({
 					.filter((range) => range.isInWorkspace)
 					.map((range) => ({
 						symbol: identifier.text(),
-						shortHash: range.shortId,
+						id: range.shortId,
 						fullHash: range.fullHash,
 						body: range.text,
 						range: range.range,

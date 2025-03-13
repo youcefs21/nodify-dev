@@ -1,7 +1,7 @@
 import { Effect } from "effect";
 import * as vscode from "vscode";
 import { assertPythonExtension } from "./vsc/assert-python-extension";
-import { registerWebview } from "./vsc/register-webview-command";
+import { registerWebview } from "./vsc/webview/register-webview-command";
 
 /**
  * Called when the extension is activated
