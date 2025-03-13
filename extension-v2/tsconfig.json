@@ -1,20 +1,12 @@
 {
 	"compilerOptions": {
-		"target": "ES2020",
-		"useDefineForClassFields": true,
-		"module": "ESNext",
-		"lib": ["ES2020", "DOM", "DOM.Iterable"],
-		"skipLibCheck": true,
+		"module": "Node16",
+		"target": "ES2022",
+		"lib": ["ES2022", "DOM"],
 		"sourceMap": true,
 		"rootDir": "./src",
 		"strict": true,
-		"noFallthroughCasesInSwitch": true,
-
-		"moduleResolution": "bundler",
-		"allowImportingTsExtensions": true,
-		"resolveJsonModule": true,
-		"isolatedModules": true,
-		"noEmit": true
+		"noFallthroughCasesInSwitch": true
 	},
 	"exclude": ["webview-ui/**/*", "node_modules/**/*", "packages/**/*"]
 }

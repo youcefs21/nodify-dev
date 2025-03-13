@@ -4,7 +4,9 @@ import OpenAI from "openai";
 import z from "zod";
 import { zodResponseFormat } from "openai/helpers/zod";
 import Anthropic from "@anthropic-ai/sdk";
-
+import { getNodifyWorkspaceDir } from "../utils/get-nodify-workspace-dir";
+import fs from "node:fs/promises";
+import { hashString } from "../utils/hash";
 const claude = new Anthropic();
 
 const VLLM_URL = "http://100.89.180.124:6969";
@@ -33,6 +35,23 @@ export function summarizeCodeReference(ref: CodeReference) {
 			return {
 				...ref,
 				summary: ref.body,
+			};
+		}
+		const dirPath = getNodifyWorkspaceDir();
+		const path = `${dirPath}/summaries_cache/${ref.fullHash}.json`;
+		const exists = yield* Effect.promise(() =>
+			fs
+				.access(path)
+				.then(() => true)
+				.catch(() => false),
+		);
+		if (exists) {
+			const data = yield* Effect.tryPromise(() =>
+				fs.readFile(path, { encoding: "utf8" }),
+			);
+			return {
+				...ref,
+				summary: summarySchema.parse(JSON.parse(data)).summary,
 			};
 		}
 
@@ -79,11 +98,15 @@ EXAMPLE OUTPUT:
 			}),
 		);
 
-		const summary = res.choices[0].message.content;
+		const parsed = res.choices[0].message.parsed;
+		const summary = parsed?.summary ?? ref.body.slice(0, 100);
+		yield* Effect.tryPromise(() =>
+			fs.writeFile(path, JSON.stringify({ summary }, null, 2)),
+		);
 
 		return {
 			...ref,
-			summary: summary ?? ref.body.slice(0, 100),
+			summary,
 		};
 	});
 }
@@ -125,6 +148,22 @@ export const abstractionTreeSchema = z.object({
  */
 export function getAbstractionTree(input: LLMContext) {
 	return Effect.gen(function* () {
+		const dirPath = getNodifyWorkspaceDir();
+		const hash = yield* hashString(JSON.stringify(input));
+		const path = `${dirPath}/abstraction_tree_cache/${hash}.json`;
+		const exists = yield* Effect.promise(() =>
+			fs
+				.access(path)
+				.then(() => true)
+				.catch(() => false),
+		);
+		if (exists) {
+			const data = yield* Effect.tryPromise(() =>
+				fs.readFile(path, { encoding: "utf8" }),
+			);
+			return z.array(abstractionGroupSchema).parse(JSON.parse(data));
+		}
+
 		const systemPrompt = `You are an expert code analyzer. Your task is to analyze the provided AST structure and create a meaningful abstraction hierarchy.
 
 TASK: Analyze the provided AST-parsed code and create an abstraction hierarchy with logical groupings.
@@ -221,21 +260,23 @@ IMPORTANT FORMATTING INSTRUCTIONS:
 
 			// Parse the JSON
 			const parsedResponse = JSON.parse(responseContent.trim());
-			return abstractionTreeSchema.parse(parsedResponse);
+			const output = abstractionTreeSchema.parse(parsedResponse).output;
+			yield* Effect.tryPromise(() =>
+				fs.writeFile(path, JSON.stringify(output, null, 2)),
+			);
+			return output;
 		} catch (error) {
 			console.error("Failed to parse Claude response as JSON:", error);
 			// Return a minimal valid structure if parsing fails
-			return {
-				output: [
-					{
-						groupID: 0,
-						label: "Error parsing response",
-						idRange: ["0", "0"] as const,
-						type: "error",
-						children: [],
-					},
-				],
-			};
+			return [
+				{
+					groupID: 0,
+					label: "Error parsing response",
+					idRange: ["0", "0"] as const,
+					type: "error",
+					children: [],
+				},
+			];
 		}
 	});
 }

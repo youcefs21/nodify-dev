@@ -2,7 +2,7 @@ import { Effect } from "effect";
 import * as vscode from "vscode";
 import { assertPythonExtension } from "./vsc/assert-python-extension";
 import { registerWebview } from "./vsc/webview/register-webview-command";
-import { createDatabase } from "./db/db-schema";
+import { initDB } from "./db/jsonDB";
 
 /**
  * Called when the extension is activated
@@ -12,8 +12,8 @@ export async function activate(context: vscode.ExtensionContext) {
 		// Assert that the Python extension is installed and activated
 		yield* assertPythonExtension(true);
 
-		// Create the database tables if they don't exist
-		yield* createDatabase();
+		// Initialize the database
+		yield* initDB();
 
 		// Initialize the commands
 		const webviewCommand = registerWebview(context);

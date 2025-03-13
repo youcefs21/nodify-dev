@@ -1,11 +1,9 @@
 import { Effect } from "effect";
 import * as vscode from "vscode";
 import * as astGrep from "@ast-grep/napi";
-import { Lang, type SgNode } from "@ast-grep/napi";
+import { Lang } from "@ast-grep/napi";
 import { getAllFlowASTs } from "../ast/get-all-flows";
 import { decodeLLMCodeBlocks } from "../ast/ast.schema";
-import { getNodifyWorkspaceDir } from "../utils/get-nodify-workspace-dir";
-import { writeFile } from "node:fs/promises";
 import { dedupeAndSummarizeReferences } from "../ast/references";
 import { getFlatReferencesListFromAST } from "../ast/references";
 import { getAbstractionTree } from "../ast/llm";
@@ -82,20 +80,10 @@ export function showOpenPythonFile() {
 			references: referenceMap,
 		};
 
-		// TEMPORARY: write the prompt context to a file
-		const dir = getNodifyWorkspaceDir();
-		const file = `${dir}/prompt.json`;
-		yield* Effect.tryPromise(() =>
-			writeFile(file, JSON.stringify(promptContext)),
-		);
-		console.log(JSON.stringify(promptContext));
-
 		// get the abstraction tree
-		const abstractionTree = yield* getAbstractionTree(promptContext);
-		const file2 = `${dir}/abstraction-tree.json`;
-		yield* Effect.tryPromise(() =>
-			writeFile(file2, JSON.stringify(abstractionTree)),
-		);
-		console.log(JSON.stringify(abstractionTree));
+		const tree = yield* getAbstractionTree(promptContext);
+
+		// show the graph
+		// yield* showGraph(flows);
 	});
 }

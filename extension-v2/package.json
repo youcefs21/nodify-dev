@@ -22,9 +22,6 @@
 		"onWebviewPanel:nodifyWebview"
 	],
 	"main": "./dist/extension.js",
-	"trustedDependencies": [
-		"better-sqlite3"
-	],
 	"contributes": {
 		"commands": [
 			{
@@ -82,17 +79,13 @@
 	"dependencies": {
 		"@anthropic-ai/sdk": "^0.39.0",
 		"@ast-grep/napi": "^0.33.1",
-		"better-sqlite3": "^11.8.1",
 		"effect": "^3.13.8",
-		"kysely": "^0.27.6",
 		"openai": "^4.79.1",
-		"sqlocal": "^0.14.0",
 		"vscode-languageclient": "^9.0.1",
 		"zod": "^3.24.1"
 	},
 	"devDependencies": {
 		"@biomejs/biome": "1.9.4",
-		"@types/better-sqlite3": "^7.6.12",
 		"@types/mocha": "^10.0.10",
 		"@types/node": "20.x",
 		"@types/vscode": "^1.96.0",
