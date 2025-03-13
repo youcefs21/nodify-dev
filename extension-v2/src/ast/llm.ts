@@ -94,6 +94,7 @@ export type AbstractionGroup = {
 	label: string;
 	idRange: readonly [string, string];
 	type: string;
+	referenceID?: string;
 	children?: readonly AbstractionGroup[];
 };
 
@@ -108,6 +109,7 @@ export const abstractionGroupSchema: z.ZodType<AbstractionGroup> = z.lazy(() =>
 		label: z.string(),
 		idRange: z.tuple([z.string(), z.string()]),
 		type: z.string(),
+		referenceID: z.string().optional(),
 		children: z.array(abstractionGroupSchema).optional(),
 	}),
 );
@@ -159,8 +161,9 @@ IMPORTANT FORMATTING INSTRUCTIONS:
 			"label": "2-8 word description",
 			"idRange": [string, string],
 			"type": "single_word_category",
+			"referenceID": "optional string, don't include if this isn't a leaf node with a reference",
 			"children": [
-				// recursive output list of groups
+				// optional, recursive output list of groups
 			]
 		},
 		// ... more groups as needed

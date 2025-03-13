@@ -17,16 +17,11 @@ interface Props {
  */
 export function getAllFlowASTs({ root, parent_id, url }: Props) {
 	return Effect.all(
-		root.map((node, i) => {
-			const kind = node.kind() as FlowKind;
-
-			// if it's a flow, handle it, otherwise return null
-			return Unify.unify(
-				flowKinds.some((flowKind) => flowKind === kind)
-					? getFlowAST({ node, kind, parent_id, i, url })
-					: Effect.succeed(null),
-			);
-		}),
+		root
+			.filter((node) => flowKinds.some((flowKind) => flowKind === node.kind()))
+			.map((node, i) =>
+				getFlowAST({ node, kind: node.kind() as FlowKind, parent_id, i, url }),
+			),
 		{ concurrency: 5 },
 	).pipe(Effect.andThen((xs) => xs.filter((x) => x !== null)));
 }
