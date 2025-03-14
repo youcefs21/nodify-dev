@@ -13,9 +13,8 @@ function handleNodeToggle(message: ClientEvent<"node-toggle">) {
 	return Effect.void;
 }
 
-function handleHighlightNodeSource(
-	message: ClientEvent<"highlight-node-source">,
-) {
+function handleHighlightNode(message: ClientEvent<"highlight-node">) {
+	console.log("highlight-node", message);
 	return Effect.void;
 }
 
@@ -40,8 +39,8 @@ export function onClientMessage(message: ClientToServerEvents) {
 				break;
 			}
 
-			case "highlight-node-source": {
-				yield* handleHighlightNodeSource(message);
+			case "highlight-node": {
+				yield* handleHighlightNode(message);
 				break;
 			}
 		}

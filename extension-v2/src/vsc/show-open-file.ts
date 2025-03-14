@@ -89,15 +89,19 @@ export function showOpenPythonFile() {
 		const flatCodeBlocks = flattenCodeBlocks(ast);
 
 		// create the graph
-		const nodes = createNodes(tree, flatCodeBlocks).filter(
-			(node) => node.data.children.length > 0,
-		);
-		const edges = createEdges(nodes);
-		const layouted = createGraphLayout(nodes, edges);
+		const nodes = createNodes(tree, flatCodeBlocks);
+		const parentNodes = nodes.filter((node) => node.data.children.length > 0);
+		const edges = createEdges(parentNodes);
+		const layouted = createGraphLayout(parentNodes, edges);
 
 		postMessageToPanel({
 			type: "nodes",
 			value: layouted.nodes,
+		});
+
+		postMessageToPanel({
+			type: "all-nodes",
+			value: nodes,
 		});
 
 		postMessageToPanel({

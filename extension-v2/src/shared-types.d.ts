@@ -5,6 +5,10 @@ export * from "./graph/graph.types";
 
 export type ServerToClientEvents =
 	| {
+			type: "all-nodes";
+			value: CustomNode[];
+	  }
+	| {
 			type: "nodes";
 			value: CustomNode[];
 	  }
@@ -22,6 +26,6 @@ export type ClientToServerEvents =
 			nodeId: string;
 	  }
 	| {
-			type: "highlight-node-source";
-			idRange: [string, string];
+			type: "highlight-node";
+			nodeId: string;
 	  };
