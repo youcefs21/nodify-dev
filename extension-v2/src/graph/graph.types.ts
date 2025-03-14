@@ -9,6 +9,7 @@ export type NodeConnection = {
 
 export type NodeProps = {
 	id: string;
+	parentId: string;
 	label: string;
 	codeRange: [CodeRange, CodeRange];
 	filePath: string;

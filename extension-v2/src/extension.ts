@@ -26,6 +26,11 @@ export async function activate(context: vscode.ExtensionContext) {
 			console.error(error);
 			return Effect.void;
 		}),
+		Effect.catchAllDefect((error) => {
+			vscode.window.showErrorMessage(`DEFECT: ${error}`);
+			console.error("DEFECT: ", error);
+			return Effect.void;
+		}),
 	);
 
 	await Effect.runPromiseExit(main);

@@ -7,7 +7,7 @@ import { decodeLLMCodeBlocks } from "../ast/ast.schema";
 import { dedupeAndSummarizeReferences } from "../ast/references";
 import { getFlatReferencesListFromAST } from "../ast/references";
 import { getAbstractionTree } from "../ast/llm";
-import { createNodes } from "../graph/create-nodes";
+import { createNodes, flattenCodeBlocks } from "../graph/create-nodes";
 import { createEdges } from "../graph/create-edges";
 import { postMessageToPanel } from "./webview/register-webview-command";
 import { createGraphLayout } from "../graph/graph-layout-creator";
@@ -86,9 +86,10 @@ export function showOpenPythonFile() {
 
 		// get the abstraction tree
 		const tree = yield* getAbstractionTree(promptContext);
+		const flatCodeBlocks = flattenCodeBlocks(ast);
 
 		// create the graph
-		const nodes = createNodes(tree, ast);
+		const nodes = createNodes(tree, flatCodeBlocks);
 		const edges = createEdges(nodes);
 		const layouted = createGraphLayout(nodes, edges);
 
