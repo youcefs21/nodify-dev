@@ -1,6 +1,8 @@
-import { useState, useCallback, useEffect } from "react";
+import { useCallback, useEffect } from "react";
 import type { CustomNode } from "../../../src/shared-types";
 import { sendToServer } from "./sendToServer";
+import { atom, useAtom } from "jotai";
+import { useReactFlow } from "@xyflow/react";
 
 // Helper functions for node operations
 const findNodeById = (nodes: CustomNode[], id: string) => {
@@ -17,19 +19,37 @@ const findChildNodes = (nodes: CustomNode[], nodeId: string) => {
 	return nodes.filter((node) => node.data.parentId === nodeId);
 };
 
+export const highlightedNodeAtom = atom<string | null>(null);
+
 export function useNodeNavigation(renderedNodes: CustomNode[]) {
-	const [highlightedNodeId, setHighlightedNodeId] = useState<string | null>(
-		null,
-	);
+	const reactFlow = useReactFlow();
+	const [highlightedNodeId, setHighlightedNodeId] =
+		useAtom(highlightedNodeAtom);
 
 	// Highlight a node
-	const highlightNode = useCallback((nodeId: string) => {
-		setHighlightedNodeId(nodeId);
-		sendToServer({
-			type: "highlight-node",
-			nodeId,
-		});
-	}, []);
+	const highlightNode = useCallback(
+		(node: CustomNode) => {
+			const nodeId = node.id;
+			if (nodeId) {
+				setHighlightedNodeId(nodeId);
+				sendToServer({
+					type: "highlight-node",
+					nodeId,
+				});
+				try {
+					const currentZoom = reactFlow.getViewport().zoom;
+					reactFlow.fitView({
+						nodes: [{ id: node.data.parentId }],
+						maxZoom: currentZoom,
+						minZoom: currentZoom,
+					});
+				} catch (error) {
+					console.error("Error fitting view", error);
+				}
+			}
+		},
+		[setHighlightedNodeId, reactFlow],
+	);
 
 	// Function to highlight the root node's first child
 	const highlightRootFirstChild = useCallback(() => {
@@ -44,12 +64,15 @@ export function useNodeNavigation(renderedNodes: CustomNode[]) {
 			if (rootNode.data.children.length > 0) {
 				const firstChildId = rootNode.data.children[0].id;
 				console.log("firstChildId", firstChildId);
-				highlightNode(firstChildId);
+				const firstChild = findNodeById(renderedNodes, firstChildId);
+				if (firstChild) {
+					highlightNode(firstChild);
+				}
 			}
 		} else {
 			console.log("no root node");
 		}
-	}, [renderedNodes, highlightNode]);
+	}, [renderedNodes, highlightNode, setHighlightedNodeId]);
 
 	// Handle keyboard navigation
 	useEffect(() => {
@@ -87,28 +110,28 @@ export function useNodeNavigation(renderedNodes: CustomNode[]) {
 				case "j":
 					// Move to next sibling
 					if (currentIndex < siblings.length - 1) {
-						highlightNode(siblings[currentIndex + 1].id);
+						highlightNode(siblings[currentIndex + 1]);
 					}
 					break;
 				case "ArrowUp":
 				case "k":
 					// Move to previous sibling
 					if (currentIndex > 0) {
-						highlightNode(siblings[currentIndex - 1].id);
+						highlightNode(siblings[currentIndex - 1]);
 					}
 					break;
 				case "ArrowLeft":
 				case "h":
 					// Move to parent
 					if (parentNode && parentNode.data.parentId !== "root") {
-						highlightNode(parentNode.id);
+						highlightNode(parentNode);
 					}
 					break;
 				case "ArrowRight":
 				case "l":
 					// Move to first child
 					if (children.length > 0) {
-						highlightNode(children[0].id);
+						highlightNode(children[0]);
 					}
 					break;
 			}
