@@ -6,9 +6,10 @@ export function createGraphLayout(nodes: CustomNode[], edges: Edge[]) {
 	const graph = new dagre.graphlib.Graph().setDefaultEdgeLabel(() => ({}));
 	graph.setGraph({
 		rankdir: "LR",
-		ranksep: 50, // Adjust this value to control rank separation
-		align: "UL", // Try aligning nodes to upper-left
-		ranker: "tight-tree", // This ranker often gives more predictable results
+		ranksep: 150,
+		nodesep: 50,
+		edgesep: 50,
+		// align: "UL",
 	});
 	const nodeWidth = 260;
 	const nodeHeight = 64;
@@ -20,7 +21,7 @@ export function createGraphLayout(nodes: CustomNode[], edges: Edge[]) {
 		node.height = nodeHeight * (1 + node.data.children.length) + 32;
 		graph.setNode(node.id, {
 			width: node.width,
-			height: node.height,
+			height: node.height + 32,
 		});
 	}
 	dagre.layout(graph);

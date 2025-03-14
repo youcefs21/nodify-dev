@@ -7,9 +7,9 @@ import {
 	SelectionMode,
 	useNodesState,
 	useEdgesState,
-	Handle,
-	Position,
 	type NodeProps,
+	Position,
+	Handle,
 } from "@xyflow/react";
 import { Background, Controls } from "@xyflow/react";
 import { ReactFlow } from "@xyflow/react";
@@ -23,7 +23,17 @@ import { Icon } from "./components/Icon";
 export function StackedNodes({ data }: NodeProps<CustomNode>) {
 	return (
 		<div className="relative flex flex-col w-full h-full gap-2 p-2 rounded-lg bg-surface-0">
-			<div className="flex items-center gap-2 px-2 py-1 rounded-lg h-14">
+			<div className="flex items-center gap-2 px-2 py-1 rounded-lg h-14 relative">
+				{data.parentId !== "root" && (
+					<Handle
+						type="target"
+						position={Position.Left}
+						id={data.id}
+						style={{
+							left: -8,
+						}}
+					/>
+				)}
 				<div className={cn("p-2 rounded-lg", "bg-blue [&>*]:stroke-mantle")}>
 					<Icon name={"tags"} className="size-5" />
 				</div>
@@ -35,8 +45,18 @@ export function StackedNodes({ data }: NodeProps<CustomNode>) {
 					return (
 						<div
 							key={child.id}
-							className="flex items-center gap-2 px-2 py-1 rounded-lg h-14 bg-surface-2"
+							className="flex items-center gap-2 px-2 py-1 rounded-lg h-14 bg-surface-2 relative"
 						>
+							{child.children.length > 0 && (
+								<Handle
+									type="source"
+									position={Position.Right}
+									style={{
+										right: -16,
+									}}
+									id={`${data.id}-${child.id}`}
+								/>
+							)}
 							<div
 								className={cn("p-2 rounded-lg", "bg-blue [&>*]:stroke-mantle")}
 							>

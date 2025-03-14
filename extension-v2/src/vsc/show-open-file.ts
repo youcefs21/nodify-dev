@@ -89,7 +89,9 @@ export function showOpenPythonFile() {
 		const flatCodeBlocks = flattenCodeBlocks(ast);
 
 		// create the graph
-		const nodes = createNodes(tree, flatCodeBlocks);
+		const nodes = createNodes(tree, flatCodeBlocks).filter(
+			(node) => node.data.children.length > 0,
+		);
 		const edges = createEdges(nodes);
 		const layouted = createGraphLayout(nodes, edges);
 

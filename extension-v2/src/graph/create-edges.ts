@@ -8,12 +8,16 @@ import type { Edge } from "@xyflow/react";
  */
 export function createEdges(nodes: CustomNode[]): Edge[] {
 	return nodes.flatMap((node) => {
-		return node.data.children.map((child) => {
-			return {
-				id: `${node.id}->${child.id}`,
-				source: node.id,
-				target: child.id,
-			};
-		});
+		return node.data.children
+			.filter((child) => child.children.length > 0)
+			.map((child) => {
+				return {
+					id: `${node.id}->${child.id}`,
+					source: node.id,
+					target: child.id,
+					sourceHandle: `${node.id}-${child.id}`,
+					targetHandle: `${child.id}`,
+				} as Edge;
+			});
 	});
 }
