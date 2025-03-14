@@ -1,3 +1,4 @@
+import type { CodeRange } from "./ast/ast.schema";
 import type { CustomNode } from "./graph/graph.types";
 import type { Edge } from "@xyflow/react";
 
@@ -28,4 +29,6 @@ export type ClientToServerEvents =
 	| {
 			type: "highlight-node";
 			nodeId: string;
+			filePath: string;
+			codeRange: [CodeRange, CodeRange];
 	  };

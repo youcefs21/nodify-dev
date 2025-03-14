@@ -1,11 +1,6 @@
 import * as vscode from "vscode";
-import type { ClientToServerEvents } from "../../shared-types";
 import { webviewPanelRef } from "./register-webview-command";
-
-type OnClientMessageT = (
-	message: ClientToServerEvents,
-	panel: vscode.WebviewPanel,
-) => void;
+import type { OnClientMessageT } from "./client-message-callback";
 
 interface props {
 	context: vscode.ExtensionContext;
@@ -41,7 +36,7 @@ export function createWebview({ context, onClientMessage, oldPanel }: props) {
 	// 📥 Handle incoming messages from the webview
 	panel.webview.onDidReceiveMessage(
 		(message) => {
-			onClientMessage(message, panel);
+			onClientMessage(context, message);
 		},
 		undefined,
 		context.subscriptions,

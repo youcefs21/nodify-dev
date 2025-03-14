@@ -13,16 +13,53 @@ function handleNodeToggle(message: ClientEvent<"node-toggle">) {
 	return Effect.void;
 }
 
-function handleHighlightNode(message: ClientEvent<"highlight-node">) {
-	console.log("highlight-node", message);
-	return Effect.void;
+function handleHighlightNode({
+	codeRange,
+	filePath,
+	nodeId,
+}: ClientEvent<"highlight-node">) {
+	console.log("highlight-node", { codeRange, filePath, nodeId });
+	return Effect.gen(function* () {
+		const document = yield* Effect.tryPromise(() =>
+			vscode.workspace.openTextDocument(filePath),
+		);
+		const editor = yield* Effect.tryPromise(() =>
+			vscode.window.showTextDocument(document, vscode.ViewColumn.One, true),
+		);
+		const highlightingDecoration = vscode.window.createTextEditorDecorationType(
+			{
+				backgroundColor: "rgba(100, 100, 100, 0.8)",
+				isWholeLine: false,
+			},
+		);
+		const range = new vscode.Range(
+			new vscode.Position(
+				codeRange[0].start.line,
+				codeRange[0].start.character,
+			),
+			new vscode.Position(codeRange[1].end.line, codeRange[1].end.character),
+		);
+		editor.setDecorations(highlightingDecoration, [range]);
+
+		// Scroll the highlighted section into view
+		editor.revealRange(range, vscode.TextEditorRevealType.InCenter);
+
+		setTimeout(() => {
+			editor.setDecorations(highlightingDecoration, []);
+		}, 1000);
+	});
 }
+
+export type OnClientMessageT = typeof onClientMessage;
 
 /**
  * Handles incoming messages from the webview client
  * @param message - The message from the webview client
  */
-export function onClientMessage(message: ClientToServerEvents) {
+export function onClientMessage(
+	context: vscode.ExtensionContext,
+	message: ClientToServerEvents,
+) {
 	const panel = webviewPanelRef.current;
 	if (!panel) throw new Error("No webview panel found");
 

@@ -35,6 +35,8 @@ export function useNodeNavigation(renderedNodes: CustomNode[]) {
 				sendToServer({
 					type: "highlight-node",
 					nodeId,
+					filePath: node.data.filePath,
+					codeRange: node.data.codeRange,
 				});
 				try {
 					const currentZoom = reactFlow.getViewport().zoom;
