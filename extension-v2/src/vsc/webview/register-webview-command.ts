@@ -2,6 +2,7 @@ import * as vscode from "vscode";
 import { createWebview } from "./create-webview";
 import { NodifyWebviewSerializer } from "./webview-serializer";
 import { onClientMessage } from "./client-message-callback";
+import type { ServerToClientEvents } from "../../shared-types";
 
 /**
  * a Singleton reference to the webview panel
@@ -9,6 +10,13 @@ import { onClientMessage } from "./client-message-callback";
 export const webviewPanelRef = {
 	current: null as vscode.WebviewPanel | null,
 };
+
+/**
+ * Post a message to the webview panel
+ * @param message - The message to post
+ */
+export const postMessageToPanel = (message: ServerToClientEvents) =>
+	webviewPanelRef.current?.webview.postMessage(JSON.stringify(message));
 
 /**
  * Register the webview command

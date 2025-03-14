@@ -7,6 +7,10 @@ import { decodeLLMCodeBlocks } from "../ast/ast.schema";
 import { dedupeAndSummarizeReferences } from "../ast/references";
 import { getFlatReferencesListFromAST } from "../ast/references";
 import { getAbstractionTree } from "../ast/llm";
+import { createNodes } from "../graph/create-nodes";
+import { createEdges } from "../graph/create-edges";
+import { postMessageToPanel } from "./webview/register-webview-command";
+import { createGraphLayout } from "../graph/graph-layout-creator";
 
 class NoPythonFileOpenError {
 	readonly _tag = "NoPythonFileOpenError";
@@ -83,7 +87,19 @@ export function showOpenPythonFile() {
 		// get the abstraction tree
 		const tree = yield* getAbstractionTree(promptContext);
 
-		// show the graph
-		// yield* showGraph(flows);
+		// create the graph
+		const nodes = createNodes(tree, ast);
+		const edges = createEdges(nodes);
+		const layouted = createGraphLayout(nodes, edges);
+
+		postMessageToPanel({
+			type: "nodes",
+			value: layouted.nodes,
+		});
+
+		postMessageToPanel({
+			type: "edges",
+			value: layouted.edges,
+		});
 	});
 }

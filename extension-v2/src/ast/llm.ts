@@ -113,7 +113,6 @@ EXAMPLE OUTPUT:
 
 // Define the types for the abstraction tree output
 export type AbstractionGroup = {
-	groupID: number;
 	label: string;
 	idRange: readonly [string, string];
 	type: string;
@@ -128,7 +127,6 @@ export type AbstractionTreeOutput = {
 // Create a Zod schema for parsing the output
 export const abstractionGroupSchema: z.ZodType<AbstractionGroup> = z.lazy(() =>
 	z.object({
-		groupID: z.number(),
 		label: z.string(),
 		idRange: z.tuple([z.string(), z.string()]),
 		type: z.string(),
@@ -270,13 +268,12 @@ IMPORTANT FORMATTING INSTRUCTIONS:
 			// Return a minimal valid structure if parsing fails
 			return [
 				{
-					groupID: 0,
 					label: "Error parsing response",
 					idRange: ["0", "0"] as const,
 					type: "error",
 					children: [],
 				},
-			];
+			] as AbstractionGroup[];
 		}
 	});
 }
