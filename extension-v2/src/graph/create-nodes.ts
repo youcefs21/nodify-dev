@@ -29,7 +29,8 @@ export function createNodes(
 		});
 
 		if (!startBlock || !endBlock) {
-			throw new Error("Block not found");
+			console.error("block not found");
+			return [];
 		}
 
 		const childNodes =
@@ -50,18 +51,15 @@ export function createNodes(
 				codeRange: [startBlock.range, endBlock.range],
 				filePath: startBlock.filePath,
 				children: childNodes
-					.map((node) => ({
-						...node.data,
-						// so the object we're sending isn't huge
-						// children: [],
-					}))
+					.map((node) => node.data)
 					.filter((node) => `${startId}-${endId}` === node.parentId),
 				expanded: true,
 				type: group.type,
+				refID: group.referenceID ?? undefined,
 			},
 			type: "stacked",
 			position: { x: 0, y: 0 },
-		} as CustomNode;
+		} satisfies CustomNode;
 
 		return [parentNode, ...childNodes];
 	});

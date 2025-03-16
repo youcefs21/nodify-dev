@@ -14,6 +14,7 @@ export type NodeProps = {
 	codeRange: [CodeRange, CodeRange];
 	filePath: string;
 	children: NodeProps[];
+	refID?: string;
 	expanded: boolean;
 	type: string;
 };

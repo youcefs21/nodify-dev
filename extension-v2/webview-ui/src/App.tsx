@@ -30,7 +30,7 @@ function App() {
 	const reactFlow = useReactFlow();
 
 	// Use our custom hook for node navigation
-	const { highlightRootFirstChild } = useNodeNavigation(allNodes);
+	const { highlightNode } = useNodeNavigation(allNodes);
 
 	// Send initial render message to server
 	useEffect(() => {
@@ -83,10 +83,10 @@ function App() {
 				});
 
 				// Highlight the root node's first child
-				highlightRootFirstChild();
+				highlightNode(rootNode);
 			}
 		}
-	}, [renderedNodes, viewport, reactFlow, highlightRootFirstChild]);
+	}, [renderedNodes, viewport, reactFlow, highlightNode]);
 
 	return (
 		<div className="flex flex-1 w-[calc(100vw-3rem)] h-screen overflow-hidden mocha">

@@ -30,51 +30,31 @@ export function useNodeNavigation(renderedNodes: CustomNode[]) {
 	const highlightNode = useCallback(
 		(node: CustomNode) => {
 			const nodeId = node.id;
-			if (nodeId) {
-				setHighlightedNodeId(nodeId);
-				sendToServer({
-					type: "highlight-node",
-					nodeId,
-					filePath: node.data.filePath,
-					codeRange: node.data.codeRange,
+			if (!nodeId) {
+				console.log("no nodeId", node);
+				return;
+			}
+
+			setHighlightedNodeId(nodeId);
+			sendToServer({
+				type: "highlight-node",
+				nodeId,
+				filePath: node.data.filePath,
+				codeRange: node.data.codeRange,
+			});
+			try {
+				const currentZoom = reactFlow.getViewport().zoom;
+				reactFlow.fitView({
+					nodes: [{ id: node.data.parentId }],
+					maxZoom: currentZoom,
+					minZoom: currentZoom,
 				});
-				try {
-					const currentZoom = reactFlow.getViewport().zoom;
-					reactFlow.fitView({
-						nodes: [{ id: node.data.parentId }],
-						maxZoom: currentZoom,
-						minZoom: currentZoom,
-					});
-				} catch (error) {
-					console.error("Error fitting view", error);
-				}
+			} catch (error) {
+				console.error("Error fitting view", error);
 			}
 		},
 		[setHighlightedNodeId, reactFlow],
 	);
-
-	// Function to highlight the root node's first child
-	const highlightRootFirstChild = useCallback(() => {
-		const rootNode = renderedNodes.find(
-			(node) => node.data.parentId === "root",
-		);
-
-		if (rootNode) {
-			setHighlightedNodeId(rootNode.id);
-
-			console.log("rootNode", rootNode);
-			if (rootNode.data.children.length > 0) {
-				const firstChildId = rootNode.data.children[0].id;
-				console.log("firstChildId", firstChildId);
-				const firstChild = findNodeById(renderedNodes, firstChildId);
-				if (firstChild) {
-					highlightNode(firstChild);
-				}
-			}
-		} else {
-			console.log("no root node");
-		}
-	}, [renderedNodes, highlightNode, setHighlightedNodeId]);
 
 	// Handle keyboard navigation
 	useEffect(() => {
@@ -149,6 +129,5 @@ export function useNodeNavigation(renderedNodes: CustomNode[]) {
 	return {
 		highlightedNodeId,
 		highlightNode,
-		highlightRootFirstChild,
 	};
 }

@@ -116,7 +116,7 @@ export type AbstractionGroup = {
 	label: string;
 	idRange: readonly [string, string];
 	type: string;
-	referenceID?: string;
+	referenceID?: string | null;
 	children?: readonly AbstractionGroup[];
 };
 
@@ -130,7 +130,7 @@ export const abstractionGroupSchema: z.ZodType<AbstractionGroup> = z.lazy(() =>
 		label: z.string(),
 		idRange: z.tuple([z.string(), z.string()]),
 		type: z.string(),
-		referenceID: z.string().optional(),
+		referenceID: z.string().optional().nullish(),
 		children: z.array(abstractionGroupSchema).optional(),
 	}),
 );

@@ -13,6 +13,11 @@ function handleNodeToggle(message: ClientEvent<"node-toggle">) {
 	return Effect.void;
 }
 
+const activeHighlight = {
+	decoration: null as vscode.TextEditorDecorationType | null,
+	timeout: null as NodeJS.Timeout | null,
+};
+
 function handleHighlightNode({
 	codeRange,
 	filePath,
@@ -44,9 +49,16 @@ function handleHighlightNode({
 		// Scroll the highlighted section into view
 		editor.revealRange(range, vscode.TextEditorRevealType.InCenter);
 
-		setTimeout(() => {
+		if (activeHighlight.timeout) {
+			clearTimeout(activeHighlight.timeout);
+		}
+		if (activeHighlight.decoration) {
+			editor.setDecorations(activeHighlight.decoration, []);
+		}
+		activeHighlight.decoration = highlightingDecoration;
+		activeHighlight.timeout = setTimeout(() => {
 			editor.setDecorations(highlightingDecoration, []);
-		}, 1000);
+		}, 5000);
 	});
 }
 
