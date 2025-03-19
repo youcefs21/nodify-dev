@@ -1,6 +1,9 @@
 import { Effect } from "effect";
 import type { ClientToServerEvents } from "../../shared-types";
-import { webviewPanelRef } from "./register-webview-command";
+import {
+	postMessageToPanel,
+	webviewPanelRef,
+} from "./register-webview-command";
 import * as vscode from "vscode";
 import { graphCache, sendNodes, showOpenPythonFile } from "../show-open-file";
 
@@ -87,6 +90,16 @@ export function onClientMessage(
 		console.log(message);
 		switch (message.type) {
 			case "on-render": {
+				// get the special URI to use with the webview
+				const assetsDirPath = vscode.Uri.joinPath(
+					context.extensionUri,
+					"webview-ui/dist",
+				);
+				postMessageToPanel({
+					type: "base-url",
+					value: panel.webview.asWebviewUri(assetsDirPath).toString(),
+				});
+
 				yield* showOpenPythonFile();
 				break;
 			}

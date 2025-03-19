@@ -1,5 +1,5 @@
 import { Book, FileText, LogIn, Play, Settings2, Unplug } from "lucide-react";
-import { cn } from "../utils/cn";
+import { cn } from "../../utils/cn";
 
 export const TypeIconMap = {
 	main: () => (

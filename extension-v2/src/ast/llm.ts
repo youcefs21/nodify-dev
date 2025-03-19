@@ -6,16 +6,16 @@ import { zodResponseFormat } from "openai/helpers/zod";
 import Anthropic from "@anthropic-ai/sdk";
 import { getNodifyWorkspaceDir } from "../utils/get-nodify-workspace-dir";
 import fs from "node:fs/promises";
-import { hashString } from "../utils/hash";
+
 const claude = new Anthropic();
 
-const VLLM_URL = "http://100.89.180.124:6969";
-const OLLAMA_URL = "http://127.0.0.1:11434";
+const OPENAI_URL = "http://100.89.180.124:6969";
+// const OPENAI_URL = "http://127.0.0.1:11434";
 const model = "unsloth/phi-4-bnb-4bit";
-const ollama_model = "phi4:14b-q8_0";
+// const model = "phi4:14b-q8_0";
 
 const client = new OpenAI({
-	baseURL: `${OLLAMA_URL}/v1`,
+	baseURL: `${OPENAI_URL}/v1`,
 	apiKey: "key",
 });
 
@@ -93,7 +93,7 @@ EXAMPLE OUTPUT:
 						content: ref.body,
 					},
 				],
-				model: ollama_model,
+				model: model,
 				response_format: zodResponseFormat(summarySchema, "summary"),
 				temperature: 0,
 			}),
@@ -232,7 +232,7 @@ IMPORTANT FORMATTING INSTRUCTIONS:
 						{ role: "user", content: JSON.stringify(input, null, 2) },
 					],
 					response_format: { type: "json_object" },
-					model: ollama_model,
+					model: model,
 				})
 				.then((res) => {
 					// Format OpenAI response to match Claude's content structure

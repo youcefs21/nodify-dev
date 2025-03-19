@@ -1,16 +1,9 @@
 import { type NodeProps, Position, Handle } from "@xyflow/react";
 import type { CustomNode } from "../../../src/shared-types";
 import { cn } from "../utils/cn";
-import { TypeIconMap } from "./Icon";
-import {
-	ChevronDown,
-	ChevronLeft,
-	ChevronRight,
-	Cpu,
-	Play,
-	Tags,
-} from "lucide-react";
-import { Button } from "./Button";
+import { TypeIconMap } from "./ui/Icon";
+import { ChevronLeft, ChevronRight, Cpu } from "lucide-react";
+import { Button } from "./ui/Button";
 import { highlightedNodeAtom } from "../utils/useNodeNavigation";
 import { useAtomValue } from "jotai";
 import { sendToServer } from "../utils/sendToServer";

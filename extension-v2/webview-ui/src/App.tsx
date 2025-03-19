@@ -15,6 +15,7 @@ import { ReactFlow } from "@xyflow/react";
 import type { CustomNode, ServerToClientEvents } from "../../src/shared-types";
 import { StackedNodes } from "./components/StackedNode";
 import { useNodeNavigation } from "./utils/useNodeNavigation";
+import { LoadingScreen } from "./components/LoadingScreen";
 
 function App() {
 	const [renderedNodes, setNodes, onNodesChange] = useNodesState<CustomNode>(
@@ -27,6 +28,7 @@ function App() {
 		zoom: 1,
 	});
 	const reactFlow = useReactFlow();
+	const [baseUrl, setBaseUrl] = useState<string | null>(null);
 
 	// Use our custom hook for node navigation
 	const { highlightNode } = useNodeNavigation(renderedNodes.map((a) => a.data));
@@ -52,6 +54,9 @@ function App() {
 				} else if (message.type === "edges") {
 					setEdges(message.value);
 					console.log("edges", message.value);
+				} else if (message.type === "base-url") {
+					setBaseUrl(message.value);
+					console.log("base-url", message.value);
 				}
 			},
 			{ signal: abortController.signal },
@@ -83,6 +88,10 @@ function App() {
 			}
 		}
 	}, [renderedNodes, viewport, reactFlow, highlightNode]);
+
+	if (renderedNodes.length === 0) {
+		return <LoadingScreen baseUrl={baseUrl ?? ""} />;
+	}
 
 	return (
 		<div className="flex flex-1 w-[calc(100vw-3rem)] h-screen overflow-hidden mocha">

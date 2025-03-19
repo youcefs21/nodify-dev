@@ -16,6 +16,10 @@ export type ServerToClientEvents =
 	| {
 			type: "edges";
 			value: Edge[];
+	  }
+	| {
+			type: "base-url";
+			value: string;
 	  };
 
 export type ClientToServerEvents =
