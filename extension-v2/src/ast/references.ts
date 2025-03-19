@@ -4,7 +4,7 @@ import { summarizeCodeReference } from "./llm";
 import { Lang, parse } from "@ast-grep/napi";
 import * as vscode from "vscode";
 import { getAllFlowASTs } from "./get-all-flows";
-import { getNodesFromAst } from "../graph/create-nodes";
+import { getGraphsFromAst } from "../graph/create-nodes";
 
 // Store for reference hashes and summaries
 // This will be replaced with a database later
@@ -88,7 +88,7 @@ export function getFlatReferencesListFromAST(
  * @param ref The reference to get nodes for
  * @returns The nodes for the reference
  */
-export function getReferenceNodes(ref: CodeReference) {
+export function getReferenceGraphs(ref: CodeReference) {
 	return Effect.gen(function* () {
 		const document = yield* Effect.tryPromise(() =>
 			vscode.workspace.openTextDocument(ref.filePath),
@@ -110,8 +110,8 @@ export function getReferenceNodes(ref: CodeReference) {
 		});
 		const block = rawNodes?.children().find((x) => x.kind() === "block");
 		if (!block) {
-			console.error("WTF NO BLOCK FOUND ON REF SEARCH");
-			return { nodes: [], references: [], refID: ref.id };
+			console.error("No block found on ref search");
+			return { graphs: [], references: [], refID: ref.id };
 		}
 
 		const ast = yield* getAllFlowASTs({
@@ -120,8 +120,8 @@ export function getReferenceNodes(ref: CodeReference) {
 			url: document.uri,
 		});
 
-		const nodes = yield* getNodesFromAst(ast);
+		const { graphs, references } = yield* getGraphsFromAst(ast);
 
-		return { ...nodes, refID: ref.id };
+		return { graphs, references, refID: ref.id };
 	});
 }

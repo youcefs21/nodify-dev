@@ -2,14 +2,22 @@ import { Effect } from "effect";
 import type { ClientToServerEvents } from "../../shared-types";
 import { webviewPanelRef } from "./register-webview-command";
 import * as vscode from "vscode";
-import { showOpenPythonFile } from "../show-open-file";
+import { graphCache, sendNodes, showOpenPythonFile } from "../show-open-file";
 
 type ClientEvent<T extends ClientToServerEvents["type"]> = Extract<
 	ClientToServerEvents,
 	{ type: T }
 >;
 
+export const collapsedNodes = new Set<string>();
+
 function handleNodeToggle(message: ClientEvent<"node-toggle">) {
+	if (collapsedNodes.has(message.nodeId)) {
+		collapsedNodes.delete(message.nodeId);
+	} else {
+		collapsedNodes.add(message.nodeId);
+	}
+	sendNodes(graphCache.ref);
 	return Effect.void;
 }
 

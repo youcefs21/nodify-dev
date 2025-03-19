@@ -3,14 +3,14 @@ import * as vscode from "vscode";
 import * as astGrep from "@ast-grep/napi";
 import { Lang } from "@ast-grep/napi";
 import { getAllFlowASTs } from "../ast/get-all-flows";
-import { getNodesFromAst } from "../graph/create-nodes";
+import { getGraphsFromAst } from "../graph/create-nodes";
 import { createEdges } from "../graph/create-edges";
 import { postMessageToPanel } from "./webview/register-webview-command";
 import { createGraphLayout } from "../graph/graph-layout-creator";
 import type { CustomNode } from "../graph/graph.types";
-import { getReferenceNodes } from "../ast/references";
+import { getReferenceGraphs } from "../ast/references";
 import type { CodeReference } from "../ast/ast.schema";
-
+import { collapsedNodes } from "./webview/client-message-callback";
 class NoPythonFileOpenError {
 	readonly _tag = "NoPythonFileOpenError";
 	readonly message = "You must have a Python file open to use this command";
@@ -48,11 +48,31 @@ export function getOpenPythonFileText() {
 	});
 }
 
+export interface Graph {
+	node: CustomNode;
+	children: Graph[];
+}
+
 /**
  * 🎨 Sends the nodes to the webview
  * @param nodes The nodes to send
  */
-function sendNodes(nodes: CustomNode[]) {
+function FlattenGraph(graph: Graph): Graph[] {
+	return [
+		graph,
+		...graph.children
+			.filter((child) => !collapsedNodes.has(child.node.data.id))
+			.flatMap(FlattenGraph),
+	];
+}
+
+export const graphCache = {
+	ref: [] as Graph[],
+};
+
+export function sendNodes(graph: Graph[]) {
+	graphCache.ref = graph;
+	const nodes = graph.flatMap(FlattenGraph).map((node) => node.node);
 	const parentNodes = nodes.filter((node) => node.data.children.length > 0);
 	const edges = createEdges(parentNodes);
 	const layouted = createGraphLayout(parentNodes, edges);
@@ -90,10 +110,11 @@ export function showOpenPythonFile() {
 		});
 		console.log(`Found AST for ${url}`);
 
-		const { nodes, references } = yield* getNodesFromAst(ast);
-		sendNodes(nodes);
+		const { graphs, references } = yield* getGraphsFromAst(ast);
+		sendNodes(graphs);
 
-		yield* processAndShowReferences(nodes, references);
+		yield* processAndShowReferences(graphs, references);
+		sendNodes(graphs);
 	});
 }
 
@@ -104,34 +125,38 @@ export function showOpenPythonFile() {
  * @returns The nodes for the references
  */
 function processAndShowReferences(
-	nodes: CustomNode[],
+	graphs: Graph[],
 	references: CodeReference[],
-) {
-	return Effect.gen(function* () {
-		const newNodes = yield* Effect.forEach(
-			nodes,
-			(node) =>
-				Effect.gen(function* () {
-					if (!node?.data.refID) return [];
+): Effect.Effect<void> {
+	return Effect.forEach(
+		graphs,
+		(graph) =>
+			Effect.gen(function* () {
+				if (!graph?.node.data.refID) {
+					return yield* processAndShowReferences(graph.children, references);
+				}
 
-					const ref = references.find((ref) => ref.id === node.data.refID);
-					if (!ref) {
-						console.error("WTF NO REF FOUND ON REF SEARCH");
-						return [];
-					}
-					const res = yield* getReferenceNodes(ref);
-					node.data.children = res.nodes
-						.filter((a) => a.data.parentId === "root")
-						.map((a) => {
-							a.data.parentId = node.data.id;
-							a.data.expanded = false;
-							return a.data;
-						});
-					return res.nodes;
-				}),
-			{ concurrency: 5 },
-		).pipe(Effect.map((x) => x.flat()));
+				const ref = references.find((ref) => ref.id === graph.node.data.refID);
+				if (!ref) return []; // this actually early stops references that haven't been expanded yet
 
-		sendNodes([...nodes, ...newNodes]);
-	});
+				const res = yield* getReferenceGraphs(ref);
+				graph.node.data.children = res.graphs.map((a) => {
+					a.node.data.parentId = graph.node.data.id;
+					return a.node.data;
+				});
+				graph.children = res.graphs;
+				collapsedNodes.add(graph.node.data.id);
+
+				return yield* processAndShowReferences(graph.children, [
+					...references,
+					...res.references,
+				]);
+			}),
+		{ concurrency: 5 },
+	).pipe(
+		Effect.catchAll((e) => {
+			console.error(e.message);
+			return Effect.void;
+		}),
+	);
 }

@@ -5,6 +5,7 @@ import type { CustomNode } from "./graph.types";
 import { getShortId, hashString } from "../utils/hash";
 import { getFlatReferencesListFromAST } from "../ast/references";
 import { getAbstractionTree } from "../ast/llm";
+import type { Graph } from "../vsc/show-open-file";
 
 export function flattenCodeBlocks(codeBlocks: CodeBlock[]): CodeBlock[] {
 	return codeBlocks.flatMap((block) => {
@@ -16,12 +17,12 @@ export function flattenCodeBlocks(codeBlocks: CodeBlock[]): CodeBlock[] {
  * Flattens the abstraction group tree,
  * and creates a ReactFlow node for each abstraction group
  */
-export function createNodes(
+export function createGraph(
 	data: AbstractionGroup[],
 	flatCodeBlocks: CodeBlock[],
 	parentId: string,
 	chunkId: string,
-): CustomNode[] {
+): Graph[] {
 	return data.flatMap((group) => {
 		// find the range
 		const startId = group.idRange[0];
@@ -42,7 +43,7 @@ export function createNodes(
 
 		const childNodes =
 			group.children && group.children.length > 0
-				? createNodes([...group.children], flatCodeBlocks, nodeId, chunkId)
+				? createGraph([...group.children], flatCodeBlocks, nodeId, chunkId)
 				: [];
 
 		const parentNode = {
@@ -55,9 +56,7 @@ export function createNodes(
 				label: group.label,
 				codeRange: [startBlock.range, endBlock.range],
 				filePath: startBlock.filePath,
-				children: childNodes
-					.map((node) => node.data)
-					.filter((node) => nodeId === node.parentId),
+				children: childNodes.map((node) => node.node.data),
 				expanded: true,
 				type: group.type,
 				refID: group.referenceID ?? undefined,
@@ -66,7 +65,10 @@ export function createNodes(
 			position: { x: 0, y: 0 },
 		} satisfies CustomNode;
 
-		return [parentNode, ...childNodes];
+		return {
+			node: parentNode,
+			children: childNodes,
+		} satisfies Graph;
 	});
 }
 
@@ -76,7 +78,7 @@ export function createNodes(
  * @param parentId The parent ID of the graph
  * @returns The nodes of the graph
  */
-export function getNodesFromAst(ast: CodeBlock[]) {
+export function getGraphsFromAst(ast: CodeBlock[]) {
 	return Effect.gen(function* () {
 		const astHash = yield* hashString(JSON.stringify(ast));
 
@@ -105,8 +107,8 @@ export function getNodesFromAst(ast: CodeBlock[]) {
 
 		// create the graph
 		const chunkId = getShortId(astHash);
-		const nodes = createNodes(tree, flatCodeBlocks, "root", chunkId);
+		const graphs = createGraph(tree, flatCodeBlocks, "root", chunkId);
 
-		return { nodes, references };
+		return { graphs, references };
 	});
 }

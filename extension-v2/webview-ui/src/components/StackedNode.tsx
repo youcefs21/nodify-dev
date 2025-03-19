@@ -6,6 +6,7 @@ import { ChevronLeft, ChevronRight, Cpu, Play, Tags } from "lucide-react";
 import { Button } from "./Button";
 import { highlightedNodeAtom } from "../utils/useNodeNavigation";
 import { useAtomValue } from "jotai";
+import { sendToServer } from "../utils/sendToServer";
 
 // 8px of padding around the whole thing, 8px gaps between nodes
 // 32px total added because of padding
@@ -13,6 +14,7 @@ import { useAtomValue } from "jotai";
 export function StackedNodes({ data }: NodeProps<CustomNode>) {
 	const CustomIcon = TypeIconMap[data.type as keyof typeof TypeIconMap];
 	const highlightedNode = useAtomValue(highlightedNodeAtom);
+
 	return (
 		<div className="relative flex flex-col w-full h-full gap-2 p-2 rounded-lg bg-surface-0">
 			<div className="flex items-center gap-2 px-2 py-1 rounded-lg h-14 relative">
@@ -76,7 +78,16 @@ export function StackedNodes({ data }: NodeProps<CustomNode>) {
 								<span className="font-mono text-sm">{child.label}</span>
 							</div>
 							{child.children.length > 0 && (
-								<Button variant="outline" size="icon">
+								<Button
+									variant="outline"
+									size="icon"
+									onClick={() => {
+										sendToServer({
+											type: "node-toggle",
+											nodeId: child.id,
+										});
+									}}
+								>
 									<ChevronRight className="w-4 h-4 stroke-text" />
 								</Button>
 							)}
