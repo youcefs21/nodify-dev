@@ -19,6 +19,29 @@ export function getAllFlowASTs({ root, parent_id, url }: Props) {
 	return Effect.all(
 		root
 			.filter((node) => flowKinds.some((flowKind) => flowKind === node.kind()))
+			.flatMap((node) => {
+				// this is because else are nested inside if_expression, and same with try and except
+				const else_blocks = node
+					.children()
+					.filter((x) => x.kind() === "else_clause");
+				const elif_blocks = node
+					.children()
+					.filter((x) => x.kind() === "elif_clause");
+				const except_blocks = node
+					.children()
+					.filter((x) => x.kind() === "except_clause");
+				const finally_blocks = node
+					.children()
+					.filter((x) => x.kind() === "finally_clause");
+
+				return [
+					node,
+					...elif_blocks,
+					...else_blocks,
+					...except_blocks,
+					...finally_blocks,
+				];
+			})
 			.map((node, i) =>
 				getFlowAST({ node, kind: node.kind() as FlowKind, parent_id, i, url }),
 			),

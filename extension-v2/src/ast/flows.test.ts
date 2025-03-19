@@ -62,4 +62,54 @@ suite("AST Test Suite", () => {
 
 		assert.strictEqual(result?.text(), "def add(a, b):\n    return a + b");
 	});
+
+	test("Try Except Statement", async () => {
+		const filePath = path.join(rootPath, "try-except.py");
+		const try_except_statement =
+			await vscode.workspace.openTextDocument(filePath);
+		const root = parse(Lang.Python, try_except_statement.getText()).root();
+		const ast = await getAllFlowASTs({
+			root: root.children(),
+			parent_id: "",
+			url: try_except_statement.uri,
+		}).pipe(Effect.runPromise);
+
+		assert.ok(ast.length === 3);
+		assert.ok(
+			"children" in ast[0] && "children" in ast[1] && "children" in ast[2],
+		);
+
+		// Verify placeholder replacement
+		assert.ok(ast[0].text.includes("<try_statement_body/>"));
+		assert.ok(ast[1].text.includes("<except_clause_body/>"));
+		assert.ok(ast[2].text.includes("<finally_clause_body/>"));
+	});
+
+	test("If Else Statement", async () => {
+		const filePath = path.join(rootPath, "if-else.py");
+		const if_else_statement = await vscode.workspace.openTextDocument(filePath);
+		const root = parse(Lang.Python, if_else_statement.getText()).root();
+		const ast = await getAllFlowASTs({
+			root: root.children(),
+			parent_id: "",
+			url: if_else_statement.uri,
+		}).pipe(Effect.runPromise);
+
+		// We expect 4 nodes: if, 2 elifs, and else
+		assert.ok(ast.length === 4);
+
+		// Check that all statements have children property
+		assert.ok(
+			"children" in ast[0] &&
+				"children" in ast[1] &&
+				"children" in ast[2] &&
+				"children" in ast[3],
+		);
+
+		// Verify placeholder replacement
+		assert.ok(ast[0].text.includes("<if_statement_body/>"));
+		assert.ok(ast[1].text.includes("<elif_clause_body/>"));
+		assert.ok(ast[2].text.includes("<elif_clause_body/>"));
+		assert.ok(ast[3].text.includes("<else_clause_body/>"));
+	});
 });

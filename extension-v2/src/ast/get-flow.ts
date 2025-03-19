@@ -49,9 +49,24 @@ export function getFlowAST({
 		switch (kind) {
 			case "while_statement":
 			case "for_statement":
+			case "try_statement":
+			case "elif_clause":
+			case "else_clause":
+			case "finally_clause":
+			case "except_clause":
 			case "if_statement": {
 				// find the block child of the current node
 				const block = node.children().find((x) => x.kind() === "block");
+				const to_be_removed = node
+					.children()
+					.filter((x) =>
+						[
+							"else_clause",
+							"elif_clause",
+							"except_clause",
+							"finally_clause",
+						].some((k) => k === x.kind()),
+					);
 				if (!block) {
 					return yield* Effect.fail(new NoBlockFoundError());
 				}
@@ -64,13 +79,15 @@ export function getFlowAST({
 				});
 
 				// replace the block body with a placeholder
-				const edit = block.replace(`<${kind}_body/>`);
-				const text = node.commitEdits([edit]);
+				const edits = [
+					block.replace(`<${kind}_body/>`),
+					...to_be_removed.map((x) => x.replace("")),
+				];
+				const text = node.commitEdits(edits);
 
-				// return the AST CodeBlock
 				return yield* Effect.succeed({
 					id: parent_id !== "" ? `${parent_id}.${i}` : `${i}`,
-					text,
+					text: text.trim(),
 					range: getCodeRangeFromSgNode(node),
 					filePath: url.fsPath,
 					children,
@@ -92,7 +109,7 @@ export function getFlowAST({
 				// create and return the output. Don't include references if there are none
 				const output = {
 					id: parent_id !== "" ? `${parent_id}.${i}` : `${i}`,
-					text: node.text(),
+					text: node.text().trim(),
 					range: getCodeRangeFromSgNode(node),
 					filePath: url.fsPath,
 				};

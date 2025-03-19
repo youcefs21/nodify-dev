@@ -9,6 +9,11 @@ export const flowKinds = [
 	"if_statement",
 	"for_statement",
 	"while_statement",
+	"try_statement",
+	"elif_clause",
+	"else_clause",
+	"except_clause",
+	"finally_clause",
 ] as const;
 export type FlowKind = (typeof flowKinds)[number];
 
