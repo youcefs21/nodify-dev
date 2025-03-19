@@ -17,29 +17,25 @@ export function useNodeNavigation(renderedNodes: NodeProps[]) {
 			.find((n) => n.id === highlightedNodeId);
 	}, [highlightedNodeId, renderedNodes]);
 
-	// Highlight a node
-	const highlightNode = useCallback(
-		(node: NodeProps) => {
-			setHighlightedNodeId(node.id);
-			sendToServer({
-				type: "highlight-node",
-				nodeId: node.id,
-				filePath: node.filePath,
-				codeRange: node.codeRange,
+	useEffect(() => {
+		if (!highlightedNode) return;
+		sendToServer({
+			type: "highlight-node",
+			nodeId: highlightedNode.id,
+			filePath: highlightedNode.filePath,
+			codeRange: highlightedNode.codeRange,
+		});
+		try {
+			const currentZoom = reactFlow.getViewport().zoom;
+			reactFlow.fitView({
+				nodes: [{ id: highlightedNode.parentId }],
+				maxZoom: currentZoom,
+				minZoom: currentZoom,
 			});
-			try {
-				const currentZoom = reactFlow.getViewport().zoom;
-				reactFlow.fitView({
-					nodes: [{ id: node.parentId }],
-					maxZoom: currentZoom,
-					minZoom: currentZoom,
-				});
-			} catch (error) {
-				console.error("Error fitting view", error);
-			}
-		},
-		[setHighlightedNodeId, reactFlow],
-	);
+		} catch (error) {
+			console.error("Error fitting view", error);
+		}
+	}, [highlightedNode, reactFlow]);
 
 	// Handle keyboard navigation
 	useEffect(() => {
@@ -72,21 +68,21 @@ export function useNodeNavigation(renderedNodes: NodeProps[]) {
 				case "j":
 					// Move to next sibling
 					if (currentIndex < siblings.length - 1) {
-						highlightNode(siblings[currentIndex + 1]);
+						setHighlightedNodeId(siblings[currentIndex + 1].id);
 					}
 					break;
 				case "ArrowUp":
 				case "k":
 					// Move to previous sibling
 					if (currentIndex > 0) {
-						highlightNode(siblings[currentIndex - 1]);
+						setHighlightedNodeId(siblings[currentIndex - 1].id);
 					}
 					break;
 				case "ArrowLeft":
 				case "h":
 					// Move to parent
 					if (parentNode && parentNode.parentId !== "root") {
-						highlightNode(parentNode);
+						setHighlightedNodeId(parentNode.id);
 					}
 					break;
 				case "ArrowRight":
@@ -100,7 +96,7 @@ export function useNodeNavigation(renderedNodes: NodeProps[]) {
 					}
 
 					if (children.length > 0 && highlightedNode.expanded) {
-						highlightNode(children[0]);
+						setHighlightedNodeId(children[0].id);
 					}
 
 					break;
@@ -112,10 +108,9 @@ export function useNodeNavigation(renderedNodes: NodeProps[]) {
 		return () => {
 			window.removeEventListener("keydown", handleKeyDown);
 		};
-	}, [highlightedNode, renderedNodes, highlightNode]);
+	}, [highlightedNode, renderedNodes, setHighlightedNodeId]);
 
 	return {
-		highlightedNodeId: highlightedNode,
-		highlightNode,
+		setHighlightedNodeId,
 	};
 }

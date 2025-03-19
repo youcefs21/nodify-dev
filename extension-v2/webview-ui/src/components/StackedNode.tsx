@@ -5,7 +5,7 @@ import { TypeIconMap } from "./ui/Icon";
 import { ChevronLeft, ChevronRight, Cpu } from "lucide-react";
 import { Button } from "./ui/Button";
 import { highlightedNodeAtom } from "../utils/useNodeNavigation";
-import { useAtomValue } from "jotai";
+import { useAtom, useAtomValue } from "jotai";
 import { sendToServer } from "../utils/sendToServer";
 
 // 8px of padding around the whole thing, 8px gaps between nodes
@@ -13,7 +13,8 @@ import { sendToServer } from "../utils/sendToServer";
 // 56px per node + 8px gap so 64px per node
 export function StackedNodes({ data }: NodeProps<CustomNode>) {
 	const CustomIcon = TypeIconMap[data.type as keyof typeof TypeIconMap];
-	const highlightedNodeId = useAtomValue(highlightedNodeAtom);
+	const [highlightedNodeId, setHighlightedNodeId] =
+		useAtom(highlightedNodeAtom);
 
 	return (
 		<div className="relative flex flex-col w-full h-full gap-2 p-2 rounded-lg bg-surface-0">
@@ -44,13 +45,23 @@ export function StackedNodes({ data }: NodeProps<CustomNode>) {
 					const CustomChildIcon =
 						TypeIconMap[child.type as keyof typeof TypeIconMap];
 					return (
-						<div
+						<button
 							key={child.id}
+							type="button"
 							className={cn(
-								"flex justify-between items-center px-2 py-1 rounded-lg h-14 bg-surface-2 relative",
+								"w-full text-left flex justify-between items-center px-2 py-1 rounded-lg h-14 bg-surface-2 relative",
 								highlightedNodeId === child.id &&
 									"outline outline-2 outline-mauve",
+								"focus:outline-none focus-visible:outline-2 focus-visible:outline-blue",
 							)}
+							onClick={(e) => {
+								setHighlightedNodeId(child.id);
+								// Remove focus from the button after click to prevent orange outline
+								if (e.currentTarget) {
+									e.currentTarget.blur();
+								}
+							}}
+							style={{ cursor: "pointer" }}
 						>
 							{child.children.length > 0 && (
 								<Handle
@@ -82,7 +93,8 @@ export function StackedNodes({ data }: NodeProps<CustomNode>) {
 									variant="outline"
 									size="icon"
 									className="aspect-square"
-									onClick={() => {
+									onClick={(e) => {
+										e.stopPropagation();
 										sendToServer({
 											type: "node-toggle",
 											nodeId: child.id,
@@ -96,7 +108,7 @@ export function StackedNodes({ data }: NodeProps<CustomNode>) {
 									)}
 								</Button>
 							)}
-						</div>
+						</button>
 					);
 				})}
 			</div>

@@ -31,7 +31,9 @@ function App() {
 	const [baseUrl, setBaseUrl] = useState<string | null>(null);
 
 	// Use our custom hook for node navigation
-	const { highlightNode } = useNodeNavigation(renderedNodes.map((a) => a.data));
+	const { setHighlightedNodeId } = useNodeNavigation(
+		renderedNodes.map((a) => a.data),
+	);
 
 	// Send initial render message to server
 	useEffect(() => {
@@ -84,10 +86,10 @@ function App() {
 				});
 
 				// Highlight the root node's first child
-				highlightNode(rootNode.data.children[0]);
+				setHighlightedNodeId(rootNode.data.children[0].id);
 			}
 		}
-	}, [renderedNodes, viewport, reactFlow, highlightNode]);
+	}, [renderedNodes, viewport, reactFlow, setHighlightedNodeId]);
 
 	if (renderedNodes.length === 0) {
 		return <LoadingScreen baseUrl={baseUrl ?? ""} />;
@@ -106,8 +108,9 @@ function App() {
 					viewport={viewport}
 					onViewportChange={setViewport}
 					onEdgesChange={onEdgesChange}
-					snapToGrid={true}
-					snapGrid={[10, 10]}
+					nodesDraggable={false}
+					nodesConnectable={false}
+					edgesFocusable={false}
 				>
 					<Controls />
 					<Background variant={BackgroundVariant.Dots} gap={12} size={1} />
