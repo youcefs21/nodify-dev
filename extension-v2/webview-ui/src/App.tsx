@@ -17,7 +17,6 @@ import { StackedNodes } from "./components/StackedNode";
 import { useNodeNavigation } from "./utils/useNodeNavigation";
 
 function App() {
-	const [allNodes, setAllNodes] = useState<CustomNode[]>([]);
 	const [renderedNodes, setNodes, onNodesChange] = useNodesState<CustomNode>(
 		[],
 	);
@@ -30,7 +29,7 @@ function App() {
 	const reactFlow = useReactFlow();
 
 	// Use our custom hook for node navigation
-	const { highlightNode } = useNodeNavigation(allNodes);
+	const { highlightNode } = useNodeNavigation(renderedNodes.map((a) => a.data));
 
 	// Send initial render message to server
 	useEffect(() => {
@@ -53,9 +52,6 @@ function App() {
 				} else if (message.type === "edges") {
 					setEdges(message.value);
 					console.log("edges", message.value);
-				} else if (message.type === "all-nodes") {
-					setAllNodes(message.value);
-					console.log("all-nodes", message.value);
 				}
 			},
 			{ signal: abortController.signal },
@@ -83,7 +79,7 @@ function App() {
 				});
 
 				// Highlight the root node's first child
-				highlightNode(rootNode);
+				highlightNode(rootNode.data.children[0]);
 			}
 		}
 	}, [renderedNodes, viewport, reactFlow, highlightNode]);

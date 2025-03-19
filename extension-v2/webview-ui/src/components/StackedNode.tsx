@@ -2,7 +2,14 @@ import { type NodeProps, Position, Handle } from "@xyflow/react";
 import type { CustomNode } from "../../../src/shared-types";
 import { cn } from "../utils/cn";
 import { TypeIconMap } from "./Icon";
-import { ChevronLeft, ChevronRight, Cpu, Play, Tags } from "lucide-react";
+import {
+	ChevronDown,
+	ChevronLeft,
+	ChevronRight,
+	Cpu,
+	Play,
+	Tags,
+} from "lucide-react";
 import { Button } from "./Button";
 import { highlightedNodeAtom } from "../utils/useNodeNavigation";
 import { useAtomValue } from "jotai";
@@ -13,7 +20,7 @@ import { sendToServer } from "../utils/sendToServer";
 // 56px per node + 8px gap so 64px per node
 export function StackedNodes({ data }: NodeProps<CustomNode>) {
 	const CustomIcon = TypeIconMap[data.type as keyof typeof TypeIconMap];
-	const highlightedNode = useAtomValue(highlightedNodeAtom);
+	const highlightedNodeId = useAtomValue(highlightedNodeAtom);
 
 	return (
 		<div className="relative flex flex-col w-full h-full gap-2 p-2 rounded-lg bg-surface-0">
@@ -48,7 +55,7 @@ export function StackedNodes({ data }: NodeProps<CustomNode>) {
 							key={child.id}
 							className={cn(
 								"flex justify-between items-center px-2 py-1 rounded-lg h-14 bg-surface-2 relative",
-								highlightedNode === child.id &&
+								highlightedNodeId === child.id &&
 									"outline outline-2 outline-mauve",
 							)}
 						>
@@ -81,6 +88,7 @@ export function StackedNodes({ data }: NodeProps<CustomNode>) {
 								<Button
 									variant="outline"
 									size="icon"
+									className="aspect-square"
 									onClick={() => {
 										sendToServer({
 											type: "node-toggle",
@@ -88,7 +96,11 @@ export function StackedNodes({ data }: NodeProps<CustomNode>) {
 										});
 									}}
 								>
-									<ChevronRight className="w-4 h-4 stroke-text" />
+									{!child.expanded ? (
+										<ChevronLeft className="w-4 h-4 stroke-text" />
+									) : (
+										<ChevronRight className="w-4 h-4 stroke-text" />
+									)}
 								</Button>
 							)}
 						</div>

@@ -1,51 +1,36 @@
-import { useCallback, useEffect } from "react";
-import type { CustomNode } from "../../../src/shared-types";
+import { useCallback, useEffect, useMemo } from "react";
+import type { CustomNode, NodeProps } from "../../../src/shared-types";
 import { sendToServer } from "./sendToServer";
 import { atom, useAtom } from "jotai";
 import { useReactFlow } from "@xyflow/react";
 
-// Helper functions for node operations
-const findNodeById = (nodes: CustomNode[], id: string) => {
-	return nodes.find((node) => node.id === id);
-};
-
-const findParentNode = (nodes: CustomNode[], nodeId: string) => {
-	const node = findNodeById(nodes, nodeId);
-	if (!node) return null;
-	return findNodeById(nodes, node.data.parentId);
-};
-
-const findChildNodes = (nodes: CustomNode[], nodeId: string) => {
-	return nodes.filter((node) => node.data.parentId === nodeId);
-};
-
 export const highlightedNodeAtom = atom<string | null>(null);
 
-export function useNodeNavigation(renderedNodes: CustomNode[]) {
+export function useNodeNavigation(renderedNodes: NodeProps[]) {
 	const reactFlow = useReactFlow();
 	const [highlightedNodeId, setHighlightedNodeId] =
 		useAtom(highlightedNodeAtom);
 
+	const highlightedNode = useMemo(() => {
+		return renderedNodes
+			.flatMap((n) => n.children)
+			.find((n) => n.id === highlightedNodeId);
+	}, [highlightedNodeId, renderedNodes]);
+
 	// Highlight a node
 	const highlightNode = useCallback(
-		(node: CustomNode) => {
-			const nodeId = node.id;
-			if (!nodeId) {
-				console.log("no nodeId", node);
-				return;
-			}
-
-			setHighlightedNodeId(nodeId);
+		(node: NodeProps) => {
+			setHighlightedNodeId(node.id);
 			sendToServer({
 				type: "highlight-node",
-				nodeId,
-				filePath: node.data.filePath,
-				codeRange: node.data.codeRange,
+				nodeId: node.id,
+				filePath: node.filePath,
+				codeRange: node.codeRange,
 			});
 			try {
 				const currentZoom = reactFlow.getViewport().zoom;
 				reactFlow.fitView({
-					nodes: [{ id: node.data.parentId }],
+					nodes: [{ id: node.parentId }],
 					maxZoom: currentZoom,
 					minZoom: currentZoom,
 				});
@@ -59,34 +44,29 @@ export function useNodeNavigation(renderedNodes: CustomNode[]) {
 	// Handle keyboard navigation
 	useEffect(() => {
 		const handleKeyDown = (event: KeyboardEvent) => {
-			if (!highlightedNodeId) {
+			if (!highlightedNode) {
 				console.log("no highlightedNodeId");
 				return;
 			}
 
-			const currentNode = findNodeById(renderedNodes, highlightedNodeId);
-			if (!currentNode) {
-				console.log("no current node for highlightedNodeId", highlightedNodeId);
-				return;
-			}
-
 			// Get parent node
-			const parentNode = findParentNode(renderedNodes, highlightedNodeId);
+			const parentNode = renderedNodes.find(
+				(node) => node.id === highlightedNode.parentId,
+			);
 
 			// Get siblings (nodes with the same parent)
-			const siblings = parentNode
-				? renderedNodes.filter((node) => node.data.parentId === parentNode.id)
-				: [];
+			const siblings = parentNode?.children ?? [];
 
 			// Get current node's index among siblings
 			const currentIndex = siblings.findIndex(
-				(node) => node.id === highlightedNodeId,
+				(node) => node.id === highlightedNode.id,
 			);
 
 			// Get children of current node
-			const children = findChildNodes(renderedNodes, highlightedNodeId);
+			const children = highlightedNode.children;
 
 			// Handle arrow keys and vim-like bindings
+			console.log("event.key", event.key, siblings);
 			switch (event.key) {
 				case "ArrowDown":
 				case "j":
@@ -105,16 +85,24 @@ export function useNodeNavigation(renderedNodes: CustomNode[]) {
 				case "ArrowLeft":
 				case "h":
 					// Move to parent
-					if (parentNode && parentNode.data.parentId !== "root") {
+					if (parentNode && parentNode.parentId !== "root") {
 						highlightNode(parentNode);
 					}
 					break;
 				case "ArrowRight":
 				case "l":
 					// Move to first child
-					if (children.length > 0) {
+					if (!highlightedNode.expanded) {
+						sendToServer({
+							type: "node-toggle",
+							nodeId: highlightedNode.id,
+						});
+					}
+
+					if (children.length > 0 && highlightedNode.expanded) {
 						highlightNode(children[0]);
 					}
+
 					break;
 			}
 		};
@@ -124,10 +112,10 @@ export function useNodeNavigation(renderedNodes: CustomNode[]) {
 		return () => {
 			window.removeEventListener("keydown", handleKeyDown);
 		};
-	}, [highlightedNodeId, renderedNodes, highlightNode]);
+	}, [highlightedNode, renderedNodes, highlightNode]);
 
 	return {
-		highlightedNodeId,
+		highlightedNodeId: highlightedNode,
 		highlightNode,
 	};
 }

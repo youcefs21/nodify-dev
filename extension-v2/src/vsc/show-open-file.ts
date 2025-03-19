@@ -72,7 +72,16 @@ export const graphCache = {
 
 export function sendNodes(graph: Graph[]) {
 	graphCache.ref = graph;
-	const nodes = graph.flatMap(FlattenGraph).map((node) => node.node);
+	const nodes = graph.flatMap(FlattenGraph).map((node) => {
+		for (const child of node.children) {
+			if (collapsedNodes.has(child.node.data.id)) {
+				child.node.data.expanded = false;
+			} else {
+				child.node.data.expanded = true;
+			}
+		}
+		return node.node;
+	});
 	const parentNodes = nodes.filter((node) => node.data.children.length > 0);
 	const edges = createEdges(parentNodes);
 	const layouted = createGraphLayout(parentNodes, edges);
@@ -80,11 +89,6 @@ export function sendNodes(graph: Graph[]) {
 	postMessageToPanel({
 		type: "nodes",
 		value: layouted.nodes,
-	});
-
-	postMessageToPanel({
-		type: "all-nodes",
-		value: nodes,
 	});
 
 	postMessageToPanel({
