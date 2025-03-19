@@ -10,11 +10,12 @@ import { hashString } from "../utils/hash";
 const claude = new Anthropic();
 
 const VLLM_URL = "http://100.89.180.124:6969";
-const OLLAMA_URL = "http://localhost:11434";
+const OLLAMA_URL = "http://127.0.0.1:11434";
 const model = "unsloth/phi-4-bnb-4bit";
+const ollama_model = "phi4:14b-q8_0";
 
 const client = new OpenAI({
-	baseURL: `${VLLM_URL}/v1`,
+	baseURL: `${OLLAMA_URL}/v1`,
 	apiKey: "key",
 });
 
@@ -92,7 +93,7 @@ EXAMPLE OUTPUT:
 						content: ref.body,
 					},
 				],
-				model: model,
+				model: ollama_model,
 				response_format: zodResponseFormat(summarySchema, "summary"),
 				temperature: 0,
 			}),
@@ -232,7 +233,7 @@ IMPORTANT FORMATTING INSTRUCTIONS:
 						{ role: "user", content: JSON.stringify(input, null, 2) },
 					],
 					response_format: { type: "json_object" },
-					model: model,
+					model: ollama_model,
 				})
 				.then((res) => {
 					// Format OpenAI response to match Claude's content structure
