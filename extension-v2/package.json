@@ -2,7 +2,7 @@
 	"name": "nodify",
 	"displayName": "nodify",
 	"description": "",
-	"version": "1.1.0",
+	"version": "1.1.1",
 	"publisher": "nodify-dev",
 	"icon": "assets/logo.png",
 	"engines": {
