@@ -1,6 +1,8 @@
 # The Nodify Project
 
-![Nodify Project Logo](extension-v2/assets/logo.png)
+<p align="center">
+  <img src="extension-v2/assets/logo.png" alt="The Nodify Project logo" width="200"/>
+</p>
 
 Take your codebase understanding to the next level!
 Nodify is a VSCode extension that visualizes the flow of execution through an entire program.
