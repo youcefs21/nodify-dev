@@ -1,6 +1,10 @@
 import type { CodeBlock, CodeReference } from "./ast.schema";
 import { Effect } from "effect";
 import { summarizeCodeReference } from "./llm";
+import { Lang, parse } from "@ast-grep/napi";
+import * as vscode from "vscode";
+import { getAllFlowASTs } from "./get-all-flows";
+import { getNodesFromAst } from "../graph/create-nodes";
 
 // Store for reference hashes and summaries
 // This will be replaced with a database later
@@ -77,4 +81,47 @@ export function getFlatReferencesListFromAST(
 	}
 
 	return references;
+}
+
+/**
+ * Gets the nodes for a reference
+ * @param ref The reference to get nodes for
+ * @returns The nodes for the reference
+ */
+export function getReferenceNodes(ref: CodeReference) {
+	return Effect.gen(function* () {
+		const document = yield* Effect.tryPromise(() =>
+			vscode.workspace.openTextDocument(ref.filePath),
+		);
+		const root = parse(Lang.Python, document.getText()).root();
+		const rawNodes = root.find({
+			rule: {
+				range: {
+					start: {
+						line: ref.range.start.line,
+						column: ref.range.start.character,
+					},
+					end: {
+						line: ref.range.end.line,
+						column: ref.range.end.character,
+					},
+				},
+			},
+		});
+		const block = rawNodes?.children().find((x) => x.kind() === "block");
+		if (!block) {
+			console.error("WTF NO BLOCK FOUND ON REF SEARCH");
+			return { nodes: [], references: [], refID: ref.id };
+		}
+
+		const ast = yield* getAllFlowASTs({
+			root: block.children(),
+			parent_id: "",
+			url: document.uri,
+		});
+
+		const nodes = yield* getNodesFromAst(ast);
+
+		return { ...nodes, refID: ref.id };
+	});
 }

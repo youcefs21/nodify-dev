@@ -1,6 +1,10 @@
-import type { CodeBlock } from "../ast/ast.schema";
+import { Effect } from "effect";
+import { decodeLLMCodeBlocks, type CodeBlock } from "../ast/ast.schema";
 import type { AbstractionGroup } from "../ast/llm";
 import type { CustomNode } from "./graph.types";
+import { getShortId, hashString } from "../utils/hash";
+import { getFlatReferencesListFromAST } from "../ast/references";
+import { getAbstractionTree } from "../ast/llm";
 
 export function flattenCodeBlocks(codeBlocks: CodeBlock[]): CodeBlock[] {
 	return codeBlocks.flatMap((block) => {
@@ -15,7 +19,8 @@ export function flattenCodeBlocks(codeBlocks: CodeBlock[]): CodeBlock[] {
 export function createNodes(
 	data: AbstractionGroup[],
 	flatCodeBlocks: CodeBlock[],
-	parentId = "root",
+	parentId: string,
+	chunkId: string,
 ): CustomNode[] {
 	return data.flatMap((group) => {
 		// find the range
@@ -33,26 +38,26 @@ export function createNodes(
 			return [];
 		}
 
+		const nodeId = `${chunkId}-${startId}-${endId}`;
+
 		const childNodes =
 			group.children && group.children.length > 0
-				? createNodes(
-						[...group.children],
-						flatCodeBlocks,
-						`${startId}-${endId}`,
-					)
+				? createNodes([...group.children], flatCodeBlocks, nodeId, chunkId)
 				: [];
 
 		const parentNode = {
-			id: `${startId}-${endId}`,
+			id: nodeId,
 			data: {
-				id: `${startId}-${endId}`,
+				id: nodeId,
 				parentId,
+				chunkId,
+				isChunkRoot: parentId === "root",
 				label: group.label,
 				codeRange: [startBlock.range, endBlock.range],
 				filePath: startBlock.filePath,
 				children: childNodes
 					.map((node) => node.data)
-					.filter((node) => `${startId}-${endId}` === node.parentId),
+					.filter((node) => nodeId === node.parentId),
 				expanded: true,
 				type: group.type,
 				refID: group.referenceID ?? undefined,
@@ -62,5 +67,46 @@ export function createNodes(
 		} satisfies CustomNode;
 
 		return [parentNode, ...childNodes];
+	});
+}
+
+/**
+ * Creates a graph from an AST
+ * @param ast The AST to create a graph from
+ * @param parentId The parent ID of the graph
+ * @returns The nodes of the graph
+ */
+export function getNodesFromAst(ast: CodeBlock[]) {
+	return Effect.gen(function* () {
+		const astHash = yield* hashString(JSON.stringify(ast));
+
+		// Process the references
+		const references = getFlatReferencesListFromAST(ast);
+		console.log(`Found ${references.length} references in the AST`);
+		// TODO: a/b test whether the summarization is helpful
+		// const processedRefs = yield* dedupeAndSummarizeReferences(references);
+		// const referenceMap = processedRefs.reduce(
+		// 	(map, ref) => {
+		// 		map[ref.id] = { summary: ref.summary, symbol: ref.symbol };
+		// 		return map;
+		// 	},
+		// 	{} as Record<string, { summary: string; symbol: string }>,
+		// );
+
+		// LLM prompt context
+		const promptContext = {
+			ast: yield* decodeLLMCodeBlocks(ast),
+			// references: referenceMap,
+		};
+
+		// get the abstraction tree
+		const tree = yield* getAbstractionTree(promptContext, astHash);
+		const flatCodeBlocks = flattenCodeBlocks(ast);
+
+		// create the graph
+		const chunkId = getShortId(astHash);
+		const nodes = createNodes(tree, flatCodeBlocks, "root", chunkId);
+
+		return { nodes, references };
 	});
 }

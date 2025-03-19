@@ -144,11 +144,10 @@ export const abstractionTreeSchema = z.object({
  * @param input The LLM context containing AST and references
  * @returns A structured abstraction tree with hierarchical groupings
  */
-export function getAbstractionTree(input: LLMContext) {
+export function getAbstractionTree(input: LLMContext, astHash: string) {
 	return Effect.gen(function* () {
 		const dirPath = getNodifyWorkspaceDir();
-		const hash = yield* hashString(JSON.stringify(input));
-		const path = `${dirPath}/abstraction_tree_cache/${hash}.json`;
+		const path = `${dirPath}/abstraction_tree_cache/${astHash}.json`;
 		const exists = yield* Effect.promise(() =>
 			fs
 				.access(path)

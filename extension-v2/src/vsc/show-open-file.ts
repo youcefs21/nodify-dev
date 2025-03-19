@@ -3,19 +3,13 @@ import * as vscode from "vscode";
 import * as astGrep from "@ast-grep/napi";
 import { Lang } from "@ast-grep/napi";
 import { getAllFlowASTs } from "../ast/get-all-flows";
-import {
-	type CodeBlock,
-	type CodeReference,
-	decodeLLMCodeBlocks,
-} from "../ast/ast.schema";
-import { dedupeAndSummarizeReferences } from "../ast/references";
-import { getFlatReferencesListFromAST } from "../ast/references";
-import { getAbstractionTree } from "../ast/llm";
-import { createNodes, flattenCodeBlocks } from "../graph/create-nodes";
+import { getNodesFromAst } from "../graph/create-nodes";
 import { createEdges } from "../graph/create-edges";
 import { postMessageToPanel } from "./webview/register-webview-command";
 import { createGraphLayout } from "../graph/graph-layout-creator";
-import type { CustomNode, NodeProps } from "../graph/graph.types";
+import type { CustomNode } from "../graph/graph.types";
+import { getReferenceNodes } from "../ast/references";
+import type { CodeReference } from "../ast/ast.schema";
 
 class NoPythonFileOpenError {
 	readonly _tag = "NoPythonFileOpenError";
@@ -54,75 +48,10 @@ export function getOpenPythonFileText() {
 	});
 }
 
-function getReferenceNodes(ref: CodeReference, parentId: string) {
-	return Effect.gen(function* () {
-		const document = yield* Effect.tryPromise(() =>
-			vscode.workspace.openTextDocument(ref.filePath),
-		);
-		const root = astGrep.parse(Lang.Python, document.getText()).root();
-		const rawNodes = root.find({
-			rule: {
-				range: {
-					start: {
-						line: ref.range.start.line,
-						column: ref.range.start.character,
-					},
-					end: {
-						line: ref.range.end.line,
-						column: ref.range.end.character,
-					},
-				},
-			},
-		});
-		const block = rawNodes?.children().find((x) => x.kind() === "block");
-		if (!block) {
-			console.error("WTF NO BLOCK FOUND ON REF SEARCH");
-			return { nodes: [], references: [], refID: ref.id };
-		}
-
-		const ast = yield* getAllFlowASTs({
-			root: block.children(),
-			parent_id: parentId,
-			url: document.uri,
-		});
-
-		const nodes = yield* getNodesFromAst(ast, parentId);
-
-		return { ...nodes, refID: ref.id };
-	});
-}
-
-function getNodesFromAst(ast: CodeBlock[], parentId: string) {
-	return Effect.gen(function* () {
-		// Process the references
-		const references = getFlatReferencesListFromAST(ast);
-		console.log(`Found ${references.length} references in the AST`);
-		const processedRefs = yield* dedupeAndSummarizeReferences(references);
-		const referenceMap = processedRefs.reduce(
-			(map, ref) => {
-				map[ref.id] = { summary: ref.summary, symbol: ref.symbol };
-				return map;
-			},
-			{} as Record<string, { summary: string; symbol: string }>,
-		);
-
-		// LLM prompt context
-		const promptContext = {
-			ast: yield* decodeLLMCodeBlocks(ast),
-			references: referenceMap,
-		};
-
-		// get the abstraction tree
-		const tree = yield* getAbstractionTree(promptContext);
-		const flatCodeBlocks = flattenCodeBlocks(ast);
-
-		// create the graph
-		const nodes = createNodes(tree, flatCodeBlocks, parentId);
-
-		return { nodes, references };
-	});
-}
-
+/**
+ * 🎨 Sends the nodes to the webview
+ * @param nodes The nodes to send
+ */
 function sendNodes(nodes: CustomNode[]) {
 	const parentNodes = nodes.filter((node) => node.data.children.length > 0);
 	const edges = createEdges(parentNodes);
@@ -144,21 +73,6 @@ function sendNodes(nodes: CustomNode[]) {
 	});
 }
 
-function recursiveIDReplace(
-	nodes: NodeProps[],
-	replace: string,
-	parent_id: string,
-) {
-	return nodes.map((node) => {
-		// if the node id contains the replace string, replace it with the parent_id
-		node.id = node.id.replace(replace, parent_id);
-		if (node.children.length > 0) {
-			node.children = recursiveIDReplace(node.children, replace, node.id);
-		}
-		return node;
-	});
-}
-
 /**
  * 🌐 Shows the graph for the open Python file
  */
@@ -176,25 +90,41 @@ export function showOpenPythonFile() {
 		});
 		console.log(`Found AST for ${url}`);
 
-		const { nodes, references } = yield* getNodesFromAst(ast, "root");
-		// sendNodes(nodes);
+		const { nodes, references } = yield* getNodesFromAst(ast);
+		sendNodes(nodes);
 
+		yield* processAndShowReferences(nodes, references);
+	});
+}
+
+/**
+ * 🔍 Gets the nodes for the references
+ * @param nodes The nodes to get the references for
+ * @param references The references to get the nodes for
+ * @returns The nodes for the references
+ */
+function processAndShowReferences(
+	nodes: CustomNode[],
+	references: CodeReference[],
+) {
+	return Effect.gen(function* () {
 		const newNodes = yield* Effect.forEach(
 			nodes,
 			(node) =>
 				Effect.gen(function* () {
-					const nodeId = node?.data.id.split("-")[0] ?? "";
+					if (!node?.data.refID) return [];
+
 					const ref = references.find((ref) => ref.id === node.data.refID);
-					console.log(node);
 					if (!ref) {
 						console.error("WTF NO REF FOUND ON REF SEARCH");
 						return [];
 					}
-					const res = yield* getReferenceNodes(ref, nodeId);
+					const res = yield* getReferenceNodes(ref);
 					node.data.children = res.nodes
-						.filter((a) => a.data.parentId === nodeId)
+						.filter((a) => a.data.parentId === "root")
 						.map((a) => {
 							a.data.parentId = node.data.id;
+							a.data.expanded = false;
 							return a.data;
 						});
 					return res.nodes;
