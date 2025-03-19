@@ -1,6 +1,6 @@
 # The Nodify Project
 
-![Nodify Project Logo](extension-v2/assets/image.png)
+![Nodify Project Logo](extension-v2/assets/logo.png)
 
 Take your codebase understanding to the next level!
 Nodify is a VSCode extension that visualizes the flow of execution through an entire program.
@@ -9,3 +9,15 @@ Using the power of AI, contributors and users alike can instantly grasp the arch
 # User Guide
 
 # Contribution Guide
+
+## Publishing the Extension
+
+Following the guide [here](https://code.visualstudio.com/api/working-with-extensions/publishing-extension), run the following commands:
+
+```Powershell
+cd extension-v2
+vsce package
+vsce publish
+```
+
+If the steps below do not work, check the personal access token status used to login to vsce and [nodify-dev](https://dev.azure.com/nodify-dev/) organization membership.
