@@ -8,16 +8,16 @@ export function LoadingScreen({ baseUrl }: { baseUrl: string }) {
 		const interval = setInterval(() => {
 			setValue((value) => {
 				// Slow down as we approach 100
-				if (value >= 90) {
-					return value + 0.1;
-				}
 				if (value >= 80) {
-					return value + 0.25;
+					return value + 0.05;
 				}
 				if (value >= 70) {
-					return value + 0.5;
+					return value + 0.1;
 				}
-				return value + 1;
+				if (value >= 50) {
+					return value + 0.25;
+				}
+				return value + 0.5;
 			});
 		}, 100);
 		return () => clearInterval(interval);

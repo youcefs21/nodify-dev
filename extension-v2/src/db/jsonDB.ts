@@ -12,6 +12,9 @@ export function initDB() {
 		yield* Effect.tryPromise(() =>
 			fs.mkdir(`${dirPath}/summaries_cache`, { recursive: true }),
 		);
+		yield* Effect.tryPromise(() =>
+			fs.mkdir(`${dirPath}/llm_logs`, { recursive: true }),
+		);
 
 		// create a .gitignore with just the text content "*" in the folder if it doesn't already exist
 		const gitignorePath = `${dirPath}/.gitignore`;

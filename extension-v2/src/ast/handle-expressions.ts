@@ -51,7 +51,11 @@ export function handleExpression({
 				// Extract the identifier or attribute that's being called/accessed
 				const identifier = node
 					.children()
-					.find((x) => x.kind() === "identifier" || x.kind() === "attribute");
+					.find(
+						(x) =>
+							x.kind() === "identifier" ||
+							(x.kind() === "attribute" && x.text() !== "(self)"),
+					);
 				if (!identifier) {
 					return yield* Effect.fail(new NoIdentifierOrAttributeFound());
 				}

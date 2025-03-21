@@ -171,4 +171,5 @@ export const decodeLLMCodeBlocks = Schema.decodeUnknown(
 export interface LLMContext {
 	ast: ReadonlyArray<LLMCodeBlock>;
 	references?: Record<string, { summary: string; symbol: string }>;
+	signature?: string;
 }

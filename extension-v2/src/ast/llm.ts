@@ -5,6 +5,7 @@ import z from "zod";
 import { zodResponseFormat } from "openai/helpers/zod";
 import { getNodifyWorkspaceDir } from "../utils/get-nodify-workspace-dir";
 import fs from "node:fs/promises";
+import { getFlatReferencesListFromAST } from "./references";
 
 const OPENAI_URL = "http://100.89.180.124:6969";
 // const OPENAI_URL = "http://127.0.0.1:11434";
@@ -34,10 +35,13 @@ class LLMError {
 export function summarizeCodeReference(ref: CodeReference) {
 	return Effect.gen(function* () {
 		// For very short code snippets, just use the code itself as the summary
-		if (ref.body.length < 100) {
+		if (ref.body.length < 9999999999) {
 			return {
 				...ref,
-				summary: ref.body,
+				summary:
+					ref.body.length < 100
+						? ref.body
+						: `${ref.body.slice(0, 100)}[truncated...]`,
 			};
 		}
 		const dirPath = getNodifyWorkspaceDir();
@@ -121,27 +125,7 @@ export const abstractionGroupSchema = z.object({
 	type: z.string(),
 	referenceID: z.string().optional().nullish(),
 	// children (depth 2)
-	children: z
-		.array(
-			z.object({
-				label: z.string(),
-				idRange: z.array(z.string()),
-				type: z.string(),
-				referenceID: z.string().optional().nullish(),
-				// grandchildren (depth 3)
-				children: z
-					.array(
-						z.object({
-							label: z.string(),
-							idRange: z.array(z.string()),
-							type: z.string(),
-							referenceID: z.string().optional().nullish(),
-						}),
-					)
-					.optional(),
-			}),
-		)
-		.optional(),
+	children: z.array(z.any()).optional(),
 });
 
 export const abstractionTreeSchema = z.object({
@@ -149,9 +133,18 @@ export const abstractionTreeSchema = z.object({
 	output: z.array(abstractionGroupSchema),
 });
 
-// extract types from schemas
-export type AbstractionGroup = z.infer<typeof abstractionGroupSchema>;
-export type AbstractionTreeOutput = z.infer<typeof abstractionTreeSchema>;
+// Define the types for the abstraction tree output
+export type AbstractionGroup = {
+	label: string;
+	idRange: readonly [string, string];
+	type: string;
+	referenceID?: string | null;
+	children?: readonly AbstractionGroup[];
+};
+
+export type AbstractionTreeOutput = {
+	output: readonly AbstractionGroup[];
+};
 
 /**
  * Analyze the provided AST-parsed code and create an abstraction hierarchy with logical groupings.
@@ -161,16 +154,20 @@ export type AbstractionTreeOutput = z.infer<typeof abstractionTreeSchema>;
 export function getAbstractionTree(input: LLMContext, astHash: string) {
 	return Effect.gen(function* () {
 		const dirPath = getNodifyWorkspaceDir();
-		const path = `${dirPath}/abstraction_tree_cache/${astHash}.json`;
+		const responsePath = `${dirPath}/abstraction_tree_cache/${astHash}.json`;
+		const logPath = `${dirPath}/llm_logs/${astHash}.json`;
 		const exists = yield* Effect.promise(() =>
 			fs
-				.access(path)
+				.access(responsePath)
 				.then(() => true)
 				.catch(() => false),
 		);
+		if (input.signature?.includes("get_vocab_size")) {
+			console.log(input.signature);
+		}
 		if (exists) {
 			const data = yield* Effect.tryPromise(() =>
-				fs.readFile(path, { encoding: "utf8" }),
+				fs.readFile(responsePath, { encoding: "utf8" }),
 			);
 			return z.array(abstractionGroupSchema).parse(JSON.parse(data));
 		}
@@ -230,6 +227,7 @@ IMPORTANT FORMATTING INSTRUCTIONS:
 					],
 					response_format: zodResponseFormat(abstractionTreeSchema, "output"),
 					model: model,
+					temperature: 0.6,
 				}),
 			catch: (e) => {
 				console.error(e);
@@ -239,13 +237,28 @@ IMPORTANT FORMATTING INSTRUCTIONS:
 			},
 		});
 
-		const output = message.choices[0].message.parsed?.output;
+		const output = message.choices[0].message.parsed?.output as
+			| AbstractionGroup[]
+			| undefined;
 		console.log(`got LLM response ${JSON.stringify(output).slice(0, 100)}...`);
 
 		// Parse the response as JSON
 		try {
 			yield* Effect.tryPromise(() =>
-				fs.writeFile(path, JSON.stringify(output, null, 2)),
+				fs.writeFile(responsePath, JSON.stringify(output, null, 2)),
+			);
+			yield* Effect.tryPromise(() =>
+				fs.writeFile(
+					logPath,
+					JSON.stringify(
+						[
+							{ role: "user", content: input },
+							{ role: "assistant", content: message },
+						],
+						null,
+						2,
+					),
+				),
 			);
 			return output;
 		} catch (error) {

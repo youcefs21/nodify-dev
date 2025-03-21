@@ -94,7 +94,7 @@ export function getReferenceGraphs(ref: CodeReference) {
 			vscode.workspace.openTextDocument(ref.filePath),
 		);
 		const root = parse(Lang.Python, document.getText()).root();
-		const rawNodes = root.find({
+		const defNode = root.find({
 			rule: {
 				range: {
 					start: {
@@ -108,10 +108,12 @@ export function getReferenceGraphs(ref: CodeReference) {
 				},
 			},
 		});
-		const block = rawNodes?.children().find((x) => x.kind() === "block");
+		const block = defNode?.children().find((x) => x.kind() === "block");
 		if (!block) {
-			console.error("No block found on ref search");
-			return { graphs: [], references: [], refID: ref.id };
+			console.error(
+				`No block found on ref search:\n\`\`\`\n${defNode?.text()}\n\`\`\``,
+			);
+			return { graphs: [], references: [], refID: undefined };
 		}
 
 		const ast = yield* getAllFlowASTs({
@@ -120,8 +122,16 @@ export function getReferenceGraphs(ref: CodeReference) {
 			url: document.uri,
 		});
 
-		const { graphs, references } = yield* getGraphsFromAst(ast);
+		const signature = defNode?.commitEdits([
+			block.replace(`<${defNode.kind()}_body/>`),
+		]);
 
-		return { graphs, references, refID: ref.id };
+		const { graphs, references } = yield* getGraphsFromAst(
+			ast,
+			ref.filePath,
+			signature,
+		);
+
+		return { graphs, references, refID: ref.id, signature };
 	});
 }

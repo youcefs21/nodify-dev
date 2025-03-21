@@ -2,7 +2,13 @@ import { type NodeProps, Position, Handle } from "@xyflow/react";
 import type { CustomNode } from "../../../src/shared-types";
 import { cn } from "../utils/cn";
 import { TypeIconMap } from "./ui/Icon";
-import { ChevronLeft, ChevronRight, Cpu } from "lucide-react";
+import {
+	ChevronLeft,
+	ChevronRight,
+	Cpu,
+	Loader2,
+	RefreshCcw,
+} from "lucide-react";
 import { Button } from "./ui/Button";
 import { highlightedNodeAtom } from "../utils/useNodeNavigation";
 import { useAtom, useAtomValue } from "jotai";
@@ -38,6 +44,15 @@ export function StackedNodes({ data }: NodeProps<CustomNode>) {
 				)}
 
 				<span className="font-mono text-sm">{data.label}</span>
+				{(data.refID || data.parentId === "root") && (
+					<Button
+						variant="outline"
+						size="icon"
+						className="p-1 h-fit w-fit ml-auto mb-auto"
+					>
+						<RefreshCcw className="size-3" />
+					</Button>
+				)}
 			</div>
 
 			<div className="flex flex-col gap-2 px-3 py-2">
@@ -49,7 +64,7 @@ export function StackedNodes({ data }: NodeProps<CustomNode>) {
 							key={child.id}
 							type="button"
 							className={cn(
-								"w-full text-left flex justify-between items-center px-2 py-1 rounded-lg h-14 bg-surface-2 relative",
+								"w-full text-left grid grid-cols-6 justify-between items-center px-2 py-1 rounded-lg h-14 bg-surface-2 relative",
 								highlightedNodeId === child.id &&
 									"outline outline-2 outline-mauve",
 								"focus:outline-none focus-visible:outline-2 focus-visible:outline-blue",
@@ -73,7 +88,7 @@ export function StackedNodes({ data }: NodeProps<CustomNode>) {
 									id={`${data.id}-${child.id}`}
 								/>
 							)}
-							<div className="flex items-center gap-2">
+							<div className="flex items-center gap-2 col-span-5">
 								{CustomChildIcon ? (
 									<CustomChildIcon />
 								) : (
@@ -88,11 +103,11 @@ export function StackedNodes({ data }: NodeProps<CustomNode>) {
 								)}
 								<span className="font-mono text-sm">{child.label}</span>
 							</div>
-							{child.children.length > 0 && (
+							{child.children.length > 0 ? (
 								<Button
 									variant="outline"
 									size="icon"
-									className="aspect-square"
+									className="aspect-square ml-auto"
 									onClick={(e) => {
 										e.stopPropagation();
 										sendToServer({
@@ -107,7 +122,16 @@ export function StackedNodes({ data }: NodeProps<CustomNode>) {
 										<ChevronRight className="w-4 h-4 stroke-text" />
 									)}
 								</Button>
-							)}
+							) : child.refID ? (
+								<Button
+									variant="outline"
+									size="icon"
+									className="aspect-square ml-auto"
+									disabled
+								>
+									<Loader2 className="size-3 animate-spin" />
+								</Button>
+							) : null}
 						</button>
 					);
 				})}

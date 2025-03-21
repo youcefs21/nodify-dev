@@ -6,12 +6,12 @@ export function createGraphLayout(nodes: CustomNode[], edges: Edge[]) {
 	const graph = new dagre.graphlib.Graph().setDefaultEdgeLabel(() => ({}));
 	graph.setGraph({
 		rankdir: "LR",
-		ranksep: 150,
-		nodesep: 50,
-		edgesep: 50,
+		// ranksep: 150,
+		// nodesep: 100,
+		// edgesep: 50,
 		// align: "UL",
 	});
-	const nodeWidth = 260;
+	const nodeWidth = 300;
 	const nodeHeight = 64;
 	for (const edge of edges) {
 		graph.setEdge(edge.source, edge.target);
@@ -35,11 +35,11 @@ export function createGraphLayout(nodes: CustomNode[], edges: Edge[]) {
 			const x = nodeWithPosition.x;
 			const y = nodeWithPosition.y;
 
-			// node.position = {
-			//     x: nodeWithPosition.x - nodeWidth / 2,
-			//     y: nodeWithPosition.y - (nodeHeight * (1 + node.data.children.length)) / 2
-			//   };
-			return { ...node, position: { x, y } };
+			node.position = {
+				x: x - nodeWidth / 2,
+				y: y - (nodeHeight * (1 + node.data.children.length)) / 2,
+			};
+			return node;
 		}),
 		edges,
 	};

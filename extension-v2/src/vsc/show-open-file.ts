@@ -114,7 +114,11 @@ export function showOpenPythonFile() {
 		});
 		console.log(`Found AST for ${url}`);
 
-		const { graphs, references } = yield* getGraphsFromAst(ast);
+		const { graphs, references } = yield* getGraphsFromAst(
+			ast,
+			url.fsPath,
+			"Top Level Code, not inside a function or class",
+		);
 		sendNodes(graphs);
 
 		yield* processAndShowReferences(graphs, references);

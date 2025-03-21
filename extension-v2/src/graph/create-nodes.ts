@@ -3,7 +3,10 @@ import { decodeLLMCodeBlocks, type CodeBlock } from "../ast/ast.schema";
 import type { AbstractionGroup } from "../ast/llm";
 import type { CustomNode } from "./graph.types";
 import { getShortId, hashString } from "../utils/hash";
-import { getFlatReferencesListFromAST } from "../ast/references";
+import {
+	dedupeAndSummarizeReferences,
+	getFlatReferencesListFromAST,
+} from "../ast/references";
 import { getAbstractionTree } from "../ast/llm";
 import type { Graph } from "../vsc/show-open-file";
 
@@ -35,7 +38,7 @@ export function createGraph(
 		});
 
 		if (!startBlock || !endBlock) {
-			console.error("block not found");
+			console.error("block not found", { ...group, children: "..." });
 			return [];
 		}
 
@@ -45,6 +48,16 @@ export function createGraph(
 			group.children && group.children.length > 0
 				? createGraph([...group.children], flatCodeBlocks, nodeId, chunkId)
 				: [];
+
+		// Check if the referenced ID exists in any flatCodeBlocks' references
+		const refId =
+			group.referenceID && typeof group.referenceID === "string"
+				? flatCodeBlocks.some((block) =>
+						block.references?.some((ref) => ref.id === group.referenceID),
+					)
+					? group.referenceID
+					: undefined
+				: undefined;
 
 		const parentNode = {
 			id: nodeId,
@@ -59,7 +72,7 @@ export function createGraph(
 				children: childNodes.map((node) => node.node.data),
 				expanded: true,
 				type: group.type,
-				refID: group.referenceID ?? undefined,
+				refID: refId,
 			},
 			type: "stacked",
 			position: { x: 0, y: 0 },
@@ -78,27 +91,34 @@ export function createGraph(
  * @param parentId The parent ID of the graph
  * @returns The nodes of the graph
  */
-export function getGraphsFromAst(ast: CodeBlock[]) {
+export function getGraphsFromAst(
+	ast: CodeBlock[],
+	filePath: string,
+	signature?: string,
+) {
 	return Effect.gen(function* () {
-		const astHash = yield* hashString(JSON.stringify(ast));
+		const astHash = yield* hashString(
+			`${filePath}\n${signature}\n${JSON.stringify(ast)}`,
+		);
 
 		// Process the references
 		const references = getFlatReferencesListFromAST(ast);
 		console.log(`Found ${references.length} references in the AST`);
-		// TODO: a/b test whether the summarization is helpful
-		// const processedRefs = yield* dedupeAndSummarizeReferences(references);
-		// const referenceMap = processedRefs.reduce(
-		// 	(map, ref) => {
-		// 		map[ref.id] = { summary: ref.summary, symbol: ref.symbol };
-		// 		return map;
-		// 	},
-		// 	{} as Record<string, { summary: string; symbol: string }>,
-		// );
+		const processedRefs = yield* dedupeAndSummarizeReferences(references);
+		const referenceMap = processedRefs.reduce(
+			(map, ref) => {
+				map[ref.id] = { summary: ref.summary, symbol: ref.symbol };
+				return map;
+			},
+			{} as Record<string, { summary: string; symbol: string }>,
+		);
 
 		// LLM prompt context
 		const promptContext = {
+			filePath,
+			context: signature,
 			ast: yield* decodeLLMCodeBlocks(ast),
-			// references: referenceMap,
+			references: referenceMap,
 		};
 
 		// get the abstraction tree
