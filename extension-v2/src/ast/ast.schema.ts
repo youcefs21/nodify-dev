@@ -14,6 +14,7 @@ export const flowKinds = [
 	"else_clause",
 	"except_clause",
 	"finally_clause",
+	"return_statement",
 ] as const;
 export type FlowKind = (typeof flowKinds)[number];
 

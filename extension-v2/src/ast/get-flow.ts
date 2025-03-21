@@ -122,8 +122,36 @@ export function getFlowAST({
 							},
 				);
 			}
-		}
 
+			case "return_statement": {
+				// `return_statement` always has 2 children, the word `return` and the expression
+				const children = node.children();
+				if (children.length !== 2) {
+					return yield* Effect.fail(new InvalidExpressionStatementError());
+				}
+
+				const [return_word, expression] = children;
+
+				// get the references in the expression
+				const refs = yield* handleExpression({ node: expression, url });
+
+				// create and return the output. Don't include references if there are none
+				const output = {
+					id: parent_id !== "" ? `${parent_id}.${i}` : `${i}`,
+					text: node.text().trim(),
+					range: getCodeRangeFromSgNode(node),
+					filePath: url.fsPath,
+				};
+				return yield* Effect.succeed(
+					refs.length === 0
+						? output
+						: {
+								...output,
+								references: refs,
+							},
+				);
+			}
+		}
 		return yield* Effect.fail(new NoBlockFoundError());
 	});
 }
