@@ -3,11 +3,8 @@ import type { CodeReference, LLMContext } from "../ast/ast.schema";
 import OpenAI from "openai";
 import z from "zod";
 import { zodResponseFormat } from "openai/helpers/zod";
-import Anthropic from "@anthropic-ai/sdk";
 import { getNodifyWorkspaceDir } from "../utils/get-nodify-workspace-dir";
 import fs from "node:fs/promises";
-
-const claude = new Anthropic();
 
 const OPENAI_URL = "http://100.89.180.124:6969";
 // const OPENAI_URL = "http://127.0.0.1:11434";
@@ -22,6 +19,11 @@ const client = new OpenAI({
 const summarySchema = z.object({
 	summary: z.string(),
 });
+
+class LLMError {
+	readonly _tag = "LLMError";
+	constructor(readonly message: string) {}
+}
 
 /**
  * Simulate LLM-based code summarization
@@ -112,33 +114,44 @@ EXAMPLE OUTPUT:
 	});
 }
 
-// Define the types for the abstraction tree output
-export type AbstractionGroup = {
-	label: string;
-	idRange: readonly [string, string];
-	type: string;
-	referenceID?: string | null;
-	children?: readonly AbstractionGroup[];
-};
-
-export type AbstractionTreeOutput = {
-	output: readonly AbstractionGroup[];
-};
-
 // Create a Zod schema for parsing the output
-export const abstractionGroupSchema: z.ZodType<AbstractionGroup> = z.lazy(() =>
-	z.object({
-		label: z.string(),
-		idRange: z.tuple([z.string(), z.string()]),
-		type: z.string(),
-		referenceID: z.string().optional().nullish(),
-		children: z.array(abstractionGroupSchema).optional(),
-	}),
-);
+export const abstractionGroupSchema = z.object({
+	label: z.string(),
+	idRange: z.array(z.string()),
+	type: z.string(),
+	referenceID: z.string().optional().nullish(),
+	// children (depth 2)
+	children: z
+		.array(
+			z.object({
+				label: z.string(),
+				idRange: z.array(z.string()),
+				type: z.string(),
+				referenceID: z.string().optional().nullish(),
+				// grandchildren (depth 3)
+				children: z
+					.array(
+						z.object({
+							label: z.string(),
+							idRange: z.array(z.string()),
+							type: z.string(),
+							referenceID: z.string().optional().nullish(),
+						}),
+					)
+					.optional(),
+			}),
+		)
+		.optional(),
+});
 
 export const abstractionTreeSchema = z.object({
+	// root (depth 1)
 	output: z.array(abstractionGroupSchema),
 });
+
+// extract types from schemas
+export type AbstractionGroup = z.infer<typeof abstractionGroupSchema>;
+export type AbstractionTreeOutput = z.infer<typeof abstractionTreeSchema>;
 
 /**
  * Analyze the provided AST-parsed code and create an abstraction hierarchy with logical groupings.
@@ -169,12 +182,11 @@ TASK: Analyze the provided AST-parsed code and create an abstraction hierarchy w
 INSTRUCTIONS:
 1. Examine the provided AST structure with its nodes, text content, and references
 2. Create a multi-level abstraction hierarchy where:
-   - Top-level groups represent high-level concepts (most abstract)
    - Mid-level groups represent related functionality
    - Leaf nodes represent specific code operations (least abstract)
-   - The depth doesn't have to be exactly 3, it can be more or less depending on the complexity of the code. What's important, the leaf node range has to have exactly one reference. It's okay if the leaf range has a single node ([start, end] = [start, start])
+   - The depth (number of nested groups) must be at most 3 (nodes have children, and grandchildren) for very complex code, 1 (nodes have no children) for very simple code, and 2 (nodes have children) for most code. 
+   - IMPORTANT: the leaf node range has to have exactly one reference. most of the time, the leaf range has a single node ([start, end] = [start, start])
 3. For each group:
-   - Assign an incrementing groupID starting from 0
    - Create a concise 2-8 word descriptive label
    - Specify the range of node IDs covered (from first to last in the sequence)
    - Categorize with a single-word type that broadly describes its purpose (examples: "event_listener", "data_processor", "machine_learning", "visualization", "documentation", "utility", "main", "callback")
@@ -188,77 +200,50 @@ IMPORTANT FORMATTING INSTRUCTIONS:
 {
   "output": [
     {
-      "groupID": number,
       "label": "2-8 word description",
       "idRange": [string, string],
       "type": "single_word_category",
       "children": [
 		{
-			"groupID": number,
 			"label": "2-8 word description",
 			"idRange": [string, string],
 			"type": "single_word_category",
 			"referenceID": "optional string, don't include if this isn't a leaf node with a reference",
-			"children": [
-				// optional, recursive output list of groups
-			]
 		},
 		// ... more groups as needed
       ]
     },
-    // Additional groups as needed
+    // ... more groups as needed
   ]
 }
 - Do not include any explanations, markdown formatting, or additional text
 - Each leaf node must contain AT MOST ONE unique reference
 `;
 
-		// const message = yield* Effect.tryPromise(() =>
-		// 	claude.messages.create({
-		// 		max_tokens: 4096,
-		// 		system: systemPrompt,
-		// 		messages: [{ role: "user", content: JSON.stringify(input, null, 2) }],
-		// 		temperature: 0,
-		// 		model: "claude-3-7-sonnet-20250219",
-		// 	}),
-		// );
-
 		// use local model for testing purposes
-		const message = yield* Effect.tryPromise(() =>
-			client.chat.completions
-				.create({
+		const message = yield* Effect.tryPromise({
+			try: () =>
+				client.beta.chat.completions.parse({
 					messages: [
 						{ role: "system", content: systemPrompt },
 						{ role: "user", content: JSON.stringify(input, null, 2) },
 					],
-					response_format: { type: "json_object" },
+					response_format: zodResponseFormat(abstractionTreeSchema, "output"),
 					model: model,
-				})
-				.then((res) => {
-					// Format OpenAI response to match Claude's content structure
-					return {
-						content: [
-							{
-								type: "text",
-								text: res.choices[0].message.content || "",
-							},
-						],
-					};
 				}),
-		);
-		console.log(
-			`got claude response ${JSON.stringify(message.content).slice(0, 100)}...`,
-		);
+			catch: (e) => {
+				console.error(e);
+				return new LLMError(
+					e instanceof Error ? e.message : "Unknown LLM error",
+				);
+			},
+		});
+
+		const output = message.choices[0].message.parsed?.output;
+		console.log(`got LLM response ${JSON.stringify(output).slice(0, 100)}...`);
 
 		// Parse the response as JSON
 		try {
-			// Extract JSON from Claude's response
-			const responseContent =
-				message.content[0]?.type === "text" ? message.content[0].text : "";
-
-			// Parse the JSON
-			const parsedResponse = JSON.parse(responseContent.trim());
-			const output = abstractionTreeSchema.parse(parsedResponse).output;
 			yield* Effect.tryPromise(() =>
 				fs.writeFile(path, JSON.stringify(output, null, 2)),
 			);

@@ -151,10 +151,12 @@ function processAndShowReferences(
 				graph.children = res.graphs;
 				collapsedNodes.add(graph.node.data.id);
 
-				return yield* processAndShowReferences(graph.children, [
+				yield* processAndShowReferences(graph.children, [
 					...references,
 					...res.references,
 				]);
+
+				sendNodes(graphCache.ref);
 			}),
 		{ concurrency: 5 },
 	).pipe(

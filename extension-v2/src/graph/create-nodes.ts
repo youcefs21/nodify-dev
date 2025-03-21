@@ -107,7 +107,12 @@ export function getGraphsFromAst(ast: CodeBlock[]) {
 
 		// create the graph
 		const chunkId = getShortId(astHash);
-		const graphs = createGraph(tree, flatCodeBlocks, "root", chunkId);
+		const graphs = createGraph(
+			tree as AbstractionGroup[],
+			flatCodeBlocks,
+			"root",
+			chunkId,
+		);
 
 		return { graphs, references };
 	});

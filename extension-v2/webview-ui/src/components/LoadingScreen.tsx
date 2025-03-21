@@ -8,13 +8,13 @@ export function LoadingScreen({ baseUrl }: { baseUrl: string }) {
 		const interval = setInterval(() => {
 			setValue((value) => {
 				// Slow down as we approach 100
-				if (value >= 95) {
+				if (value >= 90) {
 					return value + 0.1;
 				}
-				if (value >= 90) {
+				if (value >= 80) {
 					return value + 0.25;
 				}
-				if (value >= 80) {
+				if (value >= 70) {
 					return value + 0.5;
 				}
 				return value + 1;

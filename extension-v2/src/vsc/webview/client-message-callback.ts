@@ -116,7 +116,9 @@ export function onClientMessage(
 		}
 	}).pipe(
 		Effect.catchAll((error) => {
-			vscode.window.showErrorMessage(error.message);
+			vscode.window.showErrorMessage(
+				`[ERROR - ${error._tag}] ${error.message}`,
+			);
 			console.error(error);
 			return Effect.void;
 		}),
