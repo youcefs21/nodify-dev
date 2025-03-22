@@ -59,8 +59,11 @@ export function getIdentifierBody(identifierLocation: vscode.Location) {
 
 		// Get the whole function definition node
 		const node = identifier?.parent();
-		if (node?.kind() === "assignment") {
-			// TODO: this means that the identifier was created in an assignment. We ignore this for now
+		if (
+			node?.kind() !== "function_definition" &&
+			node?.kind() !== "class_definition"
+		) {
+			// TODO: just ignore everything that is not a function or class definition for now
 			return undefined;
 		}
 		if (!node) {

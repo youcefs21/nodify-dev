@@ -1,6 +1,5 @@
 import type { CodeBlock, CodeReference } from "./ast.schema";
 import { Effect } from "effect";
-import { summarizeCodeReference } from "./llm";
 import { Lang, parse } from "@ast-grep/napi";
 import * as vscode from "vscode";
 import { getAllFlowASTs } from "./get-all-flows";
@@ -14,7 +13,7 @@ interface ReferenceInfo {
 	symbol: string;
 	fullHash: string;
 	body: string;
-	summary: string;
+	shortBody: string;
 }
 
 /**
@@ -24,11 +23,13 @@ interface ReferenceInfo {
  */
 export function dedupeAndSummarizeReferences(references: CodeReference[]) {
 	return Effect.gen(function* () {
-		const processedRefs = yield* Effect.forEach(
-			references,
-			(ref) => summarizeCodeReference(ref),
-			{ concurrency: 5 },
-		);
+		const processedRefs = references.map((ref) => ({
+			...ref,
+			shortBody:
+				ref.body.length < 100
+					? ref.body
+					: `${ref.body.slice(0, 100)}[truncated...]`,
+		}));
 
 		// Remove duplicates
 		const visitedRefHashes = new Set<string>();
@@ -43,7 +44,7 @@ export function dedupeAndSummarizeReferences(references: CodeReference[]) {
 				symbol: ref.symbol,
 				fullHash: ref.fullHash,
 				body: ref.body,
-				summary: ref.summary,
+				shortBody: ref.shortBody,
 			});
 		}
 

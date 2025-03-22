@@ -11,6 +11,7 @@ import type { CustomNode } from "../graph/graph.types";
 import { getReferenceGraphs } from "../ast/references";
 import type { CodeReference } from "../ast/ast.schema";
 import { collapsedNodes } from "./webview/client-message-callback";
+import { getCodeRangeFromSgNode } from "../utils/get-range";
 class NoPythonFileOpenError {
 	readonly _tag = "NoPythonFileOpenError";
 	readonly message = "You must have a Python file open to use this command";
@@ -121,7 +122,15 @@ export function showOpenPythonFile() {
 		console.log(`Found AST for ${url}`);
 
 		const { graphs, references } = yield* getGraphsFromAst(
-			ast,
+			[
+				{
+					id: "root",
+					filePath: ast[0]?.filePath ?? "",
+					children: ast,
+					text: "Entry Point",
+					range: getCodeRangeFromSgNode(root),
+				},
+			],
 			url.fsPath,
 			root,
 			"Top Level Code, not inside a function or class",

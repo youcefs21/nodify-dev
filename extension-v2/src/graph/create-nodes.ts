@@ -7,7 +7,11 @@ import {
 	dedupeAndSummarizeReferences,
 	getFlatReferencesListFromAST,
 } from "../ast/references";
-import { getAbstractionTree, getMockAbstractionTree } from "../ast/llm";
+import {
+	getAbstractionTree,
+	getMockAbstractionTree,
+	summarizeCode,
+} from "../ast/llm";
 import type { Graph } from "../vsc/show-open-file";
 import type { SgNode } from "@ast-grep/napi";
 import { getCodeRangeFromSgNode } from "../utils/get-range";
@@ -110,10 +114,10 @@ export function getGraphsFromAst(
 		const processedRefs = yield* dedupeAndSummarizeReferences(references);
 		const referenceMap = processedRefs.reduce(
 			(map, ref) => {
-				map[ref.id] = { summary: ref.summary, symbol: ref.symbol };
+				map[ref.id] = { shortBody: ref.shortBody, symbol: ref.symbol };
 				return map;
 			},
-			{} as Record<string, { summary: string; symbol: string }>,
+			{} as Record<string, { shortBody: string; symbol: string }>,
 		);
 
 		// LLM prompt context
@@ -128,8 +132,8 @@ export function getGraphsFromAst(
 
 		// 🌳 If there is more than one reference, get the abstraction tree
 		if (processedRefs.length > 1 || flatCodeBlocks.length > 3) {
-			// const tree = yield* getAbstractionTree(promptContext, astHash);
-			const tree = getMockAbstractionTree(promptContext, astHash);
+			const tree = yield* getAbstractionTree(promptContext, astHash);
+			// const tree = getMockAbstractionTree(promptContext, astHash);
 
 			// create the graph
 			const graphs = createGraph(tree, flatCodeBlocks, "root", chunkId);
@@ -146,6 +150,7 @@ export function getGraphsFromAst(
 			throw new Error("No parent node found");
 		}
 		const range = getCodeRangeFromSgNode(parent);
+		const { summary } = yield* summarizeCode(parent.text());
 		return {
 			graphs: [
 				{
@@ -158,7 +163,7 @@ export function getGraphsFromAst(
 							parentId: "root",
 							chunkId,
 							isChunkRoot: true,
-							label: "Summary",
+							label: summary,
 							codeRange: [range, range],
 							filePath,
 							expanded: true,

@@ -1,15 +1,16 @@
 import { Effect } from "effect";
-import type { CodeReference, LLMContext } from "../ast/ast.schema";
+import type { LLMContext } from "../ast/ast.schema";
 import OpenAI from "openai";
 import z from "zod";
 import { zodResponseFormat } from "openai/helpers/zod";
 import { getNodifyWorkspaceDir } from "../utils/get-nodify-workspace-dir";
 import fs from "node:fs/promises";
-import { getFlatReferencesListFromAST } from "./references";
+import { hashString } from "../utils/hash";
 
 const OPENAI_URL = "http://100.89.180.124:6969";
 // const OPENAI_URL = "http://127.0.0.1:11434";
-const model = "unsloth/phi-4-bnb-4bit";
+// const model = "unsloth/phi-4-bnb-4bit";
+const model = "gpt-4o-mini";
 // const model = "phi4:14b-q8_0";
 const apiKey = process.env.OPENAI_API_KEY ?? "";
 
@@ -33,20 +34,12 @@ class LLMError {
  * @param code The code to summarize
  * @returns A simulated LLM-generated summary
  */
-export function summarizeCodeReference(ref: CodeReference) {
+export function summarizeCode(code: string) {
 	return Effect.gen(function* () {
 		// For very short code snippets, just use the code itself as the summary
-		if (ref.body.length < 9999999999) {
-			return {
-				...ref,
-				summary:
-					ref.body.length < 100
-						? ref.body
-						: `${ref.body.slice(0, 100)}[truncated...]`,
-			};
-		}
 		const dirPath = getNodifyWorkspaceDir();
-		const path = `${dirPath}/summaries_cache/${ref.fullHash}.json`;
+		const codeHash = yield* hashString(code);
+		const path = `${dirPath}/summaries_cache/${codeHash}.json`;
 		const exists = yield* Effect.promise(() =>
 			fs
 				.access(path)
@@ -58,7 +51,6 @@ export function summarizeCodeReference(ref: CodeReference) {
 				fs.readFile(path, { encoding: "utf8" }),
 			);
 			return {
-				...ref,
 				summary: summarySchema.parse(JSON.parse(data)).summary,
 			};
 		}
@@ -70,7 +62,6 @@ RULES:
 - Respond in JSON format
 - For short functions (< 5 lines), use 5-15 words
 - For medium and large code blocks, use 1-2 sentences
-- Omit phrases like "this function" or "this code"
 - Use technical terms appropriate for developers
 - Use as few words as possible to convey the most information, no need full sentences
 
@@ -90,30 +81,36 @@ EXAMPLE OUTPUT:
 }
 `;
 
-		console.log("Summarizing code reference", ref.body.slice(0, 20));
-		const res = yield* Effect.tryPromise(() =>
-			client.beta.chat.completions.parse({
-				messages: [
-					{ role: "system", content: systemPrompt },
-					{
-						role: "user",
-						content: ref.body,
-					},
-				],
-				model: model,
-				response_format: zodResponseFormat(summarySchema, "summary"),
-				temperature: 0,
-			}),
-		);
+		console.log("Summarizing code", code.slice(0, 20));
+		const res = yield* Effect.tryPromise({
+			try: () =>
+				client.beta.chat.completions.parse({
+					messages: [
+						{ role: "system", content: systemPrompt },
+						{
+							role: "user",
+							content: code,
+						},
+					],
+					model: model,
+					response_format: zodResponseFormat(summarySchema, "summary"),
+					temperature: 0,
+				}),
+			catch: (error) => {
+				console.error("Failed to summarize code", error);
+				return new LLMError(
+					error instanceof Error ? error.message : "Unknown error",
+				);
+			},
+		});
 
 		const parsed = res.choices[0].message.parsed;
-		const summary = parsed?.summary ?? ref.body.slice(0, 100);
+		const summary = parsed?.summary ?? code.slice(0, 100);
 		yield* Effect.tryPromise(() =>
 			fs.writeFile(path, JSON.stringify({ summary }, null, 2)),
 		);
 
 		return {
-			...ref,
 			summary,
 		};
 	});
@@ -188,6 +185,7 @@ INSTRUCTIONS:
    - Include children nodes as nested groups when appropriate
 4. Ensure each leaf node contains at most ONE reference in its range
 5. Group related operations together rather than treating each line as its own group
+6. Your ranges must include everything. Don't skip any nodes.
 
 IMPORTANT FORMATTING INSTRUCTIONS:
 - You MUST respond with ONLY a valid JSON object
@@ -213,31 +211,124 @@ IMPORTANT FORMATTING INSTRUCTIONS:
 }
 - Do not include any explanations, markdown formatting, or additional text
 - Each leaf node must contain AT MOST ONE unique reference
+
+EXAMPLE INPUT:
+{
+  "filePath": "/simple-app/src/utils.js",
+  "context": "function handleData() { ... }",
+  "ast": [
+    {
+      "id": "0",
+      "text": "const data = fetchDataFromAPI()"
+	  "references": [
+		{
+			"symbol": "fetchDataFromAPI",
+			"id": "hfuh2bda"
+		}
+	  ]
+    },
+    {
+      "id": "1",
+      "text": "if (!data) { ... }",
+      "children": [
+        {
+          "id": "1.0",
+          "text": "console.error('Failed to fetch data')"
+        },
+        {
+          "id": "1.1",
+          "text": "return null"
+        }
+      ]
+    },
+    {
+      "id": "2",
+      "text": "const processedData = processData(data)",
+      "references": [
+        {
+          "symbol": "processData",
+          "id": "abc123"
+        }
+      ]
+    },
+    {
+      "id": "3",
+      "text": "return processedData"
+    }
+  ],
+  "references": {
+    "abc123": {
+      "shortBody": "function processData(rawData) { return rawData.map(item => item.value * 2) }",
+      "symbol": "processData"
+    },
+    "hfuh2bda": {
+      "shortBody": "function fetchDataFromAPI() { return fetch('https://api.example.com/data').then(res => res.json()) }",
+      "symbol": "fetchDataFromAPI"
+    }
+  }
+}
+
+EXAMPLE OUTPUT:
+{
+  "output": [
+    {
+      "label": "Data handling and processing",
+      "idRange": ["0", "3"],
+      "type": "utility",
+      "children": [
+        {
+          "label": "Fetch data and return null if failed",
+          "idRange": ["0", "1"],
+          "type": "network_call",
+		  "referenceID": "hfuh2bda"
+        },
+        {
+          "label": "Multiply all values by 2",
+          "idRange": ["2", "2"],
+          "type": "data_processor",
+          "referenceID": "abc123"
+        },
+        {
+          "label": "Return result",
+          "idRange": ["3", "3"],
+          "type": "output"
+        }
+      ]
+    }
+  ]
+}
 `;
 
 		// use local model for testing purposes
-		const message = yield* Effect.tryPromise(() =>
-			client.chat.completions
-				.create({
-					messages: [
-						{ role: "system", content: systemPrompt },
-						{ role: "user", content: JSON.stringify(input, null, 2) },
-					],
-					response_format: { type: "json_object" },
-					model: "gpt-4o-mini",
-				})
-				.then((res) => {
-					// Format OpenAI response to match Claude's content structure
-					return {
-						content: [
-							{
-								type: "text",
-								text: res.choices[0].message.content || "",
-							},
+		const message = yield* Effect.tryPromise({
+			try: () =>
+				client.chat.completions
+					.create({
+						messages: [
+							{ role: "system", content: systemPrompt },
+							{ role: "user", content: JSON.stringify(input, null, 2) },
 						],
-					};
-				}),
-		);
+						response_format: { type: "json_object" },
+						model: model,
+					})
+					.then((res) => {
+						// Format OpenAI response to match Claude's content structure
+						return {
+							content: [
+								{
+									type: "text",
+									text: res.choices[0].message.content || "",
+								},
+							],
+						};
+					}),
+			catch: (error) => {
+				console.error("Failed to get abstraction tree", error);
+				return new LLMError(
+					error instanceof Error ? error.message : "Unknown error",
+				);
+			},
+		});
 		console.log(
 			`got claude response ${JSON.stringify(message.content).slice(0, 100)}...`,
 		);
