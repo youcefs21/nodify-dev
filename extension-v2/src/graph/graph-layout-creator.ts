@@ -12,11 +12,11 @@ export function createGraphLayout(nodes: CustomNode[], edges: Edge[]) {
 		// align: "UL",
 	});
 	const nodeWidth = 300;
-	const nodeHeight = 64;
 	for (const edge of edges) {
 		graph.setEdge(edge.source, edge.target);
 	}
 	for (const node of nodes) {
+		const nodeHeight = node.type === "stacked" ? 64 : 96;
 		node.width = nodeWidth + 32;
 		node.height = nodeHeight * (1 + node.data.children.length) + 32;
 		graph.setNode(node.id, {
@@ -31,6 +31,7 @@ export function createGraphLayout(nodes: CustomNode[], edges: Edge[]) {
 	}
 	return {
 		nodes: nodes.map((node) => {
+			const nodeHeight = node.type === "stacked" ? 64 : 160;
 			const nodeWithPosition = graph.node(node.id);
 			const x = nodeWithPosition.x;
 			const y = nodeWithPosition.y;

@@ -80,6 +80,12 @@ export function sendNodes(graph: Graph[]) {
 				child.node.data.expanded = true;
 			}
 		}
+		if (
+			node.children.length === 1 &&
+			node.children[0].node.type === "summary"
+		) {
+			node.node.type = "summary";
+		}
 		return node.node;
 	});
 	const parentNodes = nodes.filter((node) => node.data.children.length > 0);
