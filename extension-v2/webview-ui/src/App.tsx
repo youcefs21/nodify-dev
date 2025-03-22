@@ -16,6 +16,7 @@ import type { CustomNode, ServerToClientEvents } from "../../src/shared-types";
 import { StackedNodes } from "./components/StackedNode";
 import { useNodeNavigation } from "./utils/useNodeNavigation";
 import { LoadingScreen } from "./components/LoadingScreen";
+import { SummaryNode } from "./components/SummaryNode";
 
 function App() {
 	const [renderedNodes, setNodes, onNodesChange] = useNodesState<CustomNode>(
@@ -102,6 +103,7 @@ function App() {
 					nodes={renderedNodes}
 					nodeTypes={{
 						stacked: StackedNodes,
+						summary: SummaryNode,
 					}}
 					onNodesChange={onNodesChange}
 					edges={renderedEdges}
