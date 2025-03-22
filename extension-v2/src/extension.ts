@@ -3,6 +3,7 @@ import * as vscode from "vscode";
 import { assertPythonExtension } from "./vsc/assert-python-extension";
 import { registerWebview } from "./vsc/webview/register-webview-command";
 import { initDB } from "./db/jsonDB";
+import { registerLLMSelection } from "./vsc/setting-commands";
 
 /**
  * Called when the extension is activated
@@ -17,9 +18,12 @@ export async function activate(context: vscode.ExtensionContext) {
 
 		// Initialize the commands
 		const webviewCommand = registerWebview(context);
+		const settingCommands = yield* Effect.tryPromise(async () =>
+			registerLLMSelection(context),
+		);
 
 		// Add the commands to the context
-		context.subscriptions.push(webviewCommand);
+		context.subscriptions.push(webviewCommand, ...settingCommands);
 	}).pipe(
 		Effect.catchAll((error) => {
 			vscode.window.showErrorMessage(
