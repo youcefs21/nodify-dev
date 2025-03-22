@@ -24,6 +24,14 @@ interface Props {
 	url: vscode.Uri;
 }
 
+export function getFullNodeJson(node: SgNode): Record<string, unknown> {
+	return {
+		kind: node.kind(),
+		text: node.text(),
+		children: node.children().map(getFullNodeJson),
+	};
+}
+
 /**
  * Processes AST expressions to extract code references and definitions.
  *
@@ -43,6 +51,11 @@ export function handleExpression({
 	if (ignoreKinds.some((kind) => kind === node.kind())) {
 		return Effect.succeed([]);
 	}
+
+	// console.log("called handleExpression with", node.kind());
+	// console.error(
+	// 	`\n\`\`\`\n${JSON.stringify(getFullNodeJson(node), null, 4)}\n\`\`\``,
+	// );
 
 	return Effect.gen(function* () {
 		switch (node.kind()) {
@@ -80,6 +93,7 @@ export function handleExpression({
 					{ concurrency: 5 },
 				);
 				return definitionRanges
+					.filter((range) => range !== undefined)
 					.filter((range) => range.isInWorkspace)
 					.map((range) => ({
 						symbol: identifier.text(),

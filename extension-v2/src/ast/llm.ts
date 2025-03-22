@@ -11,10 +11,11 @@ const OPENAI_URL = "http://100.89.180.124:6969";
 // const OPENAI_URL = "http://127.0.0.1:11434";
 const model = "unsloth/phi-4-bnb-4bit";
 // const model = "phi4:14b-q8_0";
+const apiKey = process.env.OPENAI_API_KEY ?? "";
 
 const client = new OpenAI({
-	baseURL: `${OPENAI_URL}/v1`,
-	apiKey: "key",
+	// baseURL: `${OPENAI_URL}/v1`,
+	apiKey: apiKey,
 });
 
 const summarySchema = z.object({
@@ -118,21 +119,6 @@ EXAMPLE OUTPUT:
 	});
 }
 
-// Create a Zod schema for parsing the output
-export const abstractionGroupSchema = z.object({
-	label: z.string(),
-	idRange: z.array(z.string()),
-	type: z.string(),
-	referenceID: z.string().optional().nullish(),
-	// children (depth 2)
-	children: z.array(z.any()).optional(),
-});
-
-export const abstractionTreeSchema = z.object({
-	// root (depth 1)
-	output: z.array(abstractionGroupSchema),
-});
-
 // Define the types for the abstraction tree output
 export type AbstractionGroup = {
 	label: string;
@@ -145,6 +131,21 @@ export type AbstractionGroup = {
 export type AbstractionTreeOutput = {
 	output: readonly AbstractionGroup[];
 };
+
+// Create a Zod schema for parsing the output
+export const abstractionGroupSchema: z.ZodType<AbstractionGroup> = z.lazy(() =>
+	z.object({
+		label: z.string(),
+		idRange: z.tuple([z.string(), z.string()]),
+		type: z.string(),
+		referenceID: z.string().optional().nullish(),
+		children: z.array(abstractionGroupSchema).optional(),
+	}),
+);
+
+export const abstractionTreeSchema = z.object({
+	output: z.array(abstractionGroupSchema),
+});
 
 /**
  * Analyze the provided AST-parsed code and create an abstraction hierarchy with logical groupings.
@@ -162,9 +163,6 @@ export function getAbstractionTree(input: LLMContext, astHash: string) {
 				.then(() => true)
 				.catch(() => false),
 		);
-		if (input.signature?.includes("get_vocab_size")) {
-			console.log(input.signature);
-		}
 		if (exists) {
 			const data = yield* Effect.tryPromise(() =>
 				fs.readFile(responsePath, { encoding: "utf8" }),
@@ -198,12 +196,12 @@ IMPORTANT FORMATTING INSTRUCTIONS:
   "output": [
     {
       "label": "2-8 word description",
-      "idRange": [string, string],
+      "idRange": ["start_id", "end_id"],
       "type": "single_word_category",
       "children": [
 		{
 			"label": "2-8 word description",
-			"idRange": [string, string],
+			"idRange": ["start_id", "end_id"],
 			"type": "single_word_category",
 			"referenceID": "optional string, don't include if this isn't a leaf node with a reference",
 		},
@@ -218,32 +216,41 @@ IMPORTANT FORMATTING INSTRUCTIONS:
 `;
 
 		// use local model for testing purposes
-		const message = yield* Effect.tryPromise({
-			try: () =>
-				client.beta.chat.completions.parse({
+		const message = yield* Effect.tryPromise(() =>
+			client.chat.completions
+				.create({
 					messages: [
 						{ role: "system", content: systemPrompt },
 						{ role: "user", content: JSON.stringify(input, null, 2) },
 					],
-					response_format: zodResponseFormat(abstractionTreeSchema, "output"),
-					model: model,
-					temperature: 0.6,
+					response_format: { type: "json_object" },
+					model: "gpt-4o-mini",
+				})
+				.then((res) => {
+					// Format OpenAI response to match Claude's content structure
+					return {
+						content: [
+							{
+								type: "text",
+								text: res.choices[0].message.content || "",
+							},
+						],
+					};
 				}),
-			catch: (e) => {
-				console.error(e);
-				return new LLMError(
-					e instanceof Error ? e.message : "Unknown LLM error",
-				);
-			},
-		});
-
-		const output = message.choices[0].message.parsed?.output as
-			| AbstractionGroup[]
-			| undefined;
-		console.log(`got LLM response ${JSON.stringify(output).slice(0, 100)}...`);
+		);
+		console.log(
+			`got claude response ${JSON.stringify(message.content).slice(0, 100)}...`,
+		);
 
 		// Parse the response as JSON
 		try {
+			// Extract JSON from Claude's response
+			const responseContent =
+				message.content[0]?.type === "text" ? message.content[0].text : "";
+
+			// Parse the JSON
+			const parsedResponse = JSON.parse(responseContent.trim());
+			const output = abstractionTreeSchema.parse(parsedResponse).output;
 			yield* Effect.tryPromise(() =>
 				fs.writeFile(responsePath, JSON.stringify(output, null, 2)),
 			);
@@ -274,4 +281,26 @@ IMPORTANT FORMATTING INSTRUCTIONS:
 			] as AbstractionGroup[];
 		}
 	});
+}
+
+/**
+ * A simple function that creates a one-to-one representation of the AST in the same output format as the LLM abstraction tree
+ *
+ * Useful for isolating AST problems from the LLM abstraction tree generation
+ * @param input
+ * @param astHash
+ */
+export function getMockAbstractionTree(
+	input: LLMContext,
+	astHash: string,
+): AbstractionGroup[] {
+	return input.ast.map((node) => ({
+		label: node.text.length > 10 ? `${node.text.slice(0, 10)}...` : node.text,
+		idRange: [node.id, node.id],
+		type: "mock",
+		referenceID: node.references?.[0]?.id ?? undefined,
+		children: node.children
+			? getMockAbstractionTree({ ...input, ast: node.children }, astHash)
+			: undefined,
+	}));
 }

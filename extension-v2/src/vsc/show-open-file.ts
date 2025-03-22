@@ -117,6 +117,7 @@ export function showOpenPythonFile() {
 		const { graphs, references } = yield* getGraphsFromAst(
 			ast,
 			url.fsPath,
+			root,
 			"Top Level Code, not inside a function or class",
 		);
 		sendNodes(graphs);

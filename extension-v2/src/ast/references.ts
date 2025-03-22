@@ -5,6 +5,7 @@ import { Lang, parse } from "@ast-grep/napi";
 import * as vscode from "vscode";
 import { getAllFlowASTs } from "./get-all-flows";
 import { getGraphsFromAst } from "../graph/create-nodes";
+import { getFullNodeJson } from "./handle-expressions";
 
 // Store for reference hashes and summaries
 // This will be replaced with a database later
@@ -109,15 +110,46 @@ export function getReferenceGraphs(ref: CodeReference) {
 			},
 		});
 		const block = defNode?.children().find((x) => x.kind() === "block");
-		if (!block) {
+		if (!block || !defNode) {
 			console.error(
 				`No block found on ref search:\n\`\`\`\n${defNode?.text()}\n\`\`\``,
 			);
 			return { graphs: [], references: [], refID: undefined };
 		}
 
+		// Check if defNode is a class and find __init__ if it exists
+		let blockChildren = block.children();
+		if (defNode.kind() === "class_definition") {
+			// Find the __init__ method if it exists
+			const json = getFullNodeJson(defNode);
+			console.log(JSON.stringify(json, null, 4));
+			const initFuncDef = blockChildren.find((node) => {
+				// Look for function definition nodes
+				if (node.kind() === "function_definition") {
+					// Check if this is the __init__ method
+					const funcName = node
+						.children()
+						.find((x) => x.kind() === "identifier");
+					return funcName && funcName.text() === "__init__";
+				}
+				return false;
+			});
+
+			// If __init__ exists, flatten it into the class body
+			if (initFuncDef) {
+				// Get the block of the __init__ function
+				const initBlock = initFuncDef
+					.children()
+					.find((x) => x.kind() === "block");
+				if (initBlock) {
+					// Combine the class block children with the __init__ block children
+					blockChildren = [...blockChildren, ...initBlock.children()];
+				}
+			}
+		}
+
 		const ast = yield* getAllFlowASTs({
-			root: block.children(),
+			root: blockChildren,
 			parent_id: "",
 			url: document.uri,
 		});
@@ -129,6 +161,7 @@ export function getReferenceGraphs(ref: CodeReference) {
 		const { graphs, references } = yield* getGraphsFromAst(
 			ast,
 			ref.filePath,
+			defNode,
 			signature,
 		);
 

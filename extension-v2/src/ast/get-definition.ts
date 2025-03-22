@@ -59,6 +59,10 @@ export function getIdentifierBody(identifierLocation: vscode.Location) {
 
 		// Get the whole function definition node
 		const node = identifier?.parent();
+		if (node?.kind() === "assignment") {
+			// TODO: this means that the identifier was created in an assignment. We ignore this for now
+			return undefined;
+		}
 		if (!node) {
 			return yield* Effect.fail(new NoParentBodyRangeFound());
 		}

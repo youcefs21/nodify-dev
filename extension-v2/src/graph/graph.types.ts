@@ -34,5 +34,5 @@ export type NodeProps = {
 };
 
 export type CustomNode = Node<NodeProps> & {
-	type: "stacked";
+	type: "stacked" | "summary";
 };

@@ -7,8 +7,10 @@ import {
 	dedupeAndSummarizeReferences,
 	getFlatReferencesListFromAST,
 } from "../ast/references";
-import { getAbstractionTree } from "../ast/llm";
+import { getAbstractionTree, getMockAbstractionTree } from "../ast/llm";
 import type { Graph } from "../vsc/show-open-file";
+import type { SgNode } from "@ast-grep/napi";
+import { getCodeRangeFromSgNode } from "../utils/get-range";
 
 export function flattenCodeBlocks(codeBlocks: CodeBlock[]): CodeBlock[] {
 	return codeBlocks.flatMap((block) => {
@@ -94,6 +96,7 @@ export function createGraph(
 export function getGraphsFromAst(
 	ast: CodeBlock[],
 	filePath: string,
+	parent: SgNode,
 	signature?: string,
 ) {
 	return Effect.gen(function* () {
@@ -120,20 +123,55 @@ export function getGraphsFromAst(
 			ast: yield* decodeLLMCodeBlocks(ast),
 			references: referenceMap,
 		};
-
-		// get the abstraction tree
-		const tree = yield* getAbstractionTree(promptContext, astHash);
+		const chunkId = getShortId(astHash);
 		const flatCodeBlocks = flattenCodeBlocks(ast);
 
-		// create the graph
-		const chunkId = getShortId(astHash);
-		const graphs = createGraph(
-			tree as AbstractionGroup[],
-			flatCodeBlocks,
-			"root",
-			chunkId,
-		);
+		// 🌳 If there is more than one reference, get the abstraction tree
+		if (processedRefs.length > 1 || flatCodeBlocks.length > 3) {
+			// const tree = yield* getAbstractionTree(promptContext, astHash);
+			const tree = getMockAbstractionTree(promptContext, astHash);
 
-		return { graphs, references };
+			// create the graph
+			const graphs = createGraph(tree, flatCodeBlocks, "root", chunkId);
+
+			return { graphs, references };
+		}
+
+		// 🌱 If there is only one reference, create a summary node instead
+		const startBlock = flatCodeBlocks[0];
+		const endBlock = flatCodeBlocks[flatCodeBlocks.length - 1];
+		const startId = startBlock?.id ?? "0";
+		const endId = endBlock?.id ?? "0";
+		if (!parent) {
+			throw new Error("No parent node found");
+		}
+		const range = getCodeRangeFromSgNode(parent);
+		return {
+			graphs: [
+				{
+					// a summary node has no children
+					children: [],
+					node: {
+						id: `${chunkId}-${startId}-${endId}`,
+						data: {
+							id: `${chunkId}-${startId}-${endId}`,
+							parentId: "root",
+							chunkId,
+							isChunkRoot: true,
+							label: "Summary",
+							codeRange: [range, range],
+							filePath,
+							expanded: true,
+							type: "summary",
+							refID: references[0]?.id,
+							children: [],
+						},
+						position: { x: 0, y: 0 },
+						type: "summary",
+					} satisfies CustomNode,
+				},
+			] as Graph[],
+			references,
+		};
 	});
 }
