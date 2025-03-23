@@ -1,49 +1,15 @@
 import * as vscode from "vscode";
-import exec from "node:child_process";
-import { resolve } from "node:path";
+import { getOpenAIClientFromWorkspaceConfig } from "../../ast/llm";
 
 /**
- * Register LLM config commands
+ * Register command to select LLM server IP
  * @param context - The extension context
- * @returns commands to config server ip and model id
+ * @returns command to config server ip
  */
-export async function registerLLMSelection(context: vscode.ExtensionContext) {
-	// If running a model locally, list available models (otherwise just error out
-	// of this block and provide no options later on)
-	const available_models: string[] = await new Promise((resolve, reject) => {
-		exec.exec("ollama list", (error, stdout, stderr) => {
-			if (error) {
-				console.error(
-					`Failed to execute local command (non-critical): ${error}`,
-				);
-				reject(`Failed to execute local command (non-critical): ${error}`);
-				return;
-			}
-
-			if (stderr) {
-				console.error(
-					`Local command execution returned (non-critical): ${stderr}`,
-				);
-				reject(`Local command execution returned (non-critical): ${stderr}`);
-				return;
-			}
-
-			const available_models_with_details = stdout.split("\n").slice(1);
-			const available_models = available_models_with_details.map(
-				(model) => model.split(" ")[0],
-			);
-			resolve(
-				available_models
-					.map((model) => model.trim())
-					.filter((model) => model !== ""),
-			);
-		});
-	});
-	console.log(`available_models: ${available_models}`);
-
-	const commands = [
-		// Open dialogue boxes to change the server ip and model id
-		vscode.commands.registerCommand("nodify.selectLLMServerIP", async () => {
+export function registerLLMServerIPSelection(context: vscode.ExtensionContext) {
+	return vscode.commands.registerCommand(
+		"nodify.selectLLMServerIP",
+		async () => {
 			const choices = ["http://127.0.0.1:11434", "http://api.openai.com"];
 			const configuration = vscode.workspace.getConfiguration("nodify");
 
@@ -69,9 +35,25 @@ export async function registerLLMSelection(context: vscode.ExtensionContext) {
 			});
 
 			configuration.update("LLMServerIP", selection);
-		}),
-		vscode.commands.registerCommand("nodify.selectLLMModelID", async () => {
+		},
+	);
+}
+
+/**
+ * Register command to select LLM model ID
+ * @param context - The extension context
+ * @returns command to config model id
+ */
+export function registerLLMModelIDSelection(context: vscode.ExtensionContext) {
+	return vscode.commands.registerCommand(
+		"nodify.selectLLMModelID",
+		async () => {
 			const configuration = vscode.workspace.getConfiguration("nodify");
+
+			const client = getOpenAIClientFromWorkspaceConfig();
+			const models = await client.models.list();
+			const available_models = models.data.map((model) => model.id);
+			console.log(`available_models: ${available_models}`);
 
 			const selection: string = await new Promise((resolve, reject) => {
 				const quickPick = vscode.window.createQuickPick();
@@ -95,8 +77,6 @@ export async function registerLLMSelection(context: vscode.ExtensionContext) {
 			});
 
 			configuration.update("LLMModelID", selection);
-		}),
-	];
-
-	return commands;
+		},
+	);
 }

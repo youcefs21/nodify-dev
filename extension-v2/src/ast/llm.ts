@@ -27,7 +27,7 @@ function getModelFromWorkspaceConfig() {
 	return model_id;
 }
 
-function getOpenAIClientFromWorkspaceConfig() {
+export function getOpenAIClientFromWorkspaceConfig() {
 	const config = vscode.workspace.getConfiguration("nodify");
 	// fallback to openai server
 	const server_ip = config.get<string>("LLMServerIP");
