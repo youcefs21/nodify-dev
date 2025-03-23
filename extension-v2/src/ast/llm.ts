@@ -6,17 +6,47 @@ import { zodResponseFormat } from "openai/helpers/zod";
 import { getNodifyWorkspaceDir } from "../utils/get-nodify-workspace-dir";
 import fs from "node:fs/promises";
 import { getFlatReferencesListFromAST } from "./references";
+import vscode from "vscode";
 
-const OPENAI_URL = "http://100.89.180.124:6969";
+// const OPENAI_URL = "http://100.89.180.124:6969";
 // const OPENAI_URL = "http://127.0.0.1:11434";
-const model = "unsloth/phi-4-bnb-4bit";
+// const model = "unsloth/phi-4-bnb-4bit";
 // const model = "phi4:14b-q8_0";
 const apiKey = process.env.OPENAI_API_KEY ?? "";
 
-const client = new OpenAI({
-	// baseURL: `${OPENAI_URL}/v1`,
-	apiKey: apiKey,
-});
+function getModelFromWorkspaceConfig() {
+	const config = vscode.workspace.getConfiguration("nodify");
+	// No default defined here, instead define it in package.json
+	const model_id = config.get<string>("LLMModelID");
+	if (!model_id) {
+		console.error(
+			"No model ID found in workspace config. Defaulting to gpt-4o-mini",
+		);
+		return "gpt-4o-mini";
+	}
+	return model_id;
+}
+
+function getOpenAIClientFromWorkspaceConfig() {
+	const config = vscode.workspace.getConfiguration("nodify");
+	// fallback to openai server
+	const server_ip = config.get<string>("LLMServerIP");
+
+	if (!server_ip) {
+		return new OpenAI({
+			apiKey: apiKey,
+		});
+	}
+	return new OpenAI({
+		baseURL: `${server_ip}/v1`,
+		apiKey: apiKey,
+	});
+}
+
+// const client = new OpenAI({
+// 	// baseURL: `${OPENAI_URL}/v1`,
+// 	apiKey: apiKey,
+// });
 
 const summarySchema = z.object({
 	summary: z.string(),
@@ -35,6 +65,9 @@ class LLMError {
  */
 export function summarizeCodeReference(ref: CodeReference) {
 	return Effect.gen(function* () {
+		const model = getModelFromWorkspaceConfig();
+		const client = getOpenAIClientFromWorkspaceConfig();
+
 		// For very short code snippets, just use the code itself as the summary
 		if (ref.body.length < 9999999999) {
 			return {
@@ -154,6 +187,9 @@ export const abstractionTreeSchema = z.object({
  */
 export function getAbstractionTree(input: LLMContext, astHash: string) {
 	return Effect.gen(function* () {
+		const model = getModelFromWorkspaceConfig();
+		const client = getOpenAIClientFromWorkspaceConfig();
+
 		const dirPath = getNodifyWorkspaceDir();
 		const responsePath = `${dirPath}/abstraction_tree_cache/${astHash}.json`;
 		const logPath = `${dirPath}/llm_logs/${astHash}.json`;
@@ -179,7 +215,7 @@ INSTRUCTIONS:
 2. Create a multi-level abstraction hierarchy where:
    - Mid-level groups represent related functionality
    - Leaf nodes represent specific code operations (least abstract)
-   - The depth (number of nested groups) must be at most 3 (nodes have children, and grandchildren) for very complex code, 1 (nodes have no children) for very simple code, and 2 (nodes have children) for most code. 
+   - The depth (number of nested groups) must be at most 3 (nodes have children, and grandchildren) for very complex code, 1 (nodes have no children) for very simple code, and 2 (nodes have children) for most code.
    - IMPORTANT: the leaf node range has to have exactly one reference. most of the time, the leaf range has a single node ([start, end] = [start, start])
 3. For each group:
    - Create a concise 2-8 word descriptive label
@@ -224,7 +260,7 @@ IMPORTANT FORMATTING INSTRUCTIONS:
 						{ role: "user", content: JSON.stringify(input, null, 2) },
 					],
 					response_format: { type: "json_object" },
-					model: "gpt-4o-mini",
+					model: model, //"gpt-4o-mini",
 				})
 				.then((res) => {
 					// Format OpenAI response to match Claude's content structure

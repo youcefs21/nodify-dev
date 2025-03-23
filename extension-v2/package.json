@@ -52,7 +52,7 @@
 				"nodify.LLMServerIP": {
 					"type": "string",
 					"default": "http://127.0.0.1:11434",
-					"description": "When using LLMs from a custom server, this setting should contain the IP address of the server. Port should be included."
+					"description": "When using LLMs from a custom server, this setting should contain the IP address of the server. Port should be included for local servers."
 				},
 				"nodify.LLMModelID": {
 					"type": "string",

@@ -128,8 +128,8 @@ export function getGraphsFromAst(
 
 		// 🌳 If there is more than one reference, get the abstraction tree
 		if (processedRefs.length > 1 || flatCodeBlocks.length > 3) {
-			// const tree = yield* getAbstractionTree(promptContext, astHash);
-			const tree = getMockAbstractionTree(promptContext, astHash);
+			const tree = yield* getAbstractionTree(promptContext, astHash);
+			// const tree = getMockAbstractionTree(promptContext, astHash);
 
 			// create the graph
 			const graphs = createGraph(tree, flatCodeBlocks, "root", chunkId);

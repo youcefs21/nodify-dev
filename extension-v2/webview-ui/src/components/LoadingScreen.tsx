@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { Progress } from "./ui/Progress";
+import "./loader.css";
 
 export function LoadingScreen({ baseUrl }: { baseUrl: string }) {
 	const [value, setValue] = useState(0);
@@ -30,10 +31,11 @@ export function LoadingScreen({ baseUrl }: { baseUrl: string }) {
 				alt="Nodify Logo"
 				className="h-32 w-32 rounded-sm mb-8"
 			/>
-			<Progress value={Math.min(value, 100)} />
+			<div className="loader" />
+			{/* <Progress value={Math.min(value, 100)} />
 			<p className="text-sm text-muted-foreground">
 				[{`${Math.min(Math.round(value), 100)}%`}] Loading...
-			</p>
+			</p> */}
 		</div>
 	);
 }
