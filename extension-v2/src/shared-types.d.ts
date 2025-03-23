@@ -24,6 +24,10 @@ export type ServerToClientEvents =
 
 export type ClientToServerEvents =
 	| {
+			type: "rerun-llm";
+			chunkId: string;
+	  }
+	| {
 			type: "on-render";
 	  }
 	| {

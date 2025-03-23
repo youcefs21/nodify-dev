@@ -49,6 +49,12 @@ export function StackedNodes({ data }: NodeProps<CustomNode>) {
 						variant="outline"
 						size="icon"
 						className="p-1 h-fit w-fit ml-auto mb-auto"
+						onClick={() => {
+							sendToServer({
+								type: "rerun-llm",
+								chunkId: data.children[0].chunkId,
+							});
+						}}
 					>
 						<RefreshCcw className="size-3" />
 					</Button>
