@@ -208,46 +208,40 @@ TASK: Analyze the provided AST-parsed code and create an abstraction hierarchy w
 
 INSTRUCTIONS:
 1. Examine the provided AST structure with its nodes, text content, and references
-2. Create a multi-level abstraction hierarchy where:
-   - Mid-level groups represent related functionality
-   - Leaf nodes represent specific code operations (least abstract)
-   - The depth (number of nested groups) must be at most 3 (nodes have children, and grandchildren) for very complex code, 1 (nodes have no children) for very simple code, and 2 (nodes have children) for most code.
-   - IMPORTANT: the leaf node range has to have exactly one reference. most of the time, the leaf range has a single node ([start, end] = [start, start])
+2. Create a multi-level abstraction hierarchy where groups represent related functionality
+   - The depth (number of nested groups) must be:
+   - 1 (nodes have no children) for very simple code.
+   - 2 (nodes have children) for most code.
+   - at most 3 (nodes have children, and grandchildren) for very complex code.
 3. For each group:
    - Create a concise 2-8 word descriptive label
    - Specify the range of node IDs covered (from first to last in the sequence)
    - Categorize with a single-word type that broadly describes its purpose (examples: "event_listener", "data_processor", "machine_learning", "visualization", "documentation", "utility", "main", "callback")
-   - Include children nodes as nested groups when appropriate
 4. Ensure each leaf node contains at most ONE reference in its range
 5. Group related operations together rather than treating each line as its own group
 6. Your ranges must include everything. Don't skip any nodes.
 
 IMPORTANT FORMATTING INSTRUCTIONS:
 - You MUST respond with ONLY a valid JSON object
-- The JSON MUST follow this exact structure:
-{
-  "output": [
-    {
-      "label": "2-8 word description",
-      "idRange": ["start_id", "end_id"],
-      "type": "single_word_category",
-      "children": [
-		{
-			"label": "2-8 word description",
-			"idRange": ["start_id", "end_id"],
-			"type": "single_word_category",
-			"referenceID": "optional string, don't include if this isn't a leaf node with a reference",
-		},
-		// ... more groups as needed
-      ]
-    },
-    // ... more groups as needed
-  ]
-}
+- idRange is a 2-element array of strings, representing the start and end of the range. Use the node IDs from the input. 
+   - IMPORTANT: must be exactly 2 elements, if start and end are the same, use the same ID twice.
 - Do not include any explanations, markdown formatting, or additional text
-- Each leaf node must contain AT MOST ONE unique reference
+- The JSON MUST follow be exactly of type \`AbstractionTreeOutput\`:
 
-EXAMPLE INPUT:
+type AbstractionGroup = {
+	label: string;
+	idRange: [string, string];
+	type: string;
+	referenceID?: string | null;
+	children?: readonly AbstractionGroup[];
+};
+
+type AbstractionTreeOutput = {
+	output: readonly AbstractionGroup[];
+};
+
+
+### EXAMPLE INPUT:
 {
   "filePath": "/simple-app/src/utils.js",
   "context": "function handleData() { ... }",
@@ -303,33 +297,21 @@ EXAMPLE INPUT:
   }
 }
 
-EXAMPLE OUTPUT:
+### EXAMPLE OUTPUT:
 {
   "output": [
-    {
-      "label": "Data handling and processing",
-      "idRange": ["0", "3"],
-      "type": "utility",
-      "children": [
-        {
-          "label": "Fetch data and return null if failed",
-          "idRange": ["0", "1"],
-          "type": "network_call",
-		  "referenceID": "hfuh2bda"
-        },
-        {
-          "label": "Multiply all values by 2",
-          "idRange": ["2", "2"],
-          "type": "data_processor",
-          "referenceID": "abc123"
-        },
-        {
-          "label": "Return result",
-          "idRange": ["3", "3"],
-          "type": "output"
-        }
-      ]
-    }
+	{
+		"label": "Fetch data and return null if failed",
+		"idRange": ["0", "1.1"],
+		"type": "network_call",
+		"referenceID": "hfuh2bda"
+	},
+	{
+		"label": "Multiply all values by 2, and return result",
+		"idRange": ["2", "3"],
+		"type": "data_processor",
+		"referenceID": "abc123"
+	},
   ]
 }
 `;
@@ -368,12 +350,12 @@ EXAMPLE OUTPUT:
 			`got claude response ${JSON.stringify(message.content).slice(0, 100)}...`,
 		);
 
+		// Extract JSON from Claude's response
+		const responseContent =
+			message.content[0]?.type === "text" ? message.content[0].text : "";
+
 		// Parse the response as JSON
 		try {
-			// Extract JSON from Claude's response
-			const responseContent =
-				message.content[0]?.type === "text" ? message.content[0].text : "";
-
 			// Parse the JSON
 			const parsedResponse = JSON.parse(responseContent.trim());
 			const output = abstractionTreeSchema.parse(parsedResponse).output;
@@ -395,7 +377,11 @@ EXAMPLE OUTPUT:
 			);
 			return output;
 		} catch (error) {
-			console.error("Failed to parse Claude response as JSON:", error);
+			console.error(
+				"Failed to parse Claude response as JSON:",
+				error,
+				responseContent,
+			);
 			// Return a minimal valid structure if parsing fails
 			return [
 				{
