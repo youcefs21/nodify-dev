@@ -1,55 +1,52 @@
 import * as vscode from "vscode";
 import { parse, Lang, type SgNode, type SgRoot } from "@ast-grep/napi";
+import type { CodeReference } from "../../ast/ast.schema";
+import {
+	getIdentifierBody,
+	type NoParentBodyRangeFound,
+} from "../../ast/get-definition";
+import { Effect } from "effect";
+import type { UnknownException } from "effect/Cause";
 // import type { Reference } from "../ast/flow";
 
-export class NodifyCodeLensProvider implements vscode.CodeLensProvider {
-	public add_ast_node_to_code_lens(
-		document: vscode.TextDocument,
-		node: SgNode,
-	): vscode.CodeLens[] {
-		const codeLensChildren = node
-			.children()
-			.flatMap((child) => this.add_ast_node_to_code_lens(document, child));
+function add_ast_node_to_code_lens(
+	document: vscode.TextDocument,
+	node: SgNode,
+): Effect.Effect<vscode.CodeLens[]> {
+	return Effect.gen(function* () {
+		const codeLensChildren = yield* Effect.forEach(node.children(), (child) =>
+			add_ast_node_to_code_lens(document, child),
+		).pipe(Effect.map((children) => children.flat()));
 
-		const configuration = vscode.workspace.getConfiguration("nodify");
-		const codeLensingFunctions = configuration.get("codeLensingFunctions");
-		const codeLensingClasses = configuration.get("codeLensingClasses");
-		const codeLensingCalledObjects = configuration.get(
-			"codeLensingCalledObjects",
-		);
-
-		const allowedNodeKinds = [];
-		if (codeLensingFunctions) {
-			allowedNodeKinds.push("function_definition");
-		}
-		if (codeLensingClasses) {
-			allowedNodeKinds.push("class_definition");
-		}
-		if (codeLensingCalledObjects) {
-			allowedNodeKinds.push("call");
-		}
+		const allowedNodeKinds = ["class_definition", "function_definition"];
 
 		if (!allowedNodeKinds.includes(String(node.kind()))) {
 			return codeLensChildren;
 		}
 
-		// Right now we only care about class defs, function defs, and called functions/classes
-		// TODO: this is not the correct way to do this, ast-grep has a specific way to find all nodes of a certain kind
-		const identifierName =
-			node
-				.children()
-				.find((child) => child.kind() === "identifier")
-				?.text() ?? "Unknown";
+		const identifierNode = node
+			.children()
+			.find((child) => child.kind() === "identifier");
 
-		const range = node.range();
-		const codeLens = new vscode.CodeLens(
-			new vscode.Range(
-				range.start.line,
-				range.start.column,
-				range.end.line,
-				range.end.column,
-			),
+		if (!identifierNode) {
+			return codeLensChildren;
+		}
+		const identifierName = identifierNode.text();
+		const range = identifierNode.range();
+		const codeLensRange = new vscode.Range(
+			range.start.line,
+			range.start.column,
+			range.end.line,
+			range.end.column,
 		);
+		const codeLens = new vscode.CodeLens(codeLensRange);
+
+		const definitionRange = yield* getIdentifierBody(
+			new vscode.Location(document.uri, codeLensRange),
+		);
+		if (!definitionRange) {
+			return codeLensChildren;
+		}
 
 		codeLens.command = {
 			title: `Open Nodify at ${identifierName}`,
@@ -57,29 +54,38 @@ export class NodifyCodeLensProvider implements vscode.CodeLensProvider {
 			arguments: [
 				{
 					symbol: identifierName,
-					location: new vscode.Location(
-						document.uri,
-						new vscode.Range(
-							range.start.line,
-							range.start.column,
-							range.end.line,
-							range.end.column,
-						),
-					),
-					file: document.uri,
-				},
+					id: definitionRange.shortId,
+					fullHash: definitionRange.fullHash,
+					body: definitionRange.text,
+					range: definitionRange.range,
+					filePath: definitionRange.uri.fsPath,
+				} satisfies CodeReference,
 			],
 		};
 		return [codeLens].concat(codeLensChildren);
-	}
+	}).pipe(
+		Effect.catchAll((error) => {
+			vscode.window.showErrorMessage(
+				`[ERROR - ${error._tag}] ${error.message}`,
+			);
+			console.error(error);
+			return Effect.succeed([]);
+		}),
+		Effect.catchAllDefect((error) => {
+			vscode.window.showErrorMessage(`DEFECT: ${error}`);
+			console.error("DEFECT: ", error);
+			return Effect.succeed([]);
+		}),
+	);
+}
 
+export class NodifyCodeLensProvider implements vscode.CodeLensProvider {
 	async provideCodeLenses(
 		document: vscode.TextDocument,
 		token: vscode.CancellationToken,
 	): Promise<vscode.CodeLens[]> {
 		const root = parse(Lang.Python, document.getText()).root();
-		const codeLenses = this.add_ast_node_to_code_lens(document, root);
-		return codeLenses;
+		return await Effect.runPromise(add_ast_node_to_code_lens(document, root));
 	}
 
 	// Optional method if you want to refresh code lens when the document changes
@@ -92,9 +98,8 @@ export class NodifyCodeLensProvider implements vscode.CodeLensProvider {
 }
 
 export function registerCodeLensProvider(context: vscode.ExtensionContext) {
-	const codeLensProvider = vscode.languages.registerCodeLensProvider(
+	return vscode.languages.registerCodeLensProvider(
 		"python",
 		new NodifyCodeLensProvider(),
 	);
-	return codeLensProvider;
 }

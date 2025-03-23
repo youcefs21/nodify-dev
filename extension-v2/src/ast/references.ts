@@ -90,7 +90,7 @@ export function getFlatReferencesListFromAST(
  * @param ref The reference to get nodes for
  * @returns The nodes for the reference
  */
-export function getReferenceGraphs(ref: CodeReference) {
+export function getReferenceGraphs(ref: CodeReference, isStartingRef: boolean) {
 	return Effect.gen(function* () {
 		const document = yield* Effect.tryPromise(() =>
 			vscode.workspace.openTextDocument(ref.filePath),
@@ -163,6 +163,7 @@ export function getReferenceGraphs(ref: CodeReference) {
 			ast,
 			ref.filePath,
 			defNode,
+			isStartingRef,
 			signature,
 		);
 

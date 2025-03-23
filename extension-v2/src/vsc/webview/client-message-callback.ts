@@ -20,7 +20,7 @@ function handleNodeToggle(message: ClientEvent<"node-toggle">) {
 	} else {
 		collapsedNodes.add(message.nodeId);
 	}
-	sendNodes(graphCache.ref);
+	sendNodes(graphCache.graph);
 	return Effect.void;
 }
 

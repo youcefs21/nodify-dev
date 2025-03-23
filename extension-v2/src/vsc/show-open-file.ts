@@ -9,7 +9,7 @@ import { postMessageToPanel } from "./webview/register-webview-command";
 import { createGraphLayout } from "../graph/graph-layout-creator";
 import type { CustomNode } from "../graph/graph.types";
 import { getReferenceGraphs } from "../ast/references";
-import type { CodeReference } from "../ast/ast.schema";
+import type { CodeBlock, CodeReference } from "../ast/ast.schema";
 import { collapsedNodes } from "./webview/client-message-callback";
 import { getCodeRangeFromSgNode } from "../utils/get-range";
 class NoPythonFileOpenError {
@@ -68,11 +68,12 @@ function FlattenGraph(graph: Graph): Graph[] {
 }
 
 export const graphCache = {
-	ref: [] as Graph[],
+	startingCodeReference: null as CodeReference | null,
+	graph: [] as Graph[],
 };
 
 export function sendNodes(graph: Graph[]) {
-	graphCache.ref = graph;
+	graphCache.graph = graph;
 	const nodes = graph.flatMap(FlattenGraph).map((node) => {
 		for (const child of node.children) {
 			if (collapsedNodes.has(child.node.data.id)) {
@@ -109,36 +110,45 @@ export function sendNodes(graph: Graph[]) {
  */
 export function showOpenPythonFile() {
 	return Effect.gen(function* () {
-		// 📄 get the text of the open Python file
-		const { text, url } = yield* getOpenPythonFileText();
+		if (!graphCache.startingCodeReference) {
+			// 📄 get the text of the open Python file
+			const { text, url } = yield* getOpenPythonFileText();
 
-		// get the AST for all the flows in the file
-		const root = astGrep.parse(Lang.Python, text).root();
-		const ast = yield* getAllFlowASTs({
-			root: root.children(),
-			parent_id: "",
-			url,
-		});
-		console.log(`Found AST for ${url}`);
-
-		const { graphs, references } = yield* getGraphsFromAst(
-			[
-				{
-					id: "root",
-					filePath: ast[0]?.filePath ?? "",
-					children: ast,
-					text: "Entry Point",
-					range: getCodeRangeFromSgNode(root),
-				},
-			],
-			url.fsPath,
-			root,
-			"Top Level Code, not inside a function or class",
-		);
-		sendNodes(graphs);
-
-		yield* processAndShowReferences(graphs, references);
-		sendNodes(graphs);
+			// get the AST for all the flows in the file
+			const root = astGrep.parse(Lang.Python, text).root();
+			const ast = yield* getAllFlowASTs({
+				root: root.children(),
+				parent_id: "",
+				url,
+			});
+			console.log(`Found AST for ${url}`);
+			const { graphs, references } = yield* getGraphsFromAst(
+				[
+					{
+						id: "root",
+						filePath: ast[0]?.filePath ?? "",
+						children: ast,
+						text: "Entry Point",
+						range: getCodeRangeFromSgNode(root),
+					},
+				],
+				url.fsPath,
+				root,
+				true,
+				"Top Level Code, not inside a function or class",
+			);
+			sendNodes(graphs);
+			yield* processAndShowReferences(graphs, references);
+			sendNodes(graphs);
+		} else {
+			const res = yield* getReferenceGraphs(
+				graphCache.startingCodeReference,
+				true,
+			);
+			sendNodes(res.graphs);
+			yield* processAndShowReferences(res.graphs, res.references);
+			sendNodes(res.graphs);
+		}
 	});
 }
 
@@ -163,7 +173,7 @@ function processAndShowReferences(
 				const ref = references.find((ref) => ref.id === graph.node.data.refID);
 				if (!ref) return []; // this actually early stops references that haven't been expanded yet
 
-				const res = yield* getReferenceGraphs(ref);
+				const res = yield* getReferenceGraphs(ref, false);
 				graph.node.data.children = res.graphs.map((a) => {
 					a.node.data.parentId = graph.node.data.id;
 					return a.node.data;
@@ -176,7 +186,7 @@ function processAndShowReferences(
 					...res.references,
 				]);
 
-				sendNodes(graphCache.ref);
+				sendNodes(graphCache.graph);
 			}),
 		{ concurrency: 5 },
 	).pipe(

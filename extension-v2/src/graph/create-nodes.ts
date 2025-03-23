@@ -101,6 +101,7 @@ export function getGraphsFromAst(
 	ast: CodeBlock[],
 	filePath: string,
 	parent: SgNode,
+	isStartingRef: boolean,
 	signature?: string,
 ) {
 	return Effect.gen(function* () {
@@ -136,7 +137,24 @@ export function getGraphsFromAst(
 			// const tree = getMockAbstractionTree(promptContext, astHash);
 
 			// create the graph
-			const graphs = createGraph(tree, flatCodeBlocks, "root", chunkId);
+			const graphs = createGraph(
+				isStartingRef
+					? [
+							{
+								label: "Entry Point",
+								idRange: [
+									tree[0]?.idRange?.[0] ?? "",
+									tree[tree.length - 1]?.idRange?.[1] ?? "",
+								],
+								type: "main",
+								children: tree,
+							},
+						]
+					: tree,
+				flatCodeBlocks,
+				"root",
+				chunkId,
+			);
 
 			return { graphs, references };
 		}

@@ -3,6 +3,9 @@ import { createWebview } from "./create-webview";
 import { NodifyWebviewSerializer } from "./webview-serializer";
 import { onClientMessage } from "./client-message-callback";
 import type { ServerToClientEvents } from "../../shared-types";
+import type { CodeReference } from "../../ast/ast.schema";
+import { graphCache, showOpenPythonFile } from "../show-open-file";
+import { Effect } from "effect";
 
 /**
  * a Singleton reference to the webview panel
@@ -31,15 +34,22 @@ export function registerWebview(context: vscode.ExtensionContext) {
 	);
 
 	// 📦 Register the command to open the webview
-	const command = vscode.commands.registerCommand("nodify.openWebview", () => {
-		// ⏭️ Return if a webview is already open
-		if (webviewPanelRef.current) {
-			return webviewPanelRef.current.reveal(vscode.ViewColumn.Beside);
-		}
+	const command = vscode.commands.registerCommand(
+		"nodify.openWebview",
+		(ref?: CodeReference) => {
+			console.log("webview args", ref);
+			graphCache.startingCodeReference = ref ?? null;
+			// ⏭️ Return if a webview is already open
+			if (webviewPanelRef.current) {
+				webviewPanelRef.current.reveal(vscode.ViewColumn.Beside);
+				Effect.runFork(showOpenPythonFile());
+				return;
+			}
 
-		// 🌱 Create a new Webview
-		createWebview({ context, onClientMessage });
-	});
+			// 🌱 Create a new Webview
+			createWebview({ context, onClientMessage });
+		},
+	);
 
 	return command;
 }
