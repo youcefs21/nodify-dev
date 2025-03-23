@@ -44,7 +44,7 @@ export async function registerLLMSelection(context: vscode.ExtensionContext) {
 	const commands = [
 		// Open dialogue boxes to change the server ip and model id
 		vscode.commands.registerCommand("nodify.selectLLMServerIP", async () => {
-			const choices = ["http://127.0.0.1:11434"];
+			const choices = ["http://127.0.0.1:11434", "http://api.openai.com"];
 			const configuration = vscode.workspace.getConfiguration("nodify");
 
 			const selection: string = await new Promise((resolve, reject) => {

@@ -1,0 +1,38 @@
+/* HTML: <div class="loader"></div> */
+.loader {
+    width: 80px;
+    height: 16px;
+    box-shadow: 0 15px 0 #fff;
+    position: relative;
+    clip-path: polygon(0 -10px, 100% -10px, 100% 100%, 50% calc(100% + 15px), 0 100%);
+    transform: scale(2)
+}
+
+.loader:before,
+.loader:after {
+    content: "";
+    position: absolute;
+    inset: auto 0 0;
+    aspect-ratio: 1;
+    background:
+        radial-gradient(farthest-side, #94e2d5 98%, #0000) bottom/14px 14px,
+        radial-gradient(farthest-side, #f38ba8 98%, #0000) top /14px 14px,
+        linear-gradient(#b4befe 0 0) 50%/4px 95%;
+    background-repeat: no-repeat;
+    animation: l5 1.5s infinite linear;
+    mix-blend-mode: lighten;
+}
+
+.loader:after {
+    --d: -90deg;
+}
+
+@keyframes l5 {
+    0% {
+        transform: translateY(14px) rotate(calc(0deg + var(--d, 0deg)))
+    }
+
+    100% {
+        transform: translateY(14px) rotate(calc(-90deg + var(--d, 0deg)))
+    }
+}

@@ -52,12 +52,27 @@
 				"nodify.LLMServerIP": {
 					"type": "string",
 					"default": "http://127.0.0.1:11434",
-					"description": "When using LLMs from a custom server, this setting should contain the IP address of the server. Port should be included."
+					"description": "When using LLMs from a custom server, this setting should contain the IP address of the server. Port should be included for local servers."
 				},
 				"nodify.LLMModelID": {
 					"type": "string",
 					"default": "phi4:14b-q8_0",
-					"description": "When using LLMs from a custom server, this setting should contain the model ID of the LLM model. *Note: models should be downloaded beforehand.*"
+					"markdownDescription": "When using LLMs from a custom server, this setting should contain the model ID of the LLM model. *Note: models should be downloaded beforehand.*"
+				},
+				"nodify.CodeLensingFunctions": {
+					"type": "boolean",
+					"default": true,
+					"description": "Enable Nodify codelensing for functions."
+				},
+				"nodify.CodeLensingClasses": {
+					"type": "boolean",
+					"default": true,
+					"description": "Enable Nodify codelensing for classes."
+				},
+				"nodify.CodeLensingCalledObjects": {
+					"type": "boolean",
+					"default": false,
+					"description": "Enable Nodify codelensing for called objects (ex. where functions and classes are used)."
 				}
 			}
 		},

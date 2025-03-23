@@ -1,4 +1,4 @@
-import type { CodeRange } from "./ast/ast.schema";
+import type { CodePosition, CodeRange } from "./ast/ast.schema";
 import type { CustomNode } from "./graph/graph.types";
 import type { Edge } from "@xyflow/react";
 
@@ -20,6 +20,10 @@ export type ServerToClientEvents =
 	| {
 			type: "base-url";
 			value: string;
+	  }
+	| {
+			type: "cursor-position";
+			value: CodePosition;
 	  };
 
 export type ClientToServerEvents =
