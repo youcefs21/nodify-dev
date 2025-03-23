@@ -3,7 +3,9 @@ import * as vscode from "vscode";
 import { assertPythonExtension } from "./vsc/assert-python-extension";
 import { registerWebview } from "./vsc/webview/register-webview-command";
 import { initDB } from "./db/jsonDB";
-import { registerLLMSelection } from "./vsc/setting-commands";
+import { registerLLMSelection } from "./vsc/commands/llm-setting";
+import { registerCursorPositionListener } from "./vsc/commands/cursor-position";
+import { registerCodeLensProvider } from "./vsc/commands/codelens";
 
 /**
  * Called when the extension is activated
@@ -21,9 +23,16 @@ export async function activate(context: vscode.ExtensionContext) {
 		const settingCommands = yield* Effect.tryPromise(async () =>
 			registerLLMSelection(context),
 		);
+		// const cursorPositionListener = registerCursorPositionListener();
+		// const codelensProvider = registerCodeLensProvider(context);
 
 		// Add the commands to the context
-		context.subscriptions.push(webviewCommand, ...settingCommands);
+		context.subscriptions.push(
+			webviewCommand,
+			...settingCommands,
+			// cursorPositionListener,
+			// codelensProvider,
+		);
 	}).pipe(
 		Effect.catchAll((error) => {
 			vscode.window.showErrorMessage(

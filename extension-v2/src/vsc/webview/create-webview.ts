@@ -30,6 +30,10 @@ export function createWebview({ context, onClientMessage, oldPanel }: props) {
 					],
 				},
 			);
+	panel.iconPath = vscode.Uri.joinPath(
+		context.extensionUri,
+		"webview-ui/dist/logo.png",
+	);
 	webviewPanelRef.current = panel;
 	panel.webview.html = rootHtml(panel, context);
 

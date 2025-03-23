@@ -122,15 +122,14 @@ export type CodeReference = {
 	filePath: string;
 };
 
+export type CodePosition = {
+	line: number;
+	character: number;
+};
+
 export type CodeRange = {
-	start: {
-		line: number;
-		character: number;
-	};
-	end: {
-		line: number;
-		character: number;
-	};
+	start: CodePosition;
+	end: CodePosition;
 };
 
 export type CodeBlock = {
