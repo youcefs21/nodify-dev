@@ -59,20 +59,15 @@
 					"default": "phi4:14b-q8_0",
 					"markdownDescription": "When using LLMs from a custom server, this setting should contain the model ID of the LLM model. *Note: models should be downloaded beforehand.*"
 				},
-				"nodify.CodeLensingFunctions": {
+				"nodify.codeLensingFunctions": {
 					"type": "boolean",
 					"default": true,
 					"description": "Enable Nodify codelensing for functions."
 				},
-				"nodify.CodeLensingClasses": {
+				"nodify.codeLensingClasses": {
 					"type": "boolean",
 					"default": true,
 					"description": "Enable Nodify codelensing for classes."
-				},
-				"nodify.CodeLensingCalledObjects": {
-					"type": "boolean",
-					"default": false,
-					"description": "Enable Nodify codelensing for called objects (ex. where functions and classes are used)."
 				}
 			}
 		},
