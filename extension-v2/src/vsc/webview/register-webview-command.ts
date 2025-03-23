@@ -3,7 +3,7 @@ import { createWebview } from "./create-webview";
 import { NodifyWebviewSerializer } from "./webview-serializer";
 import { onClientMessage } from "./client-message-callback";
 import type { ServerToClientEvents } from "../../shared-types";
-import type { CodeReference } from "../../ast/ast.schema";
+import type { CodeReference } from "../../ast/python/ast.schema";
 import { graphCache, showOpenPythonFile } from "../show-open-file";
 import { Effect } from "effect";
 

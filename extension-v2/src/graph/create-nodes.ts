@@ -1,12 +1,8 @@
 import { Effect } from "effect";
-import { decodeLLMCodeBlocks, type CodeBlock } from "../ast/ast.schema";
+import { decodeLLMCodeBlocks, type CodeBlock } from "../ast/python/ast.schema";
 import type { AbstractionGroup } from "../ast/llm";
 import type { CustomNode } from "./graph.types";
 import { getShortId, hashString } from "../utils/hash";
-import {
-	dedupeAndSummarizeReferences,
-	getFlatReferencesListFromAST,
-} from "../ast/references";
 import {
 	getAbstractionTree,
 	getMockAbstractionTree,
@@ -15,6 +11,8 @@ import {
 import type { Graph } from "../vsc/show-open-file";
 import type { SgNode } from "@ast-grep/napi";
 import { getCodeRangeFromSgNode } from "../utils/get-range";
+import { dedupeAndSummarizeReferences } from "../ast/references";
+import { getFlatReferencesListFromAST } from "../ast/references";
 
 export function flattenCodeBlocks(codeBlocks: CodeBlock[]): CodeBlock[] {
 	return codeBlocks.flatMap((block) => {
@@ -133,8 +131,8 @@ export function getGraphsFromAst(
 
 		// 🌳 If there is more than one reference, get the abstraction tree
 		if (processedRefs.length > 1 || flatCodeBlocks.length > 3) {
-			const tree = yield* getAbstractionTree(promptContext, astHash);
-			// const tree = getMockAbstractionTree(promptContext, astHash);
+			// const tree = yield* getAbstractionTree(promptContext, astHash);
+			const tree = getMockAbstractionTree(promptContext, astHash);
 
 			// create the graph
 			const graphs = createGraph(

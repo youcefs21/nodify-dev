@@ -2,7 +2,7 @@ import type { SgNode } from "@ast-grep/napi";
 import type * as vscode from "vscode";
 import { Effect } from "effect";
 import { type FlowKind, flowKinds } from "./ast.schema";
-import { getCodeRangeFromSgNode } from "../utils/get-range";
+import { getCodeRangeFromSgNode } from "../../utils/get-range";
 import type { CodeBlock } from "./ast.schema";
 import { getAllFlowASTs } from "./get-all-flows";
 import {

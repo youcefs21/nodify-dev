@@ -12,10 +12,22 @@
 		"type": "git",
 		"url": "git://github.com/MutazHelal/Capstone2025.git"
 	},
-	"extensionDependencies": ["ms-python.python"],
-	"workspaces": ["packages/*", "webview-ui"],
-	"categories": ["Programming Languages", "Other"],
-	"activationEvents": ["onLanguage:python", "onWebviewPanel:nodifyWebview"],
+	"extensionDependencies": [
+		"ms-python.python"
+	],
+	"workspaces": [
+		"packages/*",
+		"webview-ui"
+	],
+	"categories": [
+		"Programming Languages",
+		"Other"
+	],
+	"activationEvents": [
+		"onLanguage:python",
+		"onLanguage:typescript",
+		"onWebviewPanel:nodifyWebview"
+	],
 	"main": "./dist/extension.js",
 	"contributes": {
 		"commands": [
@@ -79,8 +91,23 @@
 		"languages": [
 			{
 				"id": "python",
-				"aliases": ["Python"],
-				"extensions": [".py"],
+				"aliases": [
+					"Python"
+				],
+				"extensions": [
+					".py"
+				],
+				"configuration": "./language-configuration.json"
+			},
+			{
+				"id": "typescript",
+				"aliases": [
+					"TypeScript"
+				],
+				"extensions": [
+					".ts",
+					".tsx"
+				],
 				"configuration": "./language-configuration.json"
 			}
 		]

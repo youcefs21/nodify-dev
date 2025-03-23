@@ -1,10 +1,10 @@
-import type { CodeBlock, CodeReference } from "./ast.schema";
+import type { CodeBlock, CodeReference } from "../ast/python/ast.schema";
 import { Effect } from "effect";
 import { Lang, parse } from "@ast-grep/napi";
 import * as vscode from "vscode";
-import { getAllFlowASTs } from "./get-all-flows";
+import { getAllFlowASTs } from "./python/get-all-flows";
 import { getGraphsFromAst } from "../graph/create-nodes";
-import { getFullNodeJson } from "./handle-expressions";
+import { getFullNodeJson } from "./python/handle-expressions";
 
 // Store for reference hashes and summaries
 // This will be replaced with a database later

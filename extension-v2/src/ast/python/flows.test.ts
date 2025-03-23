@@ -5,7 +5,7 @@ import * as path from "node:path";
 import * as vscode from "vscode";
 import { getAllFlowASTs } from "./get-all-flows";
 import { Lang, parse } from "@ast-grep/napi";
-import { assertPythonExtension } from "../vsc/assert-python-extension";
+import { assertPythonExtension } from "../../vsc/assert-python-extension";
 
 let rootPath: string;
 

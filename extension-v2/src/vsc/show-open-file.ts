@@ -2,16 +2,16 @@ import { Effect } from "effect";
 import * as vscode from "vscode";
 import * as astGrep from "@ast-grep/napi";
 import { Lang } from "@ast-grep/napi";
-import { getAllFlowASTs } from "../ast/get-all-flows";
+import { getAllFlowASTs } from "../ast/python/get-all-flows";
 import { getGraphsFromAst } from "../graph/create-nodes";
 import { createEdges } from "../graph/create-edges";
 import { postMessageToPanel } from "./webview/register-webview-command";
 import { createGraphLayout } from "../graph/graph-layout-creator";
 import type { CustomNode } from "../graph/graph.types";
 import { getReferenceGraphs } from "../ast/references";
-import type { CodeBlock, CodeReference } from "../ast/ast.schema";
+import type { CodeReference } from "../ast/python/ast.schema";
 import { collapsedNodes } from "./webview/client-message-callback";
-import { getCodeRangeFromSgNode } from "../utils/get-range";
+
 class NoPythonFileOpenError {
 	readonly _tag = "NoPythonFileOpenError";
 	readonly message = "You must have a Python file open to use this command";
@@ -123,15 +123,7 @@ export function showOpenPythonFile() {
 			});
 			console.log(`Found AST for ${url}`);
 			const { graphs, references } = yield* getGraphsFromAst(
-				[
-					{
-						id: "root",
-						filePath: ast[0]?.filePath ?? "",
-						children: ast,
-						text: "Entry Point",
-						range: getCodeRangeFromSgNode(root),
-					},
-				],
+				ast,
 				url.fsPath,
 				root,
 				true,

@@ -1,4 +1,4 @@
-import { Lang, parse } from "@ast-grep/napi";
+import { type Lang, parse } from "@ast-grep/napi";
 import { Effect } from "effect";
 import * as vscode from "vscode";
 import { hashString, getShortId } from "../utils/hash";
@@ -21,7 +21,10 @@ export class NoParentBodyRangeFound {
  * - a flag indicating if it's in the workspace,
  * - and the hash of the body
  */
-export function getIdentifierBody(identifierLocation: vscode.Location) {
+export function getIdentifierBody(
+	identifierLocation: vscode.Location,
+	languageId: Lang,
+) {
 	return Effect.gen(function* () {
 		// Check if the identifier is within the workspace
 		let isInWorkspace = false;
@@ -38,7 +41,7 @@ export function getIdentifierBody(identifierLocation: vscode.Location) {
 		const document = yield* Effect.tryPromise(() =>
 			vscode.workspace.openTextDocument(identifierLocation.uri),
 		);
-		const root = parse(Lang.Python, document.getText()).root();
+		const root = parse(languageId, document.getText()).root();
 
 		// Find the node in the AST that matches the identifier's position
 		const ref = identifierLocation.range;
@@ -61,7 +64,9 @@ export function getIdentifierBody(identifierLocation: vscode.Location) {
 		const node = identifier?.parent();
 		if (
 			node?.kind() !== "function_definition" &&
-			node?.kind() !== "class_definition"
+			node?.kind() !== "class_definition" &&
+			node?.kind() !== "function_declaration" &&
+			node?.kind() !== "class_declaration"
 		) {
 			// TODO: just ignore everything that is not a function or class definition for now
 			return undefined;

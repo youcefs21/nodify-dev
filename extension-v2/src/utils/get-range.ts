@@ -1,5 +1,5 @@
 import type { SgNode } from "@ast-grep/napi";
-import type { CodeRange } from "../ast/ast.schema";
+import type { CodeRange } from "../ast/python/ast.schema";
 
 export function getCodeRangeFromSgNode(node: SgNode): CodeRange {
 	const raw_range = node.range();

@@ -1,5 +1,5 @@
 import { Effect } from "effect";
-import type { LLMContext } from "../ast/ast.schema";
+import type { LLMContext } from "./python/ast.schema";
 import OpenAI from "openai";
 import z from "zod";
 import { zodResponseFormat } from "openai/helpers/zod";

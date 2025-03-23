@@ -26,7 +26,8 @@ export async function activate(context: vscode.ExtensionContext) {
 			registerWebview(context),
 			registerLLMServerIPSelection(context),
 			registerLLMModelIDSelection(context),
-			registerCodeLensProvider(context),
+			registerCodeLensProvider(context, "python"),
+			registerCodeLensProvider(context, "typescript"),
 			// registerCursorPositionListener(),
 		);
 	}).pipe(

@@ -1,21 +1,26 @@
 import * as vscode from "vscode";
 import { parse, Lang, type SgNode, type SgRoot } from "@ast-grep/napi";
-import type { CodeReference } from "../../ast/ast.schema";
+import type { CodeReference } from "../../ast/python/ast.schema";
 import {
 	getIdentifierBody,
 	type NoParentBodyRangeFound,
 } from "../../ast/get-definition";
 import { Effect } from "effect";
 import type { UnknownException } from "effect/Cause";
-// import type { Reference } from "../ast/flow";
+// import type { Reference } from "../ast/python/flow";
 
-function add_ast_node_to_code_lens(
+type CodeLensError = NoParentBodyRangeFound | UnknownException;
+
+/**
+ * 🐍 Add code lenses to Python AST nodes
+ */
+function add_python_ast_node_to_code_lens(
 	document: vscode.TextDocument,
 	node: SgNode,
-): Effect.Effect<vscode.CodeLens[]> {
+): Effect.Effect<vscode.CodeLens[], CodeLensError> {
 	return Effect.gen(function* () {
 		const codeLensChildren = yield* Effect.forEach(node.children(), (child) =>
-			add_ast_node_to_code_lens(document, child),
+			add_python_ast_node_to_code_lens(document, child),
 		).pipe(Effect.map((children) => children.flat()));
 
 		const allowedNodeKinds = ["class_definition", "function_definition"];
@@ -31,6 +36,107 @@ function add_ast_node_to_code_lens(
 		if (!identifierNode) {
 			return codeLensChildren;
 		}
+
+		return yield* createCodeLens(document, identifierNode, codeLensChildren);
+	}).pipe(
+		Effect.catchAll((error) => {
+			vscode.window.showErrorMessage(
+				`[ERROR - ${error._tag}] ${error.message}`,
+			);
+			console.error(error);
+			return Effect.succeed([]);
+		}),
+		Effect.catchAllDefect((error) => {
+			vscode.window.showErrorMessage(`DEFECT: ${error}`);
+			console.error("DEFECT: ", error);
+			return Effect.succeed([]);
+		}),
+	);
+}
+
+/**
+ * 🔍 Add code lenses to Typescript AST nodes
+ */
+function add_typescript_ast_node_to_code_lens(
+	document: vscode.TextDocument,
+	node: SgNode,
+): Effect.Effect<vscode.CodeLens[], CodeLensError> {
+	return Effect.gen(function* () {
+		const codeLensChildren = yield* Effect.forEach(node.children(), (child) =>
+			add_typescript_ast_node_to_code_lens(document, child),
+		).pipe(Effect.map((children) => children.flat()));
+
+		const allowedNodeKinds = [
+			"class_declaration",
+			// "method_definition",
+			"function_declaration",
+			// "arrow_function",
+		];
+
+		if (!allowedNodeKinds.includes(String(node.kind()))) {
+			return codeLensChildren;
+		}
+
+		let identifierNode: SgNode | undefined;
+
+		switch (node.kind()) {
+			case "class_declaration":
+			case "function_declaration":
+				identifierNode = node
+					.children()
+					.find((child) => child.kind() === "identifier");
+				break;
+			case "method_definition":
+				identifierNode = node
+					.children()
+					.find(
+						(child) =>
+							child.kind() === "property_identifier" ||
+							child.kind() === "identifier",
+					);
+				break;
+			case "arrow_function": {
+				// For arrow functions, use the parent node's identifier if available
+				const parent = node.parent();
+				if (parent && parent.kind() === "variable_declarator") {
+					identifierNode = parent
+						.children()
+						.find((child) => child.kind() === "identifier");
+				}
+				break;
+			}
+		}
+
+		if (!identifierNode) {
+			return codeLensChildren;
+		}
+
+		return yield* createCodeLens(document, identifierNode, codeLensChildren);
+	}).pipe(
+		Effect.catchAll((error) => {
+			vscode.window.showErrorMessage(
+				`[ERROR - ${error._tag}] ${error.message}`,
+			);
+			console.error(error);
+			return Effect.succeed([]);
+		}),
+		Effect.catchAllDefect((error) => {
+			vscode.window.showErrorMessage(`DEFECT: ${error}`);
+			console.error("DEFECT: ", error);
+			return Effect.succeed([]);
+		}),
+	);
+}
+
+/**
+ * 📝 Create code lenses for a given identifier node
+ */
+function createCodeLens(
+	document: vscode.TextDocument,
+	identifierNode: SgNode,
+	codeLensChildren: vscode.CodeLens[],
+): Effect.Effect<vscode.CodeLens[], CodeLensError> {
+	return Effect.gen(function* () {
 		const identifierName = identifierNode.text();
 		const range = identifierNode.range();
 		const codeLensRange = new vscode.Range(
@@ -43,6 +149,7 @@ function add_ast_node_to_code_lens(
 
 		const definitionRange = yield* getIdentifierBody(
 			new vscode.Location(document.uri, codeLensRange),
+			document.languageId === "python" ? Lang.Python : Lang.TypeScript,
 		);
 		if (!definitionRange) {
 			return codeLensChildren;
@@ -63,20 +170,7 @@ function add_ast_node_to_code_lens(
 			],
 		};
 		return [codeLens].concat(codeLensChildren);
-	}).pipe(
-		Effect.catchAll((error) => {
-			vscode.window.showErrorMessage(
-				`[ERROR - ${error._tag}] ${error.message}`,
-			);
-			console.error(error);
-			return Effect.succeed([]);
-		}),
-		Effect.catchAllDefect((error) => {
-			vscode.window.showErrorMessage(`DEFECT: ${error}`);
-			console.error("DEFECT: ", error);
-			return Effect.succeed([]);
-		}),
-	);
+	});
 }
 
 export class NodifyCodeLensProvider implements vscode.CodeLensProvider {
@@ -84,8 +178,24 @@ export class NodifyCodeLensProvider implements vscode.CodeLensProvider {
 		document: vscode.TextDocument,
 		token: vscode.CancellationToken,
 	): Promise<vscode.CodeLens[]> {
-		const root = parse(Lang.Python, document.getText()).root();
-		return await Effect.runPromise(add_ast_node_to_code_lens(document, root));
+		// 🐍 if we're processing a python file, use the python parser
+		if (document.languageId === "python") {
+			const root = parse(Lang.Python, document.getText()).root();
+			return await Effect.runPromise(
+				add_python_ast_node_to_code_lens(document, root),
+			);
+		}
+
+		// 🔍 if we're processing a typescript file, use the typescript parser
+		if (document.languageId === "typescript") {
+			const root = parse(Lang.TypeScript, document.getText()).root();
+			return await Effect.runPromise(
+				add_typescript_ast_node_to_code_lens(document, root),
+			);
+		}
+
+		console.log("unsupported language", document.languageId);
+		return [];
 	}
 
 	// Optional method if you want to refresh code lens when the document changes
@@ -97,9 +207,12 @@ export class NodifyCodeLensProvider implements vscode.CodeLensProvider {
 	}
 }
 
-export function registerCodeLensProvider(context: vscode.ExtensionContext) {
+export function registerCodeLensProvider(
+	context: vscode.ExtensionContext,
+	languageId: "python" | "typescript",
+) {
 	return vscode.languages.registerCodeLensProvider(
-		"python",
+		languageId,
 		new NodifyCodeLensProvider(),
 	);
 }
