@@ -52,7 +52,6 @@ export type Kind = (typeof kinds)[number];
 
 export const ignoreKinds = [
 	"=",
-	"identifier",
 	"number",
 	"[",
 	"]",

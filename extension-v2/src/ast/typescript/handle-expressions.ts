@@ -9,7 +9,6 @@ import {
 	getIdentifierBody,
 	type NoParentBodyRangeFound,
 } from "../get-definition";
-import { OutputEffect } from "./get-flow";
 import { getCodeRangeFromSgNode } from "../../utils/get-range";
 
 class NoIdentifierOrAttributeFound {
@@ -72,6 +71,23 @@ export function handleExpression({
 		});
 	}
 
+	if (
+		i === 0 &&
+		(node.kind() === "call_expression" || node.kind() === "member_expression")
+	) {
+		// I need to precompute the depth of the chained calls, and set i to that depth
+		let current = node;
+		let depth = 0;
+		while (
+			current.kind() === "call_expression" ||
+			current.kind() === "member_expression"
+		) {
+			depth++;
+			current = current.children()[0];
+		}
+		i = depth;
+	}
+
 	return Effect.gen(function* () {
 		switch (node.kind()) {
 			case "call_expression": {
@@ -93,6 +109,54 @@ export function handleExpression({
 				// but for top level calls, a()
 				// the first child is identifier ("a")
 
+				// process the args expressions
+				const args = node.children()[1];
+				if (args.kind() !== "arguments") {
+					console.warn(
+						`Expected arguments for call_expression ${node.text()} at ${url.fsPath}:${node.range().start.line}:${node.range().start.column}`,
+					);
+					return yield* Effect.fail(new NoArgumentsFound());
+				}
+
+				const argsRefs = yield* Effect.forEach(
+					args.children(),
+					(arg, index) =>
+						handleExpression({
+							node: arg,
+							url,
+							parent_id:
+								parent_id !== ""
+									? `${parent_id}.${i}.${index}`
+									: `${i}.${index}`,
+							i: 0,
+						}).pipe(
+							Effect.map((x) => ({
+								...x,
+								node: arg,
+							})),
+						),
+					{ concurrency: 5 },
+				);
+
+				const argNodes = argsRefs
+					.filter(
+						(arg) => !ignoreKinds.some((kind) => kind === arg.node.kind()),
+					)
+					.map(
+						(arg, index) =>
+							({
+								id:
+									parent_id !== ""
+										? `${parent_id}.${i}.${index}`
+										: `${i}.${index}`,
+								text: arg.node.text(),
+								range: getCodeRangeFromSgNode(arg.node),
+								filePath: url.fsPath,
+								references: arg.refs,
+								children: arg.children,
+							}) satisfies CodeBlock,
+					);
+
 				const callerIdentifier = node.children()[0];
 				if (callerIdentifier.kind() === "member_expression") {
 					// this should in theory have 2 children:
@@ -102,58 +166,27 @@ export function handleExpression({
 						node: callerIdentifier,
 						url,
 						parent_id,
-						i,
+						i: i - 1,
 					});
-
-					// process the args expressions
-					const args = node.children()[1];
-					if (args.kind() !== "arguments") {
-						console.warn(
-							`Expected arguments for call_expression ${node.text()} at ${url.fsPath}:${node.range().start.line}:${node.range().start.column}`,
-						);
-						return yield* Effect.fail(new NoArgumentsFound());
-					}
-
-					const argsRefs = yield* Effect.forEach(
-						args.children(),
-						(arg) =>
-							handleExpression({
-								node: arg,
-								url,
-								parent_id,
-								i,
-							}).pipe(
-								Effect.map((x) => ({
-									...x,
-									node: arg,
-								})),
-							),
-						{ concurrency: 5 },
-					);
-
-					const result = argsRefs.map(
-						(arg) =>
-							({
-								id: parent_id !== "" ? `${parent_id}.${i}` : `${i}`,
-								text: arg.node.text(),
-								range: getCodeRangeFromSgNode(arg.node),
-								filePath: url.fsPath,
-								references: arg.refs,
-								children: arg.children,
-							}) satisfies CodeBlock,
-					);
 
 					// I want to put the args expressions in the children of the property_identifier
 					parentCall.children[parentCall.children.length - 1].children?.push(
-						...result,
+						...argNodes,
 					);
 
 					return parentCall;
 				}
 
+				const { refs: callerIdentifierRefs } = yield* handleExpression({
+					node: callerIdentifier,
+					url,
+					parent_id,
+					i,
+				});
+
 				return {
-					children: [],
-					refs: [],
+					children: argNodes,
+					refs: callerIdentifierRefs,
 				};
 			}
 
@@ -169,7 +202,7 @@ export function handleExpression({
 						node: parent,
 						url,
 						parent_id,
-						i,
+						i: i - 1,
 					});
 					// this just returns the ref of c (the property_identifier)
 					const { refs: propIdentifierRefs } = yield* handleExpression({
@@ -200,7 +233,7 @@ export function handleExpression({
 						node: parent,
 						url,
 						parent_id,
-						i,
+						i: i - 1,
 					});
 					const { refs: propIdentifierRefs } = yield* handleExpression({
 						node: property_identifier,
