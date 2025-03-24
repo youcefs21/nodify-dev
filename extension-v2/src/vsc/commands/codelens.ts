@@ -25,7 +25,38 @@ function add_python_ast_node_to_code_lens(
 			add_python_ast_node_to_code_lens(document, child),
 		).pipe(Effect.map((children) => children.flat()));
 
-		const allowedNodeKinds = ["class_definition", "function_definition"];
+		const configuration = vscode.workspace.getConfiguration("nodify");
+		const codeLensingFunctions = configuration.get<boolean>(
+			"codeLensingFunctions",
+		);
+		const codeLensingClasses = configuration.get<boolean>("codeLensingClasses");
+
+		const allowedNodeKinds = [];
+		if (codeLensingFunctions) {
+			allowedNodeKinds.push("function_definition");
+		}
+		if (codeLensingClasses) {
+			allowedNodeKinds.push("class_definition");
+		}
+		// Could use called objects in the future, but focus on definitions for now
+		// If adding back in the future, add this setting to package.json:
+		// "nodify.codeLensingCalledObjects": {
+		// 			"type": "boolean",
+		// 			"default": false,
+		// 			"description": "Enable Nodify codelensing for called objects (ex. where functions and classes are used)."
+		// 		}
+		//
+		// Then this code can be uncommented:
+		// const codeLensingCalledObjects = configuration.get<boolean>(
+		// 	"codeLensingCalledObjects",
+		// );
+		// if (codeLensingCalledObjects) {
+		// 	if (node.kind() === "call") {
+		// 		console.log("call node:", node.text());
+		// 	}
+		// 	allowedNodeKinds.push("call");
+		// }
+		// const allowedNodeKinds = ["class_definition", "function_definition"];
 
 		if (!allowedNodeKinds.includes(String(node.kind()))) {
 			return codeLensChildren;
@@ -218,12 +249,28 @@ export class NodifyCodeLensProvider implements vscode.CodeLensProvider {
 	): vscode.CodeLens {
 		return codeLens; // don't need to resolve anything
 	}
+
+	onDidChangeCodeLenses?: vscode.Event<void> | undefined;
 }
 
 export function registerCodeLensProvider(
 	context: vscode.ExtensionContext,
 	languageId: "python" | "typescript",
 ) {
+	vscode.workspace.onDidChangeConfiguration((e) => {
+		if (
+			e.affectsConfiguration("nodify.codeLensingFunctions") ||
+			e.affectsConfiguration("nodify.codeLensingClasses")
+			// || e.affectsConfiguration("nodify.codeLensingCalledObjects")
+		) {
+			for (const document of vscode.workspace.textDocuments) {
+				vscode.commands.executeCommand(
+					"vscode.executeCodeLensProvider",
+					document.uri,
+				);
+			}
+		}
+	});
 	return vscode.languages.registerCodeLensProvider(
 		languageId,
 		new NodifyCodeLensProvider(),
