@@ -1,180 +1,19 @@
 import { Effect } from "effect";
-import type { LLMContext } from "./llm/llm.schema";
-import OpenAI from "openai";
-import z from "zod";
-import { zodResponseFormat } from "openai/helpers/zod";
-import { getNodifyWorkspaceDir } from "../utils/get-nodify-workspace-dir";
+import type { AbstractionGroup, LLMContext } from "./llm.schema";
+import {
+	getOpenAIClientFromWorkspaceConfig,
+	getModelFromWorkspaceConfig,
+} from "./llm-config";
+import { getNodifyWorkspaceDir } from "../../utils/get-nodify-workspace-dir";
+import { z } from "zod";
 import fs from "node:fs/promises";
-import { hashString } from "../utils/hash";
-import vscode from "vscode";
+import {
+	LLMError,
+	abstractionGroupSchema,
+	abstractionTreeSchema,
+} from "./llm.schema";
 
-// const OPENAI_URL = "http://100.89.180.124:6969";
-// const OPENAI_URL = "http://127.0.0.1:11434";
-// const model = "unsloth/phi-4-bnb-4bit";
-// const model = "phi4:14b-q8_0";
-const apiKey = process.env.OPENAI_API_KEY ?? "";
-
-function getModelFromWorkspaceConfig() {
-	const config = vscode.workspace.getConfiguration("nodify");
-	// No default defined here, instead define it in package.json
-	const model_id = config.get<string>("LLMModelID");
-	if (!model_id) {
-		console.error(
-			"No model ID found in workspace config. Defaulting to gpt-4o-mini",
-		);
-		return "gpt-4o-mini";
-	}
-	return model_id;
-}
-
-export function getOpenAIClientFromWorkspaceConfig() {
-	const config = vscode.workspace.getConfiguration("nodify");
-	// fallback to openai server
-	const server_ip = config.get<string>("LLMServerIP");
-
-	if (!server_ip) {
-		return new OpenAI({
-			apiKey: apiKey,
-		});
-	}
-	return new OpenAI({
-		baseURL: `${server_ip}/v1`,
-		apiKey: apiKey,
-	});
-}
-
-// const client = new OpenAI({
-// 	// baseURL: `${OPENAI_URL}/v1`,
-// 	apiKey: apiKey,
-// });
-
-const summarySchema = z.object({
-	summary: z.string(),
-});
-
-class LLMError {
-	readonly _tag = "LLMError";
-	constructor(readonly message: string) {}
-}
-
-/**
- * Simulate LLM-based code summarization
- * This is a placeholder for future implementation with an actual LLM
- * @param code The code to summarize
- * @returns A simulated LLM-generated summary
- */
-export function summarizeCode(code: string) {
-	return Effect.gen(function* () {
-		const model = getModelFromWorkspaceConfig();
-		const client = getOpenAIClientFromWorkspaceConfig();
-
-		// For very short code snippets, just use the code itself as the summary
-		const dirPath = getNodifyWorkspaceDir();
-		const codeHash = yield* hashString(code);
-		const path = `${dirPath}/summaries_cache/${codeHash}.json`;
-		const exists = yield* Effect.promise(() =>
-			fs
-				.access(path)
-				.then(() => true)
-				.catch(() => false),
-		);
-		if (exists) {
-			const data = yield* Effect.tryPromise(() =>
-				fs.readFile(path, { encoding: "utf8" }),
-			);
-			return {
-				summary: summarySchema.parse(JSON.parse(data)).summary,
-			};
-		}
-
-		const systemPrompt = `Summarize code snippets concisely. Focus on core functionality only.
-
-RULES:
-- Keep summaries shorter than the code itself
-- Respond in JSON format
-- For short functions (< 5 lines), use 5-15 words
-- For medium and large code blocks, use 1-2 sentences
-- Use technical terms appropriate for developers
-- Use as few words as possible to convey the most information, no need full sentences
-
-EXAMPLE:
-\`\`\`python
-def calculate_average(numbers):
-    total = sum(numbers)
-    count = len(numbers)
-    if count == 0:
-        return 0
-    return total / count
-\`\`\`
-
-EXAMPLE OUTPUT:
-{
-  "summary": "Arithmetic mean for list of numbers"
-}
-`;
-
-		console.log("Summarizing code", code.slice(0, 20));
-		const res = yield* Effect.tryPromise({
-			try: () =>
-				client.beta.chat.completions.parse({
-					messages: [
-						{ role: "system", content: systemPrompt },
-						{
-							role: "user",
-							content: code,
-						},
-					],
-					model: model,
-					response_format: zodResponseFormat(summarySchema, "summary"),
-					temperature: 0,
-				}),
-			catch: (error) => {
-				console.error("Failed to summarize code", error);
-				return new LLMError(
-					error instanceof Error ? error.message : "Unknown error",
-				);
-			},
-		});
-
-		const parsed = res.choices[0].message.parsed;
-		const summary = parsed?.summary ?? code.slice(0, 100);
-		yield* Effect.tryPromise(() =>
-			fs.writeFile(path, JSON.stringify({ summary }, null, 2)),
-		);
-
-		return {
-			summary,
-		};
-	});
-}
-
-// Define the types for the abstraction tree output
-export type AbstractionGroup = {
-	label: string;
-	idRange: readonly [string, string];
-	type: string;
-	referenceID?: string | null;
-	children?: readonly AbstractionGroup[];
-};
-
-export type AbstractionTreeOutput = {
-	output: readonly AbstractionGroup[];
-};
-
-// Create a Zod schema for parsing the output
-export const abstractionGroupSchema: z.ZodType<AbstractionGroup> = z.lazy(() =>
-	z.object({
-		label: z.string(),
-		idRange: z.tuple([z.string(), z.string()]),
-		type: z.string(),
-		referenceID: z.string().optional().nullish(),
-		children: z.array(abstractionGroupSchema).optional(),
-	}),
-);
-
-export const abstractionTreeSchema = z.object({
-	output: z.array(abstractionGroupSchema),
-});
+export const SHOULD_USE_MOCK = true;
 
 /**
  * Analyze the provided AST-parsed code and create an abstraction hierarchy with logical groupings.
@@ -183,6 +22,10 @@ export const abstractionTreeSchema = z.object({
  */
 export function getAbstractionTree(input: LLMContext, astHash: string) {
 	return Effect.gen(function* () {
+		if (SHOULD_USE_MOCK) {
+			return getMockAbstractionTree(input, astHash);
+		}
+
 		const model = getModelFromWorkspaceConfig();
 		const client = getOpenAIClientFromWorkspaceConfig();
 

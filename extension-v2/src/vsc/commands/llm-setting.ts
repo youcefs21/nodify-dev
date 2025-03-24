@@ -1,5 +1,5 @@
 import * as vscode from "vscode";
-import { getOpenAIClientFromWorkspaceConfig } from "../../ast/llm";
+import { getOpenAIClientFromWorkspaceConfig } from "../../ast/llm/llm-config";
 
 /**
  * Register command to select LLM server IP

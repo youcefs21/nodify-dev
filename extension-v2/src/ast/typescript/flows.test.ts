@@ -48,14 +48,15 @@ suite("TypeScript AST Test Suite", () => {
 				references: [
 					{
 						symbol: "add",
-						id: "ac11d8d",
+						id: "69e1184",
+						lang: Lang.TypeScript,
 						fullHash:
-							"ac11d8d64281167ad6248e70bc0ae792c9b3779a947c5ed7179461e4d66071f7",
-						body: "export async function add(a: number, b: number): Promise<number> {\n\treturn new Promise((resolve) => {\n\t\tsetTimeout(() => {\n\t\t\tresolve(a + b);\n\t\t}, 1000);\n\t});\n}",
+							"69e1184a09eed7785a8533403315741d14c70be20c43dd87064de9df658a65d9",
+						body: "async function add(a: number, b: number): Promise<number> {\n\treturn new Promise((resolve) => {\n\t\tsetTimeout(() => {\n\t\t\tresolve(a + b);\n\t\t}, 1000);\n\t});\n}",
 						range: {
 							start: {
 								line: 0,
-								character: 0,
+								character: 7,
 							},
 							end: {
 								line: 6,

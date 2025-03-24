@@ -1,5 +1,6 @@
 import { Schema } from "effect";
 import type { Lang } from "@ast-grep/napi";
+import z from "zod";
 
 ////////////////////////////////////////////////////////////
 // Output Types
@@ -66,3 +67,36 @@ export interface LLMContext {
 	references?: Record<string, { shortBody: string; symbol: string }>;
 	signature?: string;
 }
+
+export class LLMError {
+	readonly _tag = "LLMError";
+	constructor(readonly message: string) {}
+}
+
+// Define the types for the abstraction tree output
+export type AbstractionGroup = {
+	label: string;
+	idRange: readonly [string, string];
+	type: string;
+	referenceID?: string | null;
+	children?: readonly AbstractionGroup[];
+};
+
+export type AbstractionTreeOutput = {
+	output: readonly AbstractionGroup[];
+};
+
+// Create a Zod schema for parsing the output
+export const abstractionGroupSchema: z.ZodType<AbstractionGroup> = z.lazy(() =>
+	z.object({
+		label: z.string(),
+		idRange: z.tuple([z.string(), z.string()]),
+		type: z.string(),
+		referenceID: z.string().optional().nullish(),
+		children: z.array(abstractionGroupSchema).optional(),
+	}),
+);
+
+export const abstractionTreeSchema = z.object({
+	output: z.array(abstractionGroupSchema),
+});
