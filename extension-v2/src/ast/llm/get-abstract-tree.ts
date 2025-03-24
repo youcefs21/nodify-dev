@@ -14,7 +14,7 @@ import {
 } from "./llm.schema";
 import { countTokens } from "gpt-tokenizer";
 
-export const SHOULD_USE_MOCK = true;
+export const SHOULD_USE_MOCK = false;
 
 /**
  * Analyze the provided AST-parsed code and create an abstraction hierarchy with logical groupings.
