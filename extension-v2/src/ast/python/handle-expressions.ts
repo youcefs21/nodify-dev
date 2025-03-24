@@ -1,13 +1,14 @@
 import * as vscode from "vscode";
 import { Lang, type SgNode } from "@ast-grep/napi";
 import { Effect } from "effect";
-import { type CodeReference, ignoreKinds } from "./ast.schema";
 import { getDefinition } from "../../vsc/builtin";
 import type { UnknownException } from "effect/Cause";
 import {
 	getIdentifierBody,
 	type NoParentBodyRangeFound,
 } from "../get-definition";
+import { ignoreKinds } from "./ast.schema";
+import type { CodeReference } from "../llm/llm.schema";
 
 class NoIdentifierOrAttributeFound {
 	readonly _tag = "NoIdentifierOrAttributeFound";
@@ -98,6 +99,7 @@ export function handleExpression({
 					.filter((range) => range !== undefined)
 					.filter((range) => range.isInWorkspace)
 					.map((range) => ({
+						lang: Lang.Python,
 						symbol: identifier.text(),
 						id: range.shortId,
 						fullHash: range.fullHash,

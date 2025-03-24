@@ -1,7 +1,8 @@
 import * as vscode from "vscode";
 import { Lang, type SgNode } from "@ast-grep/napi";
 import { Effect } from "effect";
-import { type CodeReference, ignoreKinds } from "./ast.schema";
+import { ignoreKinds } from "./ast.schema";
+import type { CodeReference } from "../llm/llm.schema";
 import { getDefinition } from "../../vsc/builtin";
 import type { UnknownException } from "effect/Cause";
 import {
@@ -102,6 +103,7 @@ export function handleExpression({
 						body: range.text,
 						range: range.range,
 						filePath: range.uri.fsPath,
+						lang: Lang.TypeScript,
 					}));
 			}
 

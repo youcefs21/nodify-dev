@@ -3,8 +3,8 @@ import type * as vscode from "vscode";
 import { Effect } from "effect";
 import { type FlowKind, flowKinds } from "./ast.schema";
 import { getCodeRangeFromSgNode } from "../../utils/get-range";
-import type { CodeBlock } from "./ast.schema";
-import { getAllFlowASTs } from "./get-all-flows";
+import type { CodeBlock } from "../llm/llm.schema";
+import { getAllPythonFlowASTs } from "./get-all-flows";
 import {
 	handleExpression,
 	type HandleExpressionErrors,
@@ -72,7 +72,7 @@ export function getFlowAST({
 				}
 
 				// recursively get the AST for all the flows in the block
-				const children = yield* getAllFlowASTs({
+				const children = yield* getAllPythonFlowASTs({
 					root: block.children(),
 					parent_id: parent_id !== "" ? `${parent_id}.${i}` : `${i}`,
 					url,

@@ -3,7 +3,7 @@ import * as assert from "node:assert";
 import * as path from "node:path";
 
 import * as vscode from "vscode";
-import { getAllFlowASTs } from "./get-all-flows";
+import { getAllPythonFlowASTs } from "./get-all-flows";
 import { Lang, parse } from "@ast-grep/napi";
 import { assertPythonExtension } from "../../vsc/assert-python-extension";
 
@@ -19,7 +19,7 @@ suite("AST Test Suite", () => {
 		const filePath = path.join(rootPath, "hello-world.py");
 		const hello_world = await vscode.workspace.openTextDocument(filePath);
 		const root = parse(Lang.Python, hello_world.getText()).root();
-		const ast = await getAllFlowASTs({
+		const ast = await getAllPythonFlowASTs({
 			root: root.children(),
 			parent_id: "",
 			url: hello_world.uri,
@@ -36,7 +36,7 @@ suite("AST Test Suite", () => {
 		const local_function_definition =
 			await vscode.workspace.openTextDocument(filePath);
 		const root = parse(Lang.Python, local_function_definition.getText()).root();
-		const ast = await getAllFlowASTs({
+		const ast = await getAllPythonFlowASTs({
 			root: root.children(),
 			parent_id: "",
 			url: local_function_definition.uri,
@@ -68,7 +68,7 @@ suite("AST Test Suite", () => {
 		const try_except_statement =
 			await vscode.workspace.openTextDocument(filePath);
 		const root = parse(Lang.Python, try_except_statement.getText()).root();
-		const ast = await getAllFlowASTs({
+		const ast = await getAllPythonFlowASTs({
 			root: root.children(),
 			parent_id: "",
 			url: try_except_statement.uri,
@@ -89,7 +89,7 @@ suite("AST Test Suite", () => {
 		const filePath = path.join(rootPath, "if-else.py");
 		const if_else_statement = await vscode.workspace.openTextDocument(filePath);
 		const root = parse(Lang.Python, if_else_statement.getText()).root();
-		const ast = await getAllFlowASTs({
+		const ast = await getAllPythonFlowASTs({
 			root: root.children(),
 			parent_id: "",
 			url: if_else_statement.uri,

@@ -15,7 +15,7 @@ interface Props {
  *
  * if you're looking for the actual AST logic, see {@link getFlowAST}
  */
-export function getAllFlowASTs({ root, parent_id, url }: Props) {
+export function getAllTypescriptFlowASTs({ root, parent_id, url }: Props) {
 	return Effect.all(
 		root
 			.filter((node) => flowKinds.some((flowKind) => flowKind === node.kind()))

@@ -2,15 +2,15 @@ import { Effect } from "effect";
 import * as vscode from "vscode";
 import * as astGrep from "@ast-grep/napi";
 import { Lang } from "@ast-grep/napi";
-import { getAllFlowASTs } from "../ast/python/get-all-flows";
 import { getGraphsFromAst } from "../graph/create-nodes";
 import { createEdges } from "../graph/create-edges";
 import { postMessageToPanel } from "./webview/register-webview-command";
 import { createGraphLayout } from "../graph/graph-layout-creator";
 import type { CustomNode } from "../graph/graph.types";
 import { getReferenceGraphs } from "../ast/references";
-import type { CodeReference } from "../ast/python/ast.schema";
+import type { CodeReference } from "../ast/llm/llm.schema";
 import { collapsedNodes } from "./webview/client-message-callback";
+import { getAllFlowASTs } from "../ast/get-all-flow-asts";
 
 class NoPythonFileOpenError {
 	readonly _tag = "NoPythonFileOpenError";
@@ -21,26 +21,34 @@ class NoPythonFileOpenError {
  * 📄 Get the text of the open Python file, preferring the active editor
  * @returns text of the open Python file
  */
-export function getOpenPythonFileText() {
+export function getOpenFileText(langs: string[]) {
 	return Effect.gen(function* () {
 		// ✅ use the active editor if it's a Python file
 		const activeEditor = vscode.window.activeTextEditor;
-		if (activeEditor && activeEditor.document.languageId === "python") {
+		if (activeEditor && langs.includes(activeEditor.document.languageId)) {
 			return {
 				text: activeEditor.document.getText(),
 				url: activeEditor.document.uri,
+				lang:
+					activeEditor.document.languageId === "python"
+						? Lang.Python
+						: Lang.TypeScript,
 			};
 		}
 
 		// 🔍 otherwise, look for any visible Python editor
 		const visibleEditors = vscode.window.visibleTextEditors;
-		const pythonEditor = visibleEditors.find(
-			(editor) => editor.document.languageId === "python",
+		const pythonEditor = visibleEditors.find((editor) =>
+			langs.includes(editor.document.languageId),
 		);
 		if (pythonEditor) {
 			return {
 				text: pythonEditor.document.getText(),
 				url: pythonEditor.document.uri,
+				lang:
+					pythonEditor.document.languageId === "python"
+						? Lang.Python
+						: Lang.TypeScript,
 			};
 		}
 
@@ -108,18 +116,21 @@ export function sendNodes(graph: Graph[]) {
 /**
  * 🌐 Shows the graph for the open Python file
  */
-export function showOpenPythonFile() {
+export function showOpenFile(langs: Lang[]) {
 	return Effect.gen(function* () {
 		if (!graphCache.startingCodeReference) {
 			// 📄 get the text of the open Python file
-			const { text, url } = yield* getOpenPythonFileText();
+			const { text, url, lang } = yield* getOpenFileText(
+				langs.map((l) => l.toLowerCase()),
+			);
 
 			// get the AST for all the flows in the file
-			const root = astGrep.parse(Lang.Python, text).root();
+			const root = astGrep.parse(lang, text).root();
 			const ast = yield* getAllFlowASTs({
 				root: root.children(),
 				parent_id: "",
 				url,
+				lang,
 			});
 			console.log(`Found AST for ${url}`);
 			const { graphs, references } = yield* getGraphsFromAst(

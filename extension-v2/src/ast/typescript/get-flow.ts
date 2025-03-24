@@ -3,8 +3,8 @@ import type * as vscode from "vscode";
 import { Effect } from "effect";
 import { type FlowKind, flowKinds } from "./ast.schema";
 import { getCodeRangeFromSgNode } from "../../utils/get-range";
-import type { CodeBlock } from "./ast.schema";
-import { getAllFlowASTs } from "./get-all-flows";
+import type { CodeBlock } from "../llm/llm.schema";
+import { getAllTypescriptFlowASTs } from "./get-all-flows";
 import {
 	handleExpression,
 	type HandleExpressionErrors,
@@ -113,7 +113,7 @@ export function getFlowAST({
 				}
 
 				// recursively get the AST for all the flows in the block
-				const children = yield* getAllFlowASTs({
+				const children = yield* getAllTypescriptFlowASTs({
 					root: block.children(),
 					parent_id: parent_id !== "" ? `${parent_id}.${i}` : `${i}`,
 					url,
@@ -174,14 +174,6 @@ export function getFlowAST({
 				// `return_statement` can have 1 or 2 children
 				const children = node.children();
 
-				if (children.length === 0 || children.length > 2) {
-					return yield* Effect.fail(
-						new InvalidExpressionStatementError(
-							`${children.length} children != 1 or 2 for return statement`,
-						),
-					);
-				}
-
 				// If there's only "return" keyword, no expression
 				if (children.length === 1) {
 					const output = {
@@ -193,8 +185,8 @@ export function getFlowAST({
 					return yield* Effect.succeed(output);
 				}
 
-				// Find the expression (usually the second child after "return" keyword)
-				const expression = children[1];
+				// Find the expression (last child)
+				const expression = children[children.length - 1];
 
 				// Get the references in the expression
 				const refs = yield* handleExpression({ node: expression, url });

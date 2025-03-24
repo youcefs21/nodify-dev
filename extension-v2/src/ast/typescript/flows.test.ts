@@ -4,7 +4,7 @@ import * as path from "node:path";
 import { before, suite, test } from "mocha";
 import { parse, Lang } from "@ast-grep/napi";
 import { Effect } from "effect";
-import { getAllFlowASTs } from "./get-all-flows";
+import { getAllTypescriptFlowASTs } from "./get-all-flows";
 import { assertTypeScriptExtension } from "../../vsc/assert-typescript-extension";
 
 suite("TypeScript AST Test Suite", () => {
@@ -20,7 +20,7 @@ suite("TypeScript AST Test Suite", () => {
 		const document = await vscode.workspace.openTextDocument(filePath);
 		const root = parse(Lang.TypeScript, document.getText()).root();
 
-		const ast = await getAllFlowASTs({
+		const ast = await getAllTypescriptFlowASTs({
 			root: root.children(),
 			parent_id: "",
 			url: document.uri,

@@ -1,4 +1,5 @@
-import type { CodePosition, CodeRange } from "./ast/python/ast.schema";
+import type { CodeRange } from "./ast/llm/llm.schema";
+import type { CodePosition } from "./ast/llm/llm.schema";
 import type { CustomNode } from "./graph/graph.types";
 import type { Edge } from "@xyflow/react";
 

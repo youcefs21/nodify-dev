@@ -1,10 +1,10 @@
-import type { CodeBlock, CodeReference } from "../ast/python/ast.schema";
 import { Effect } from "effect";
 import { Lang, parse } from "@ast-grep/napi";
 import * as vscode from "vscode";
-import { getAllFlowASTs } from "./python/get-all-flows";
 import { getGraphsFromAst } from "../graph/create-nodes";
 import { getFullNodeJson } from "./python/handle-expressions";
+import type { CodeBlock, CodeReference } from "./llm/llm.schema";
+import { getAllFlowASTs } from "./get-all-flow-asts";
 
 // Store for reference hashes and summaries
 // This will be replaced with a database later
@@ -95,7 +95,7 @@ export function getReferenceGraphs(ref: CodeReference, isStartingRef: boolean) {
 		const document = yield* Effect.tryPromise(() =>
 			vscode.workspace.openTextDocument(ref.filePath),
 		);
-		const root = parse(Lang.Python, document.getText()).root();
+		const root = parse(ref.lang, document.getText()).root();
 		const defNode = root.find({
 			rule: {
 				range: {
@@ -110,7 +110,9 @@ export function getReferenceGraphs(ref: CodeReference, isStartingRef: boolean) {
 				},
 			},
 		});
-		const block = defNode?.children().find((x) => x.kind() === "block");
+		const block = defNode
+			?.children()
+			.find((x) => x.kind() === "block" || x.kind() === "statement_block");
 		if (!block || !defNode) {
 			console.error(
 				`No block found on ref search:\n\`\`\`\n${defNode?.text()}\n\`\`\``,
@@ -151,6 +153,7 @@ export function getReferenceGraphs(ref: CodeReference, isStartingRef: boolean) {
 			root: blockChildren,
 			parent_id: "",
 			url: document.uri,
+			lang: ref.lang,
 		});
 
 		const signature = defNode?.commitEdits([

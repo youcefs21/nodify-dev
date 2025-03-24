@@ -1,7 +1,6 @@
 import * as vscode from "vscode";
 import { parse, Lang, type SgNode, type SgRoot } from "@ast-grep/napi";
-import type { CodeReference as PythonCodeReference } from "../../ast/python/ast.schema";
-import type { CodeReference as TypeScriptCodeReference } from "../../ast/typescript/ast.schema";
+import type { CodeReference } from "../../ast/llm/llm.schema";
 import {
 	getIdentifierBody,
 	type NoParentBodyRangeFound,
@@ -11,7 +10,6 @@ import type { UnknownException } from "effect/Cause";
 // import type { Reference } from "../ast/python/flow";
 
 type CodeLensError = NoParentBodyRangeFound | UnknownException;
-type CodeReference = PythonCodeReference | TypeScriptCodeReference;
 
 /**
  * 🐍 Add code lenses to Python AST nodes
@@ -210,6 +208,7 @@ function createCodeLens(
 					body: definitionRange.text,
 					range: definitionRange.range,
 					filePath: definitionRange.uri.fsPath,
+					lang,
 				} satisfies CodeReference,
 			],
 		};

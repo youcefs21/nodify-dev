@@ -3,9 +3,10 @@ import { createWebview } from "./create-webview";
 import { NodifyWebviewSerializer } from "./webview-serializer";
 import { onClientMessage } from "./client-message-callback";
 import type { ServerToClientEvents } from "../../shared-types";
-import type { CodeReference } from "../../ast/python/ast.schema";
-import { graphCache, showOpenPythonFile } from "../show-open-file";
+import { graphCache, showOpenFile } from "../show-open-file";
 import { Effect } from "effect";
+import { Lang } from "@ast-grep/napi";
+import type { CodeReference } from "../../ast/llm/llm.schema";
 
 /**
  * a Singleton reference to the webview panel
@@ -42,7 +43,9 @@ export function registerWebview(context: vscode.ExtensionContext) {
 			// ⏭️ Return if a webview is already open
 			if (webviewPanelRef.current) {
 				webviewPanelRef.current.reveal(vscode.ViewColumn.Beside);
-				Effect.runFork(showOpenPythonFile());
+				Effect.runFork(
+					showOpenFile(ref?.lang ? [ref.lang] : [Lang.Python, Lang.TypeScript]),
+				);
 				return;
 			}
 

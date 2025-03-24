@@ -1,5 +1,6 @@
 import type { Node } from "@xyflow/react";
-import type { CodeRange } from "../ast/python/ast.schema";
+import type { CodeRange } from "../ast/llm/llm.schema";
+
 export type NodeConnection = {
 	sourceId: string;
 	targetId: string;

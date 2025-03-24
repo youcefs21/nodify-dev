@@ -43,9 +43,15 @@ export function getIdentifierBody(
 
 		if (workspaceFolders) {
 			const filePath = uri.fsPath;
-			isInWorkspace = workspaceFolders.some((folder) =>
-				filePath.startsWith(folder.uri.fsPath),
-			);
+			isInWorkspace = workspaceFolders.some((folder) => {
+				const folderPath = folder.uri.fsPath;
+				return (
+					filePath.startsWith(folderPath) && !filePath.includes("node_modules")
+				);
+			});
+			if (!isInWorkspace) {
+				return undefined;
+			}
 		}
 
 		// Parse the document content into an AST using ast-grep
@@ -112,6 +118,10 @@ export function getIdentifierBody(
 				`Invalid node kind (${node.kind()}) for identifier at location ${uri.fsPath}:${range.start.line}:${range.start.character}`,
 			);
 			return undefined;
+		}
+
+		if (node.kind() === "export_statement") {
+			node = node.children()[1];
 		}
 
 		const hash = yield* hashString(node.text());

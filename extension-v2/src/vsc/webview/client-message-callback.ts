@@ -5,7 +5,8 @@ import {
 	webviewPanelRef,
 } from "./register-webview-command";
 import * as vscode from "vscode";
-import { graphCache, sendNodes, showOpenPythonFile } from "../show-open-file";
+import { graphCache, sendNodes, showOpenFile } from "../show-open-file";
+import { Lang } from "@ast-grep/napi";
 
 type ClientEvent<T extends ClientToServerEvents["type"]> = Extract<
 	ClientToServerEvents,
@@ -100,7 +101,7 @@ export function onClientMessage(
 					value: panel.webview.asWebviewUri(assetsDirPath).toString(),
 				});
 
-				yield* showOpenPythonFile();
+				yield* showOpenFile([Lang.Python, Lang.TypeScript]);
 				break;
 			}
 
