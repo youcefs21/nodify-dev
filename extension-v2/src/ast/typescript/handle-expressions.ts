@@ -35,8 +35,8 @@ export function getFullNodeJson(node: SgNode): Record<string, unknown> {
 /**
  * Processes AST expressions to extract code references and definitions.
  *
- * Analyzes Python AST expressions:
- * 1. Call expressions/attributes: Resolves identifier to definition
+ * Analyzes TypeScript AST expressions:
+ * 1. Call expressions/member expressions: Resolves identifier to definition
  * 2. Compound expressions: Recursively processes child nodes
  *
  * Creates dependency graph for code flow visualization.
@@ -52,26 +52,24 @@ export function handleExpression({
 		return Effect.succeed([]);
 	}
 
-	// console.log("called handleExpression with", node.kind());
-	// console.error(
-	// 	`\n\`\`\`\n${JSON.stringify(getFullNodeJson(node), null, 4)}\n\`\`\``,
-	// );
-
 	return Effect.gen(function* () {
 		switch (node.kind()) {
-			case "attribute":
-			case "call": {
-				// Extract the identifier or attribute that's being called/accessed
+			case "member_expression":
+			case "call_expression": {
+				// Extract the identifier or member expression that's being called/accessed
 				const identifier = node
 					.children()
 					.find(
 						(x) =>
 							x.kind() === "identifier" ||
-							(x.kind() === "attribute" && x.text() !== "(self)"),
+							x.kind() === "property_identifier" ||
+							x.kind() === "member_expression",
 					);
+
 				if (!identifier) {
 					return yield* Effect.fail(new NoIdentifierOrAttributeFound());
 				}
+
 				const location = identifier.range().end;
 
 				// Resolve the symbol to its definition using VSCode's definition provider
@@ -79,21 +77,21 @@ export function handleExpression({
 					url,
 					new vscode.Position(location.line, location.column),
 				);
+
 				if (definitions.length === 0) {
-					if (identifier.text() !== "print") {
-						console.warn(
-							`No definitions found for ${identifier.text()} at ${url.fsPath}:${location.line}:${location.column}`,
-						);
-					}
+					console.warn(
+						`No definitions found for ${identifier.text()} at ${url.fsPath}:${location.line}:${location.column}`,
+					);
 					return [];
 				}
 
 				// Extract the full range of the definition's body for reference mapping
 				const definitionRanges = yield* Effect.forEach(
 					definitions,
-					(def) => getIdentifierBody(def, Lang.Python),
+					(def) => getIdentifierBody(def, Lang.TypeScript),
 					{ concurrency: 5 },
 				);
+
 				return definitionRanges
 					.filter((range) => range !== undefined)
 					.filter((range) => range.isInWorkspace)
@@ -109,31 +107,22 @@ export function handleExpression({
 
 			// For compound expressions, recursively process all child nodes
 			// to build a complete reference graph
-			case "lambda":
-			case "augmented_assignment":
-			case "tuple":
-			case "set":
-			case "list":
-			case "dictionary":
-			case "pair":
+			case "ternary_expression":
+			case "binary_expression":
 			case "parenthesized_expression":
-			case "conditional_expression":
-			case "binary_operator":
-			case "boolean_operator":
-			case "not_operator":
-			case "comparison_operator":
-			case "string":
-			case "interpolation":
-			case "subscript":
-			case "slice":
-			case "generator_expression":
-			case "set_comprehension":
-			case "tuple_comprehension":
-			case "list_comprehension":
-			case "dictionary_comprehension":
-			case "for_in_clause":
-			case "unary_operator":
-			case "assignment": {
+			case "array":
+			case "object":
+			case "pair":
+			case "template_string":
+			case "subscript_expression":
+			case "unary_expression":
+			case "assignment_expression":
+			case "await_expression":
+			case "yield_expression":
+			case "generator_function":
+			case "lexical_declaration":
+			case "variable_declarator":
+			case "new_expression": {
 				// Process all children concurrently
 				const x = yield* Effect.forEach(
 					node.children(),
@@ -141,17 +130,6 @@ export function handleExpression({
 					{ concurrency: 5 },
 				);
 				return x.flat();
-			}
-
-			case "yield": {
-				// For yield expressions, skip the 'yield' keyword (first child)
-				// and only process the yielded value(s)
-				const children = yield* Effect.forEach(
-					node.children().slice(1),
-					(x) => handleExpression({ node: x, url }),
-					{ concurrency: 5 },
-				);
-				return children.flat();
 			}
 		}
 

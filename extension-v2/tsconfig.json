@@ -8,5 +8,10 @@
 		"strict": true,
 		"noFallthroughCasesInSwitch": true
 	},
-	"exclude": ["webview-ui/**/*", "node_modules/**/*", "packages/**/*"]
+	"exclude": [
+		"webview-ui/**/*",
+		"node_modules/**/*",
+		"packages/**/*",
+		"test-workspace/**/*"
+	]
 }

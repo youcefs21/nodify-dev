@@ -22,7 +22,7 @@ export async function getSymbols(url: vscode.Uri) {
  */
 export function getDefinition(uri: vscode.Uri, position: vscode.Position) {
 	return Effect.tryPromise(() =>
-		vscode.commands.executeCommand<Location[]>(
+		vscode.commands.executeCommand<(LocationLink | Location)[]>(
 			"vscode.executeDefinitionProvider",
 			uri,
 			position,

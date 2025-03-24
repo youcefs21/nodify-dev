@@ -1,6 +1,7 @@
 import * as vscode from "vscode";
 import { parse, Lang, type SgNode, type SgRoot } from "@ast-grep/napi";
-import type { CodeReference } from "../../ast/python/ast.schema";
+import type { CodeReference as PythonCodeReference } from "../../ast/python/ast.schema";
+import type { CodeReference as TypeScriptCodeReference } from "../../ast/typescript/ast.schema";
 import {
 	getIdentifierBody,
 	type NoParentBodyRangeFound,
@@ -10,6 +11,7 @@ import type { UnknownException } from "effect/Cause";
 // import type { Reference } from "../ast/python/flow";
 
 type CodeLensError = NoParentBodyRangeFound | UnknownException;
+type CodeReference = PythonCodeReference | TypeScriptCodeReference;
 
 /**
  * 🐍 Add code lenses to Python AST nodes
@@ -37,7 +39,12 @@ function add_python_ast_node_to_code_lens(
 			return codeLensChildren;
 		}
 
-		return yield* createCodeLens(document, identifierNode, codeLensChildren);
+		return yield* createCodeLens(
+			document,
+			identifierNode,
+			codeLensChildren,
+			Lang.Python,
+		);
 	}).pipe(
 		Effect.catchAll((error) => {
 			vscode.window.showErrorMessage(
@@ -68,9 +75,9 @@ function add_typescript_ast_node_to_code_lens(
 
 		const allowedNodeKinds = [
 			"class_declaration",
-			// "method_definition",
+			"method_definition",
 			"function_declaration",
-			// "arrow_function",
+			"arrow_function",
 		];
 
 		if (!allowedNodeKinds.includes(String(node.kind()))) {
@@ -111,7 +118,12 @@ function add_typescript_ast_node_to_code_lens(
 			return codeLensChildren;
 		}
 
-		return yield* createCodeLens(document, identifierNode, codeLensChildren);
+		return yield* createCodeLens(
+			document,
+			identifierNode,
+			codeLensChildren,
+			Lang.TypeScript,
+		);
 	}).pipe(
 		Effect.catchAll((error) => {
 			vscode.window.showErrorMessage(
@@ -135,6 +147,7 @@ function createCodeLens(
 	document: vscode.TextDocument,
 	identifierNode: SgNode,
 	codeLensChildren: vscode.CodeLens[],
+	lang: Lang,
 ): Effect.Effect<vscode.CodeLens[], CodeLensError> {
 	return Effect.gen(function* () {
 		const identifierName = identifierNode.text();
@@ -149,7 +162,7 @@ function createCodeLens(
 
 		const definitionRange = yield* getIdentifierBody(
 			new vscode.Location(document.uri, codeLensRange),
-			document.languageId === "python" ? Lang.Python : Lang.TypeScript,
+			lang,
 		);
 		if (!definitionRange) {
 			return codeLensChildren;

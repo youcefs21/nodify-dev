@@ -122,8 +122,6 @@ export function getReferenceGraphs(ref: CodeReference, isStartingRef: boolean) {
 		let blockChildren = block.children();
 		if (defNode.kind() === "class_definition") {
 			// Find the __init__ method if it exists
-			const json = getFullNodeJson(defNode);
-			console.log(JSON.stringify(json, null, 4));
 			const initFuncDef = blockChildren.find((node) => {
 				// Look for function definition nodes
 				if (node.kind() === "function_definition") {
