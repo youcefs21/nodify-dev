@@ -11,6 +11,7 @@ import { getReferenceGraphs } from "../ast/references";
 import type { CodeReference } from "../ast/llm/llm.schema";
 import { collapsedNodes } from "./webview/client-message-callback";
 import { getAllFlowASTs } from "../ast/get-all-flow-asts";
+import { hashString } from "../utils/hash";
 
 class NoPythonFileOpenError {
 	readonly _tag = "NoPythonFileOpenError";
@@ -77,6 +78,7 @@ function FlattenGraph(graph: Graph): Graph[] {
 
 export const graphCache = {
 	startingCodeReference: null as CodeReference | null,
+	visitedASTHashes: new Set<string>(),
 	graph: [] as Graph[],
 };
 
@@ -118,6 +120,7 @@ export function sendNodes(graph: Graph[]) {
  */
 export function showOpenFile(langs: Lang[]) {
 	return Effect.gen(function* () {
+		graphCache.visitedASTHashes.clear();
 		if (!graphCache.startingCodeReference) {
 			// 📄 get the text of the open Python file
 			const { text, url, lang } = yield* getOpenFileText(

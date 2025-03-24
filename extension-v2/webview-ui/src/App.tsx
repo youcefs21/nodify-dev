@@ -113,6 +113,7 @@ function App() {
 					nodesDraggable={false}
 					nodesConnectable={false}
 					edgesFocusable={false}
+					minZoom={0}
 				>
 					<Controls />
 					<Background variant={BackgroundVariant.Dots} gap={12} size={1} />

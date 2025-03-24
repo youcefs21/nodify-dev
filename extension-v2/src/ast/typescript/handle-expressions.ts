@@ -21,11 +21,17 @@ class NoArgumentsFound {
 	readonly message = "No arguments found";
 }
 
+class NoStatementBlockFound {
+	readonly _tag = "NoStatementBlockFound";
+	readonly message = "No statement block found";
+}
+
 export type HandleExpressionErrors =
 	| UnknownException
 	| NoParentBodyRangeFound
 	| NoIdentifierOrAttributeFound
-	| NoArgumentsFound;
+	| NoArgumentsFound
+	| NoStatementBlockFound;
 interface Props {
 	node: SgNode;
 	url: vscode.Uri;
@@ -90,6 +96,48 @@ export function handleExpression({
 
 	return Effect.gen(function* () {
 		switch (node.kind()) {
+			case "generator_function":
+			case "function_declaration":
+			case "arrow_function": {
+				// I just need to create a ref to this place
+				const body = yield* getIdentifierBody(
+					{
+						targetRange: new vscode.Range(
+							new vscode.Position(
+								node.range().start.line,
+								node.range().start.column,
+							),
+							new vscode.Position(
+								node.range().end.line,
+								node.range().end.column,
+							),
+						),
+						targetUri: url,
+					} as vscode.LocationLink,
+					Lang.TypeScript,
+				);
+				if (!body) {
+					return {
+						children: [],
+						refs: [],
+					};
+				}
+				return {
+					children: [],
+					refs: [
+						{
+							symbol: node.text(),
+							id: body.shortId,
+							fullHash: body.fullHash,
+							body: body.text,
+							range: body.range,
+							filePath: body.uri.fsPath,
+							lang: Lang.TypeScript,
+						},
+					],
+				};
+			}
+			case "new_expression":
 			case "call_expression": {
 				// chained calls are represented in the ast from the bottom up
 				// a().b().c() is represented as c -> [b -> [a]]
@@ -108,9 +156,10 @@ export function handleExpression({
 
 				// but for top level calls, a()
 				// the first child is identifier ("a")
+				const offset = node.kind() === "new_expression" ? 1 : 0;
 
 				// process the args expressions
-				const args = node.children()[1];
+				const args = node.children()[1 + offset];
 				if (args.kind() !== "arguments") {
 					console.warn(
 						`Expected arguments for call_expression ${node.text()} at ${url.fsPath}:${node.range().start.line}:${node.range().start.column}`,
@@ -157,7 +206,7 @@ export function handleExpression({
 							}) satisfies CodeBlock,
 					);
 
-				const callerIdentifier = node.children()[0];
+				const callerIdentifier = node.children()[0 + offset];
 				if (callerIdentifier.kind() === "member_expression") {
 					// this should in theory have 2 children:
 					// 1. call_expression: "b()"
@@ -228,7 +277,12 @@ export function handleExpression({
 				}
 
 				// "a.c" (parent is identifier "a")
-				if (parent.kind() === "identifier") {
+				if (
+					parent.kind() === "identifier" ||
+					parent.kind() === "property_identifier" ||
+					parent.kind() === "member_expression" ||
+					parent.kind() === "subscript_expression"
+				) {
 					const parentIdentifier = yield* handleExpression({
 						node: parent,
 						url,
@@ -266,6 +320,10 @@ export function handleExpression({
 
 				console.warn(
 					`No identifier or attribute found for ${node.text()} at ${url.fsPath}:${node.range().start.line}:${node.range().start.column}`,
+				);
+				console.error(
+					"instead got children",
+					node.children().map((x) => x.kind()),
 				);
 				return yield* Effect.fail(new NoIdentifierOrAttributeFound());
 			}
@@ -322,15 +380,14 @@ export function handleExpression({
 			case "object":
 			case "pair":
 			case "template_string":
-			case "subscript_expression":
+			// case "subscript_expression":
 			case "unary_expression":
 			case "assignment_expression":
 			case "await_expression":
 			case "yield_expression":
-			case "generator_function":
+			case "return_statement":
 			case "lexical_declaration":
-			case "variable_declarator":
-			case "new_expression": {
+			case "variable_declarator": {
 				// Process all children concurrently
 				const x = yield* Effect.forEach(
 					node.children(),

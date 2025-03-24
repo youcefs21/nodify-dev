@@ -126,6 +126,7 @@
 		"@anthropic-ai/sdk": "^0.39.0",
 		"@ast-grep/napi": "^0.33.1",
 		"effect": "^3.13.8",
+		"gpt-tokenizer": "^2.9.0",
 		"openai": "^4.79.1",
 		"tailwindcss-animate": "^1.0.7",
 		"vscode-languageclient": "^9.0.1",

@@ -99,12 +99,17 @@ export function getFlowAST({
 			case "block":
 			case "statement_block":
 			case "switch_statement":
-			case "case_statement":
+			case "switch_case":
 			case "default_clause": {
 				// find the block child of the current node
 				const block = node
 					.children()
-					.find((x) => x.kind() === "statement_block" || x.kind() === "block");
+					.find(
+						(x) =>
+							x.kind() === "statement_block" ||
+							x.kind() === "block" ||
+							x.kind() === "switch_body",
+					);
 
 				const to_be_removed = node
 					.children()
@@ -115,7 +120,18 @@ export function getFlowAST({
 					);
 
 				if (!block) {
-					return yield* Effect.fail(new NoBlockFoundError());
+					console.error(
+						"no block found, children kinds are",
+						node.children().map((x) => x.kind()),
+					);
+					return yield* Effect.succeed({
+						id: parent_id !== "" ? `${parent_id}.${i}` : `${i}`,
+						text: node.text().trim(),
+						range: getCodeRangeFromSgNode(node),
+						filePath: url.fsPath,
+						children: [],
+					});
+					// return yield* Effect.fail(new NoBlockFoundError());
 				}
 
 				// recursively get the AST for all the flows in the block
@@ -197,8 +213,8 @@ export function getFlowAST({
 					return yield* Effect.succeed(output);
 				}
 
-				// Find the expression (last child)
-				const expression = children[children.length - 1];
+				// Find the expression (second child)
+				const expression = children[1];
 
 				// Get the references in the expression
 				const { refs, children: expressionChildren } = yield* handleExpression({

@@ -12,10 +12,11 @@ export const flowKinds = [
 	"block",
 	"statement_block",
 	"switch_statement",
-	"case_statement",
+	"switch_case",
 	"default_clause",
 	"lexical_declaration",
 	"await_expression",
+	"new_expression",
 ] as const;
 export type FlowKind = (typeof flowKinds)[number];
 
@@ -51,6 +52,8 @@ export const kinds = [
 export type Kind = (typeof kinds)[number];
 
 export const ignoreKinds = [
+	"subscript_expression",
+	"new",
 	"=",
 	"number",
 	"[",
@@ -94,7 +97,6 @@ export const ignoreKinds = [
 	"false",
 	"await",
 	"async",
-	"function",
 	"string_fragment",
 	"string",
 	"template_string",
@@ -124,4 +126,8 @@ export const ignoreKinds = [
 	"nested_type_identifier",
 	"type_identifier",
 	"yield",
+	"type",
+	"type_alias_declaration",
+	"type_identifier",
+	"object_type",
 ];

@@ -80,7 +80,8 @@ export function getIdentifierBody(
 			console.error(
 				`No identifier found for location ${uri.fsPath}:${range.start.line}:${range.start.character}`,
 			);
-			return yield* Effect.fail(new NoParentBodyRangeFound());
+			// return yield* Effect.fail(new NoParentBodyRangeFound());
+			return undefined;
 		}
 
 		// Get the whole function or class definition node
@@ -114,9 +115,9 @@ export function getIdentifierBody(
 			(lang === SgLang.Python && !isValidPythonNode) ||
 			(lang === SgLang.TypeScript && !isValidTypeScriptNode)
 		) {
-			console.error(
-				`Invalid node kind (${node.kind()}) for identifier at location ${uri.fsPath}:${range.start.line}:${range.start.character}`,
-			);
+			// console.error(
+			// 	`Invalid node kind (${node.kind()}) for identifier at location ${uri.fsPath}:${range.start.line}:${range.start.character}`,
+			// );
 			return undefined;
 		}
 

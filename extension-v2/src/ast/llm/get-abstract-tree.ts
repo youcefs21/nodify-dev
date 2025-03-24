@@ -12,6 +12,7 @@ import {
 	abstractionGroupSchema,
 	abstractionTreeSchema,
 } from "./llm.schema";
+import { countTokens } from "gpt-tokenizer";
 
 export const SHOULD_USE_MOCK = true;
 
@@ -22,6 +23,8 @@ export const SHOULD_USE_MOCK = true;
  */
 export function getAbstractionTree(input: LLMContext, astHash: string) {
 	return Effect.gen(function* () {
+		const tokens = countTokens(JSON.stringify(input));
+		console.log(`input tokens: ${tokens}`);
 		if (SHOULD_USE_MOCK) {
 			return getMockAbstractionTree(input, astHash);
 		}
