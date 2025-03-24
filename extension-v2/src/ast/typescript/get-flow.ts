@@ -1,7 +1,7 @@
 import type { SgNode } from "@ast-grep/napi";
 import type * as vscode from "vscode";
 import { Effect } from "effect";
-import { type FlowKind, flowKinds } from "./ast.schema";
+import type { FlowKind } from "./ast.schema";
 import { getCodeRangeFromSgNode } from "../../utils/get-range";
 import type { CodeBlock } from "../llm/llm.schema";
 import { getAllTypescriptFlowASTs } from "./get-all-flows";
@@ -31,7 +31,7 @@ interface Props {
 	url: vscode.Uri;
 }
 // output type
-type OutputEffect = Effect.Effect<
+export type OutputEffect = Effect.Effect<
 	CodeBlock,
 	NoBlockFoundError | InvalidExpressionStatementError | HandleExpressionErrors
 >;
@@ -65,7 +65,12 @@ export function getFlowAST({
 				const expression = children[1];
 
 				// Find all references in the expression
-				const refs = yield* handleExpression({ node: expression, url });
+				const { refs, children: expressionChildren } = yield* handleExpression({
+					node: expression,
+					url,
+					parent_id: parent_id !== "" ? `${parent_id}.${i}` : `${i}`,
+					i: 0,
+				});
 
 				// Create and return the output
 				const output = {
@@ -73,6 +78,7 @@ export function getFlowAST({
 					text: node.text().trim(),
 					range: getCodeRangeFromSgNode(node),
 					filePath: url.fsPath,
+					children: expressionChildren,
 				};
 
 				return yield* Effect.succeed(
@@ -151,7 +157,12 @@ export function getFlowAST({
 				}
 
 				// find all the references in the expression
-				const refs = yield* handleExpression({ node: children[0], url });
+				const { refs, children: expressionChildren } = yield* handleExpression({
+					node: children[0],
+					url,
+					parent_id: parent_id !== "" ? `${parent_id}.${i}` : `${i}`,
+					i: 0,
+				});
 
 				// create and return the output. Don't include references if there are none
 				const output = {
@@ -159,6 +170,7 @@ export function getFlowAST({
 					text: node.text().trim(),
 					range: getCodeRangeFromSgNode(node),
 					filePath: url.fsPath,
+					children: expressionChildren,
 				};
 				return yield* Effect.succeed(
 					refs.length === 0
@@ -189,7 +201,12 @@ export function getFlowAST({
 				const expression = children[children.length - 1];
 
 				// Get the references in the expression
-				const refs = yield* handleExpression({ node: expression, url });
+				const { refs, children: expressionChildren } = yield* handleExpression({
+					node: expression,
+					url,
+					parent_id: parent_id !== "" ? `${parent_id}.${i}` : `${i}`,
+					i: 0,
+				});
 
 				// Create and return the output. Don't include references if there are none
 				const output = {
@@ -197,6 +214,7 @@ export function getFlowAST({
 					text: node.text().trim(),
 					range: getCodeRangeFromSgNode(node),
 					filePath: url.fsPath,
+					children: expressionChildren,
 				};
 				return yield* Effect.succeed(
 					refs.length === 0
@@ -225,7 +243,12 @@ export function getFlowAST({
 				}
 
 				// Find any function or expressions in the value
-				const refs = yield* handleExpression({ node: declarator, url });
+				const { refs, children: expressionChildren } = yield* handleExpression({
+					node: declarator,
+					url,
+					parent_id: parent_id !== "" ? `${parent_id}.${i}` : `${i}`,
+					i: 0,
+				});
 
 				// Create output
 				const output = {
@@ -233,6 +256,7 @@ export function getFlowAST({
 					text: node.text().trim(),
 					range: getCodeRangeFromSgNode(node),
 					filePath: url.fsPath,
+					children: expressionChildren,
 				};
 
 				return yield* Effect.succeed(
