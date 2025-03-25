@@ -12,7 +12,13 @@ Using the power of AI, contributors and users alike can instantly grasp the arch
 
 # User Guide
 
+## Accessing Nodify through VSCode Marketplace
+
+_Note: if the extension through VSCode Marketplace does not work, please try the [debug mode](#accessing-nodify-locally-debug-mode)_
+
 # Contribution Guide
+
+## Accessing Nodify Locally (Debug Mode)
 
 ## Publishing the Extension
 
