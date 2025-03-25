@@ -1,5 +1,5 @@
 import * as vscode from "vscode";
-import { Lang, type SgNode } from "@ast-grep/napi";
+import { type Edit, Lang, type SgNode } from "@ast-grep/napi";
 import { Effect } from "effect";
 import { ignoreKinds } from "./ast.schema";
 import type { CodeBlock, CodeReference } from "../llm/llm.schema";
@@ -9,7 +9,10 @@ import {
 	getIdentifierBody,
 	type NoParentBodyRangeFound,
 } from "../get-definition";
-import { getCodeRangeFromSgNode } from "../../utils/get-range";
+import {
+	combineCodeRanges,
+	getCodeRangeFromSgNode,
+} from "../../utils/get-range";
 
 class NoIdentifierOrAttributeFound {
 	readonly _tag = "NoIdentifierOrAttributeFound";
@@ -50,6 +53,7 @@ export function getFullNodeJson(node: SgNode): Record<string, unknown> {
 type Output = {
 	children: CodeBlock[];
 	refs: CodeReference[];
+	edits: Edit[];
 };
 
 /**
@@ -74,6 +78,7 @@ export function handleExpression({
 		return Effect.succeed({
 			children: [],
 			refs: [],
+			edits: [],
 		});
 	}
 
@@ -120,13 +125,14 @@ export function handleExpression({
 					return {
 						children: [],
 						refs: [],
+						edits: [],
 					};
 				}
 				return {
 					children: [],
 					refs: [
 						{
-							symbol: node.text(),
+							symbol: `<${node.kind()}/>`,
 							id: body.shortId,
 							fullHash: body.fullHash,
 							body: body.text,
@@ -135,6 +141,7 @@ export function handleExpression({
 							lang: Lang.TypeScript,
 						},
 					],
+					edits: [node.replace(`<${node.kind()}/>`)],
 				};
 			}
 			case "new_expression":
@@ -185,26 +192,34 @@ export function handleExpression({
 							})),
 						),
 					{ concurrency: 5 },
+				).pipe(
+					Effect.map((x) =>
+						x.filter(
+							(arg) => !ignoreKinds.some((kind) => kind === arg.node.kind()),
+						),
+					),
 				);
 
-				const argNodes = argsRefs
-					.filter(
-						(arg) => !ignoreKinds.some((kind) => kind === arg.node.kind()),
-					)
-					.map(
-						(arg, index) =>
-							({
-								id:
-									parent_id !== ""
-										? `${parent_id}.${i}.${index}`
-										: `${i}.${index}`,
-								text: arg.node.text(),
-								range: getCodeRangeFromSgNode(arg.node),
-								filePath: url.fsPath,
-								references: arg.refs,
-								children: arg.children,
-							}) satisfies CodeBlock,
-					);
+				const argNodes = argsRefs.map(
+					(arg, index) =>
+						({
+							id:
+								parent_id !== ""
+									? `${parent_id}.${i}.${index}`
+									: `${i}.${index}`,
+							text: ignoreKinds.some((kind) => kind === arg.node.kind())
+								? arg.node.text()
+								: `<${arg.node.kind()}/>`,
+							range: getCodeRangeFromSgNode(arg.node),
+							filePath: url.fsPath,
+							references: arg.refs,
+							children: arg.children,
+						}) satisfies CodeBlock,
+				);
+
+				const edits = argsRefs.map((x) =>
+					x.node.replace(`<${x.node.kind()}/>`),
+				);
 
 				const callerIdentifier = node.children()[0 + offset];
 				if (callerIdentifier.kind() === "member_expression") {
@@ -219,23 +234,31 @@ export function handleExpression({
 					});
 
 					// I want to put the args expressions in the children of the property_identifier
-					parentCall.children[parentCall.children.length - 1].children?.push(
-						...argNodes,
-					);
+					const n = parentCall.children[parentCall.children.length - 1];
+					n.children?.push(...argNodes);
+					n.range = combineCodeRanges(n.range, getCodeRangeFromSgNode(args));
+					n.text += args.commitEdits([...edits]);
 
-					return parentCall;
+					node.commitEdits([...edits, ...parentCall.edits]).trim();
+
+					return {
+						...parentCall,
+						edits: [...edits, ...parentCall.edits],
+					};
 				}
 
-				const { refs: callerIdentifierRefs } = yield* handleExpression({
-					node: callerIdentifier,
-					url,
-					parent_id,
-					i,
-				});
+				const { refs: callerIdentifierRefs, edits: callerIdentifierEdits } =
+					yield* handleExpression({
+						node: callerIdentifier,
+						url,
+						parent_id,
+						i,
+					});
 
 				return {
 					children: argNodes,
 					refs: callerIdentifierRefs,
+					edits: [...edits, ...callerIdentifierEdits],
 				};
 			}
 
@@ -254,16 +277,21 @@ export function handleExpression({
 						i: i - 1,
 					});
 					// this just returns the ref of c (the property_identifier)
-					const { refs: propIdentifierRefs } = yield* handleExpression({
-						node: property_identifier,
-						url,
-						parent_id,
-						i,
-					});
+					const { refs: propIdentifierRefs, edits: propIdentifierEdits } =
+						yield* handleExpression({
+							node: property_identifier,
+							url,
+							parent_id,
+							i,
+						});
 					return {
 						refs: parentCall.refs,
 						children: [
-							...parentCall.children,
+							...parentCall.children.filter(
+								(x) =>
+									(x.references?.length ?? 0) > 0 ||
+									(x.children?.length ?? 0) > 0,
+							),
 							{
 								id: parent_id !== "" ? `${parent_id}.${i + 1}` : `${i + 1}`,
 								text: property_identifier.text().trim(),
@@ -273,6 +301,7 @@ export function handleExpression({
 								children: [],
 							},
 						],
+						edits: [...parentCall.edits, ...propIdentifierEdits],
 					};
 				}
 
@@ -289,14 +318,16 @@ export function handleExpression({
 						parent_id,
 						i: i - 1,
 					});
-					const { refs: propIdentifierRefs } = yield* handleExpression({
-						node: property_identifier,
-						url,
-						parent_id,
-						i,
-					});
+					const { refs: propIdentifierRefs, edits: propIdentifierEdits } =
+						yield* handleExpression({
+							node: property_identifier,
+							url,
+							parent_id,
+							i,
+						});
 					return {
 						refs: [],
+						edits: [...parentIdentifier.edits, ...propIdentifierEdits],
 						children: [
 							{
 								id: parent_id !== "" ? `${parent_id}.${i}` : `${i}`,
@@ -344,6 +375,7 @@ export function handleExpression({
 					return {
 						children: [],
 						refs: [],
+						edits: [],
 					};
 				}
 
@@ -368,6 +400,7 @@ export function handleExpression({
 							lang: Lang.TypeScript,
 						})),
 					children: [],
+					edits: [],
 				};
 			}
 
@@ -399,9 +432,10 @@ export function handleExpression({
 						return {
 							children: [...acc.children, ...curr.children],
 							refs: [...acc.refs, ...curr.refs],
+							edits: [...acc.edits, ...curr.edits],
 						};
 					},
-					{ children: [], refs: [] },
+					{ children: [], refs: [], edits: [] },
 				);
 			}
 		}
@@ -409,6 +443,7 @@ export function handleExpression({
 		return {
 			children: [],
 			refs: [],
+			edits: [],
 		};
 	});
 }

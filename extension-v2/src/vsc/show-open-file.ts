@@ -167,13 +167,21 @@ export function showOpenFile(langs: Lang[]) {
 function processAndShowReferences(
 	graphs: Graph[],
 	references: CodeReference[],
+	depth = 0,
 ): Effect.Effect<void> {
 	return Effect.forEach(
 		graphs,
 		(graph) =>
 			Effect.gen(function* () {
+				if (depth > 3) {
+					return;
+				}
 				if (!graph?.node.data.refID) {
-					return yield* processAndShowReferences(graph.children, references);
+					return yield* processAndShowReferences(
+						graph.children,
+						references,
+						depth + 1,
+					);
 				}
 
 				const ref = references.find((ref) => ref.id === graph.node.data.refID);
@@ -187,10 +195,11 @@ function processAndShowReferences(
 				graph.children = res.graphs;
 				collapsedNodes.add(graph.node.data.id);
 
-				yield* processAndShowReferences(graph.children, [
-					...references,
-					...res.references,
-				]);
+				yield* processAndShowReferences(
+					graph.children,
+					[...references, ...res.references],
+					depth + 1,
+				);
 
 				sendNodes(graphCache.graph);
 			}),

@@ -65,7 +65,11 @@ export function getFlowAST({
 				const expression = children[1];
 
 				// Find all references in the expression
-				const { refs, children: expressionChildren } = yield* handleExpression({
+				const {
+					refs,
+					children: expressionChildren,
+					edits,
+				} = yield* handleExpression({
 					node: expression,
 					url,
 					parent_id: parent_id !== "" ? `${parent_id}.${i}` : `${i}`,
@@ -75,7 +79,7 @@ export function getFlowAST({
 				// Create and return the output
 				const output = {
 					id: parent_id !== "" ? `${parent_id}.${i}` : `${i}`,
-					text: node.text().trim(),
+					text: node.commitEdits(edits).trim(),
 					range: getCodeRangeFromSgNode(node),
 					filePath: url.fsPath,
 					children: expressionChildren,
@@ -146,11 +150,10 @@ export function getFlowAST({
 					block.replace(`<${kind}_body/>`),
 					...to_be_removed.map((x) => x.replace("")),
 				];
-				const text = node.commitEdits(edits);
 
 				return yield* Effect.succeed({
 					id: parent_id !== "" ? `${parent_id}.${i}` : `${i}`,
-					text: text.trim(),
+					text: node.commitEdits(edits).trim(),
 					range: getCodeRangeFromSgNode(node),
 					filePath: url.fsPath,
 					children,
@@ -173,7 +176,11 @@ export function getFlowAST({
 				}
 
 				// find all the references in the expression
-				const { refs, children: expressionChildren } = yield* handleExpression({
+				const {
+					refs,
+					children: expressionChildren,
+					edits,
+				} = yield* handleExpression({
 					node: children[0],
 					url,
 					parent_id: parent_id !== "" ? `${parent_id}.${i}` : `${i}`,
@@ -183,7 +190,7 @@ export function getFlowAST({
 				// create and return the output. Don't include references if there are none
 				const output = {
 					id: parent_id !== "" ? `${parent_id}.${i}` : `${i}`,
-					text: node.text().trim(),
+					text: node.commitEdits(edits).trim(),
 					range: getCodeRangeFromSgNode(node),
 					filePath: url.fsPath,
 					children: expressionChildren,
@@ -217,7 +224,11 @@ export function getFlowAST({
 				const expression = children[1];
 
 				// Get the references in the expression
-				const { refs, children: expressionChildren } = yield* handleExpression({
+				const {
+					refs,
+					children: expressionChildren,
+					edits,
+				} = yield* handleExpression({
 					node: expression,
 					url,
 					parent_id: parent_id !== "" ? `${parent_id}.${i}` : `${i}`,
@@ -227,7 +238,7 @@ export function getFlowAST({
 				// Create and return the output. Don't include references if there are none
 				const output = {
 					id: parent_id !== "" ? `${parent_id}.${i}` : `${i}`,
-					text: node.text().trim(),
+					text: node.commitEdits(edits).trim(),
 					range: getCodeRangeFromSgNode(node),
 					filePath: url.fsPath,
 					children: expressionChildren,
@@ -259,7 +270,11 @@ export function getFlowAST({
 				}
 
 				// Find any function or expressions in the value
-				const { refs, children: expressionChildren } = yield* handleExpression({
+				const {
+					refs,
+					children: expressionChildren,
+					edits,
+				} = yield* handleExpression({
 					node: declarator,
 					url,
 					parent_id: parent_id !== "" ? `${parent_id}.${i}` : `${i}`,
@@ -269,7 +284,7 @@ export function getFlowAST({
 				// Create output
 				const output = {
 					id: parent_id !== "" ? `${parent_id}.${i}` : `${i}`,
-					text: node.text().trim(),
+					text: node.commitEdits(edits).trim(),
 					range: getCodeRangeFromSgNode(node),
 					filePath: url.fsPath,
 					children: expressionChildren,

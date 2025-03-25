@@ -23,16 +23,26 @@ export const SHOULD_USE_MOCK = false;
  */
 export function getAbstractionTree(input: LLMContext, astHash: string) {
 	return Effect.gen(function* () {
+		const dirPath = getNodifyWorkspaceDir();
+
 		const tokens = countTokens(JSON.stringify(input));
 		console.log(`input tokens: ${tokens}`);
+
 		if (SHOULD_USE_MOCK) {
+			const mockFolder = `${dirPath}/ast_cache`;
+			const mockPath = `${mockFolder}/${astHash}.json`;
+
+			// make the directory if it doesn't exist
+			yield* Effect.tryPromise(() => fs.mkdir(mockFolder, { recursive: true }));
+			yield* Effect.tryPromise(() =>
+				fs.writeFile(mockPath, JSON.stringify(input, null, 4)),
+			);
 			return getMockAbstractionTree(input, astHash);
 		}
 
 		const model = getModelFromWorkspaceConfig();
 		const client = getOpenAIClientFromWorkspaceConfig();
 
-		const dirPath = getNodifyWorkspaceDir();
 		const responsePath = `${dirPath}/abstraction_tree_cache/${astHash}.json`;
 		const logPath = `${dirPath}/llm_logs/${astHash}.json`;
 		const exists = yield* Effect.promise(() =>
