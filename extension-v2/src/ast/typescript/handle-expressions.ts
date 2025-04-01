@@ -283,10 +283,6 @@ export function handleExpression({
 				const property_identifier = node.children()[2];
 				// the parent could either be a call_expression or a member_expression
 
-				if (node.text() === "context.subscriptions") {
-					console.log(node.range());
-				}
-
 				// "a().c" (parent is call_expression "a()")
 				if (parent.kind() === "call_expression") {
 					// it would return the ref of thing thing calling, and children (args expressions)

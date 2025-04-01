@@ -147,6 +147,7 @@ export function getFlowAST({
 						id: parent_id !== "" ? `${parent_id}.${i}` : `${i}`,
 						text: node.text().trim(),
 						range: getCodeRangeFromSgNode(node),
+						children: [],
 						filePath: url.fsPath,
 					});
 				}

@@ -216,6 +216,7 @@ export function getFlowAST({
 						text: node.text().trim(),
 						range: getCodeRangeFromSgNode(node),
 						filePath: url.fsPath,
+						children: [],
 					};
 					return yield* Effect.succeed(output);
 				}

@@ -31,7 +31,7 @@ export type CodeBlock = {
 	text: string;
 	range: CodeRange;
 	filePath: string;
-	children?: CodeBlock[];
+	children: CodeBlock[];
 	references?: CodeReference[];
 };
 

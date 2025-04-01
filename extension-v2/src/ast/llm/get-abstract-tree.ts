@@ -174,6 +174,16 @@ type AbstractionTreeOutput = {
 
 		// use local model for testing purposes
 		console.error(`sending request with ${tokens} tokens`);
+		if (tokens > 15_000) {
+			return [
+				{
+					label: "Code is too long to analyze",
+					idRange: ["0", "0"] as const,
+					type: "error",
+					children: [],
+				},
+			] as AbstractionGroup[];
+		}
 		const message = yield* Effect.tryPromise({
 			try: () =>
 				client.chat.completions

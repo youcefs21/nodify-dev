@@ -10,6 +10,7 @@ import {
 import { getNodifyWorkspaceDir } from "../../utils/get-nodify-workspace-dir";
 import fs from "node:fs/promises";
 import { LLMError } from "./llm.schema";
+import { countTokens } from "gpt-tokenizer";
 
 const summarySchema = z.object({
 	summary: z.string(),
@@ -76,6 +77,12 @@ EXAMPLE OUTPUT:
 `;
 
 		console.error("Summarizing code", code.slice(0, 20));
+		const tokens = countTokens(code);
+		if (tokens > 15_000) {
+			return {
+				summary: "Code is too long to summarize",
+			};
+		}
 		const res = yield* Effect.tryPromise({
 			try: () =>
 				client.beta.chat.completions.parse({
