@@ -25,7 +25,7 @@ export function getAbstractionTree(input: LLMContext, astHash: string) {
 		const dirPath = getNodifyWorkspaceDir();
 
 		const tokens = countTokens(JSON.stringify(input));
-		console.error(`input tokens: ${tokens}`);
+		console.log(`input tokens: ${tokens}`);
 
 		if (SHOULD_USE_MOCK) {
 			const mockFolder = `${dirPath}/ast_cache`;
@@ -43,7 +43,7 @@ export function getAbstractionTree(input: LLMContext, astHash: string) {
 		const client = getOpenAIClientFromWorkspaceConfig();
 
 		const responsePath = `${dirPath}/abstraction_tree_cache/${astHash}.json`;
-		const logPath = `${dirPath}/llm_logs/${astHash}.json`;
+		const logPath = `${dirPath}/llm_logs/${astHash}-abstraction-tree.json`;
 		const exists = yield* Effect.promise(() =>
 			fs
 				.access(responsePath)
@@ -173,17 +173,20 @@ type AbstractionTreeOutput = {
 `;
 
 		// use local model for testing purposes
-		console.error(`sending request with ${tokens} tokens`);
 		if (tokens > 15_000) {
 			return [
 				{
-					label: "Code is too long to analyze",
-					idRange: ["0", "0"] as const,
+					label: "Code Chunk is too long to analyze",
+					idRange: [
+						input.ast[0].id,
+						input.ast[input.ast.length - 1].id,
+					] as const,
 					type: "error",
 					children: [],
 				},
 			] as AbstractionGroup[];
 		}
+		console.error(`sending request with ${tokens} tokens`);
 		const message = yield* Effect.tryPromise({
 			try: () =>
 				client.chat.completions
@@ -236,7 +239,8 @@ type AbstractionTreeOutput = {
 					logPath,
 					JSON.stringify(
 						[
-							{ role: "user", content: input },
+							{ role: "system", content: systemPrompt },
+							{ role: "user", content: JSON.stringify(input, null, 2) },
 							{ role: "assistant", content: message },
 						],
 						null,

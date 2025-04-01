@@ -19,7 +19,6 @@ import {
 	Bell,
 	Power,
 	Package,
-	Building2,
 	Waves,
 	LineChart,
 	FileCheck,
@@ -28,6 +27,10 @@ import {
 	Sliders,
 	Activity,
 	Network,
+	LogOut,
+	CheckCircle,
+	ArrowLeft,
+	ClipboardList,
 } from "lucide-react";
 import { cn } from "../../utils/cn";
 
@@ -112,6 +115,11 @@ export const TypeIconMap = {
 			<Hammer className="size-5" />
 		</div>
 	),
+	build_process: () => (
+		<div className={cn("p-2 rounded-lg bg-yellow [&>*]:stroke-mantle")}>
+			<Hammer className="size-5" />
+		</div>
+	),
 	display: () => (
 		<div className={cn("p-2 rounded-lg bg-sky [&>*]:stroke-mantle")}>
 			<Layout className="size-5" />
@@ -135,11 +143,6 @@ export const TypeIconMap = {
 	package_management: () => (
 		<div className={cn("p-2 rounded-lg bg-mauve [&>*]:stroke-mantle")}>
 			<Package className="size-5" />
-		</div>
-	),
-	build_process: () => (
-		<div className={cn("p-2 rounded-lg bg-yellow [&>*]:stroke-mantle")}>
-			<Building2 className="size-5" />
 		</div>
 	),
 	stream_handler: () => (
@@ -180,6 +183,26 @@ export const TypeIconMap = {
 	network_call: () => (
 		<div className={cn("p-2 rounded-lg bg-teal [&>*]:stroke-mantle")}>
 			<Network className="size-5" />
+		</div>
+	),
+	return: () => (
+		<div className={cn("p-2 rounded-lg bg-blue [&>*]:stroke-mantle")}>
+			<ArrowLeft className="size-5" />
+		</div>
+	),
+	summary: () => (
+		<div className={cn("p-2 rounded-lg bg-sapphire [&>*]:stroke-mantle")}>
+			<ClipboardList className="size-5" />
+		</div>
+	),
+	exit: () => (
+		<div className={cn("p-2 rounded-lg bg-red [&>*]:stroke-mantle")}>
+			<LogOut className="size-5" />
+		</div>
+	),
+	finalization: () => (
+		<div className={cn("p-2 rounded-lg bg-green [&>*]:stroke-mantle")}>
+			<CheckCircle className="size-5" />
 		</div>
 	),
 };

@@ -65,7 +65,7 @@ export function handleExpression({
 	parent_is_call_expression,
 }: Props): Effect.Effect<Output, HandleExpressionErrors> {
 	// Skip processing for basic syntax elements that don't contain meaningful references
-	if (ignoreKinds.some((kind) => kind === node.kind())) {
+	if (!node || ignoreKinds.some((kind) => kind === node.kind())) {
 		return Effect.succeed({
 			children: [],
 			refs: [],
@@ -182,7 +182,10 @@ export function handleExpression({
 					parent.kind() === "identifier" ||
 					parent.kind() === "property_identifier" ||
 					parent.kind() === "attribute" ||
-					parent.kind() === "subscript_expression"
+					parent.kind() === "subscript_expression" ||
+					parent.kind() === "string" ||
+					parent.kind() === "concatenated_string" ||
+					parent.kind() === "subscript"
 				) {
 					const parentIdentifier = yield* handleExpression({
 						node: parent,
@@ -254,8 +257,13 @@ export function handleExpression({
 					args
 						.children()
 						.filter((x) => !ignoreKinds.some((kind) => kind === x.kind())),
-					(arg, index) =>
-						handleExpression({
+					(_arg, index) => {
+						let arg = _arg;
+						if (arg.kind() === "keyword_argument") {
+							arg = arg.children()[3];
+						}
+
+						return handleExpression({
 							node: arg,
 							url,
 							parent_id:
@@ -269,12 +277,15 @@ export function handleExpression({
 								...x,
 								node: arg,
 							})),
-						),
+						);
+					},
 					{ concurrency: 5 },
 				).pipe(
 					Effect.map((x) =>
 						x.filter(
-							(arg) => !ignoreKinds.some((kind) => kind === arg.node.kind()),
+							(arg) =>
+								arg.node &&
+								!ignoreKinds.some((kind) => kind === arg.node.kind()),
 						),
 					),
 				);
@@ -335,7 +346,11 @@ export function handleExpression({
 											y.children?.length > 0,
 									),
 							),
-							...parentCall.children,
+							...parentCall.children.filter(
+								(x) =>
+									(x.references?.length ?? 0) > 0 ||
+									(x.children?.length ?? 0) > 0,
+							),
 						],
 						refs: [],
 						edits: [...edits, ...parentCall.edits],
@@ -349,26 +364,28 @@ export function handleExpression({
 					i,
 					parent_is_call_expression: true,
 				});
-				return {
-					children: [
-						{
-							id: `${parent_id}.${i}`,
-							text: callerIdentifier.text(),
-							range: getCodeRangeFromSgNode(callerIdentifier),
-							filePath: url.fsPath,
-							references: caller.refs,
-							children: [],
-						},
-						...argNodes.filter(
-							(x) =>
-								x.references?.length > 0 ||
-								x.children?.some(
-									(y) =>
-										(y.references && y.references?.length > 0) ||
-										y.children?.length > 0,
-								),
+
+				const children = argNodes.filter(
+					(x) =>
+						x.references?.length > 0 ||
+						x.children?.some(
+							(y) =>
+								(y.references && y.references?.length > 0) ||
+								y.children?.length > 0,
 						),
-					],
+				);
+				if (children.length > 0 || caller.refs.length > 0) {
+					children.push({
+						id: `${parent_id}.${i}`,
+						text: callerIdentifier.text(),
+						range: getCodeRangeFromSgNode(callerIdentifier),
+						filePath: url.fsPath,
+						references: caller.refs,
+						children: [],
+					});
+				}
+				return {
+					children,
 					refs: [],
 					edits: [...caller.edits],
 				};
@@ -449,7 +466,7 @@ export function handleExpression({
 		};
 	}).pipe(
 		Effect.tap((x) => {
-			console.log("handled node kind", node.kind(), node.text(), x);
+			// console.log("handled node kind", node.kind(), node.text(), x);
 		}),
 	);
 }

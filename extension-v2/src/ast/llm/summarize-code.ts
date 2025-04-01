@@ -35,6 +35,7 @@ export function summarizeCode(code: string) {
 		const dirPath = getNodifyWorkspaceDir();
 		const codeHash = yield* hashString(code);
 		const path = `${dirPath}/summaries_cache/${codeHash}.json`;
+		const logPath = `${dirPath}/llm_logs/${codeHash}-summary.json`;
 		const exists = yield* Effect.promise(() =>
 			fs
 				.access(path)
@@ -110,6 +111,25 @@ EXAMPLE OUTPUT:
 		const summary = parsed?.summary ?? code.slice(0, 100);
 		yield* Effect.tryPromise(() =>
 			fs.writeFile(path, JSON.stringify({ summary }, null, 2)),
+		);
+
+		// Save LLM logs including system and user prompts
+		yield* Effect.tryPromise(() =>
+			fs.mkdir(`${dirPath}/llm_logs`, { recursive: true }),
+		);
+		yield* Effect.tryPromise(() =>
+			fs.writeFile(
+				logPath,
+				JSON.stringify(
+					[
+						{ role: "system", content: systemPrompt },
+						{ role: "user", content: code },
+						{ role: "assistant", content: res },
+					],
+					null,
+					2,
+				),
+			),
 		);
 
 		return {
