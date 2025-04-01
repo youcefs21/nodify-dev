@@ -75,7 +75,7 @@ EXAMPLE OUTPUT:
 }
 `;
 
-		console.log("Summarizing code", code.slice(0, 20));
+		console.error("Summarizing code", code.slice(0, 20));
 		const res = yield* Effect.tryPromise({
 			try: () =>
 				client.beta.chat.completions.parse({
@@ -97,6 +97,7 @@ EXAMPLE OUTPUT:
 				);
 			},
 		});
+		console.error(`got llm response ${JSON.stringify(res).slice(0, 100)}...`);
 
 		const parsed = res.choices[0].message.parsed;
 		const summary = parsed?.summary ?? code.slice(0, 100);

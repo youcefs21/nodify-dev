@@ -25,7 +25,7 @@ export function getAbstractionTree(input: LLMContext, astHash: string) {
 		const dirPath = getNodifyWorkspaceDir();
 
 		const tokens = countTokens(JSON.stringify(input));
-		console.log(`input tokens: ${tokens}`);
+		console.error(`input tokens: ${tokens}`);
 
 		if (SHOULD_USE_MOCK) {
 			const mockFolder = `${dirPath}/ast_cache`;
@@ -69,12 +69,13 @@ INSTRUCTIONS:
    - 2 (nodes have children) for most code.
    - at most 3 (nodes have children, and grandchildren) for very complex code.
 3. For each group:
-   - Create a concise 2-8 word descriptive label
+   - Create a concise 2-6 word descriptive label
    - Specify the range of node IDs covered (from first to last in the sequence)
-   - Categorize with a single-word type that broadly describes its purpose (examples: "event_listener", "data_processor", "machine_learning", "visualization", "documentation", "utility", "main", "callback")
+   - Categorize with a single-word type that broadly describes its purpose (examples: "event_listener", "data_processor", "machine_learning", "visualization", "documentation", "utility", "callback", "network_call", "notification", etc.)
 4. Ensure each leaf node contains at most ONE reference in its range
 5. Group related operations together rather than treating each line as its own group
 6. Your ranges must include everything. Don't skip any nodes.
+7. Your output doesn't have to be in the same order as the input, instead you should order them by the logical flow of the code. This is especially important for recursive functions, and callbacks 
 
 IMPORTANT FORMATTING INSTRUCTIONS:
 - You MUST respond with ONLY a valid JSON object
@@ -172,6 +173,7 @@ type AbstractionTreeOutput = {
 `;
 
 		// use local model for testing purposes
+		console.error(`sending request with ${tokens} tokens`);
 		const message = yield* Effect.tryPromise({
 			try: () =>
 				client.chat.completions
@@ -182,6 +184,8 @@ type AbstractionTreeOutput = {
 						],
 						response_format: { type: "json_object" },
 						model: model, //model,
+						temperature: 0.5,
+						max_tokens: 4000,
 					})
 					.then((res) => {
 						// Format OpenAI response to match Claude's content structure
@@ -201,8 +205,8 @@ type AbstractionTreeOutput = {
 				);
 			},
 		});
-		console.log(
-			`got claude response ${JSON.stringify(message.content).slice(0, 100)}...`,
+		console.error(
+			`got llm response ${JSON.stringify(message.content).slice(0, 100)}...`,
 		);
 
 		// Extract JSON from Claude's response

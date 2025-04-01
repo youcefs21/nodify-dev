@@ -99,6 +99,7 @@ export function getFlowAST({
 				// which is the `expression` we care about
 				const children = node.children();
 				if (children.length !== 1) {
+					console.error(node.text());
 					return yield* Effect.fail(new InvalidExpressionStatementError());
 				}
 
@@ -124,15 +125,24 @@ export function getFlowAST({
 			}
 
 			case "return_statement": {
-				// `return_statement` always has 2 children, the word `return` and the expression
+				// `return_statement` can have either 1 child (just 'return') or 2 children ('return' and expression)
 				const children = node.children();
-				if (children.length !== 2) {
+				if (children.length === 0 || children.length > 2) {
 					return yield* Effect.fail(new InvalidExpressionStatementError());
 				}
 
-				const [return_word, expression] = children;
+				// If there's only one child, it's just a return statement
+				if (children.length === 1) {
+					return yield* Effect.succeed({
+						id: parent_id !== "" ? `${parent_id}.${i}` : `${i}`,
+						text: node.text().trim(),
+						range: getCodeRangeFromSgNode(node),
+						filePath: url.fsPath,
+					});
+				}
 
-				// get the references in the expression
+				// Handle case with expression
+				const [return_word, expression] = children;
 				const refs = yield* handleExpression({ node: expression, url });
 
 				// create and return the output. Don't include references if there are none

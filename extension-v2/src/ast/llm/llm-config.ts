@@ -5,7 +5,7 @@ import OpenAI from "openai";
 // const OPENAI_URL = "http://127.0.0.1:11434";
 // const model = "unsloth/phi-4-bnb-4bit";
 // const model = "phi4:14b-q8_0";
-export const SHOULD_USE_MOCK = true;
+export const SHOULD_USE_MOCK = false;
 const apiKey = process.env.OPENAI_API_KEY ?? "";
 
 export function getModelFromWorkspaceConfig() {

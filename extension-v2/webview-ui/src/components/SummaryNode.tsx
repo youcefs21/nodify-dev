@@ -19,6 +19,9 @@ import { sendToServer } from "../utils/sendToServer";
 // 56px per node + 8px gap so 64px per node
 export function SummaryNode({ data }: NodeProps<CustomNode>) {
 	const CustomIcon = TypeIconMap[data.type as keyof typeof TypeIconMap];
+	if (!CustomIcon) {
+		console.error(`data.type is not in TypeIconMap: ${data.type}`);
+	}
 	const [highlightedNodeId, setHighlightedNodeId] =
 		useAtom(highlightedNodeAtom);
 

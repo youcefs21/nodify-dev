@@ -1,4 +1,34 @@
-import { Book, FileText, LogIn, Play, Settings2, Unplug } from "lucide-react";
+import {
+	Book,
+	FileText,
+	LogIn,
+	Play,
+	Settings2,
+	Unplug,
+	Webhook,
+	CheckCircle2,
+	BarChart3,
+	Settings,
+	Wrench,
+	ShieldCheck,
+	Type,
+	Code2,
+	Hammer,
+	Layout,
+	Terminal,
+	Bell,
+	Power,
+	Package,
+	Building2,
+	Waves,
+	LineChart,
+	FileCheck,
+	MessageSquare,
+	XCircle,
+	Sliders,
+	Activity,
+	Network,
+} from "lucide-react";
 import { cn } from "../../utils/cn";
 
 export const TypeIconMap = {
@@ -35,6 +65,121 @@ export const TypeIconMap = {
 	execution: () => (
 		<div className={cn("p-2 rounded-lg bg-green [&>*]:stroke-mantle")}>
 			<Play className="size-5" />
+		</div>
+	),
+	callback: () => (
+		<div className={cn("p-2 rounded-lg bg-mauve [&>*]:stroke-mantle")}>
+			<Webhook className="size-5" />
+		</div>
+	),
+	data_validation: () => (
+		<div className={cn("p-2 rounded-lg bg-teal [&>*]:stroke-mantle")}>
+			<CheckCircle2 className="size-5" />
+		</div>
+	),
+	visualization: () => (
+		<div className={cn("p-2 rounded-lg bg-sapphire [&>*]:stroke-mantle")}>
+			<BarChart3 className="size-5" />
+		</div>
+	),
+	configuration: () => (
+		<div className={cn("p-2 rounded-lg bg-mauve [&>*]:stroke-mantle")}>
+			<Settings className="size-5" />
+		</div>
+	),
+	setup: () => (
+		<div className={cn("p-2 rounded-lg bg-peach [&>*]:stroke-mantle")}>
+			<Wrench className="size-5" />
+		</div>
+	),
+	validation: () => (
+		<div className={cn("p-2 rounded-lg bg-teal [&>*]:stroke-mantle")}>
+			<ShieldCheck className="size-5" />
+		</div>
+	),
+	type_management: () => (
+		<div className={cn("p-2 rounded-lg bg-blue [&>*]:stroke-mantle")}>
+			<Type className="size-5" />
+		</div>
+	),
+	exit_code_processor: () => (
+		<div className={cn("p-2 rounded-lg bg-red [&>*]:stroke-mantle")}>
+			<Code2 className="size-5" />
+		</div>
+	),
+	build_processor: () => (
+		<div className={cn("p-2 rounded-lg bg-yellow [&>*]:stroke-mantle")}>
+			<Hammer className="size-5" />
+		</div>
+	),
+	display: () => (
+		<div className={cn("p-2 rounded-lg bg-sky [&>*]:stroke-mantle")}>
+			<Layout className="size-5" />
+		</div>
+	),
+	exit_code_logic: () => (
+		<div className={cn("p-2 rounded-lg bg-red [&>*]:stroke-mantle")}>
+			<Terminal className="size-5" />
+		</div>
+	),
+	notification: () => (
+		<div className={cn("p-2 rounded-lg bg-pink [&>*]:stroke-mantle")}>
+			<Bell className="size-5" />
+		</div>
+	),
+	process_termination: () => (
+		<div className={cn("p-2 rounded-lg bg-red [&>*]:stroke-mantle")}>
+			<Power className="size-5" />
+		</div>
+	),
+	package_management: () => (
+		<div className={cn("p-2 rounded-lg bg-mauve [&>*]:stroke-mantle")}>
+			<Package className="size-5" />
+		</div>
+	),
+	build_process: () => (
+		<div className={cn("p-2 rounded-lg bg-yellow [&>*]:stroke-mantle")}>
+			<Building2 className="size-5" />
+		</div>
+	),
+	stream_handler: () => (
+		<div className={cn("p-2 rounded-lg bg-teal [&>*]:stroke-mantle")}>
+			<Waves className="size-5" />
+		</div>
+	),
+	statistics: () => (
+		<div className={cn("p-2 rounded-lg bg-sapphire [&>*]:stroke-mantle")}>
+			<LineChart className="size-5" />
+		</div>
+	),
+	post_processing: () => (
+		<div className={cn("p-2 rounded-lg bg-blue [&>*]:stroke-mantle")}>
+			<FileCheck className="size-5" />
+		</div>
+	),
+	message_display: () => (
+		<div className={cn("p-2 rounded-lg bg-sky [&>*]:stroke-mantle")}>
+			<MessageSquare className="size-5" />
+		</div>
+	),
+	termination: () => (
+		<div className={cn("p-2 rounded-lg bg-red [&>*]:stroke-mantle")}>
+			<XCircle className="size-5" />
+		</div>
+	),
+	argument_handler: () => (
+		<div className={cn("p-2 rounded-lg bg-mauve [&>*]:stroke-mantle")}>
+			<Sliders className="size-5" />
+		</div>
+	),
+	profiling: () => (
+		<div className={cn("p-2 rounded-lg bg-sapphire [&>*]:stroke-mantle")}>
+			<Activity className="size-5" />
+		</div>
+	),
+	network_call: () => (
+		<div className={cn("p-2 rounded-lg bg-teal [&>*]:stroke-mantle")}>
+			<Network className="size-5" />
 		</div>
 	),
 };
