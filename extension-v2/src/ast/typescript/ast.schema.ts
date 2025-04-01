@@ -52,6 +52,8 @@ export const kinds = [
 export type Kind = (typeof kinds)[number];
 
 export const ignoreKinds = [
+	"null",
+	"undefined",
 	"subscript_expression",
 	"new",
 	"=",

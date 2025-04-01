@@ -39,6 +39,7 @@ interface Props {
 	node: SgNode;
 	url: vscode.Uri;
 	parent_id: string;
+	parent_is_call_expression?: boolean;
 	i: number;
 }
 
@@ -72,6 +73,7 @@ export function handleExpression({
 	url,
 	parent_id,
 	i,
+	parent_is_call_expression,
 }: Props): Effect.Effect<Output, HandleExpressionErrors> {
 	// Skip processing for basic syntax elements that don't contain meaningful references
 	if (ignoreKinds.some((kind) => kind === node.kind())) {
@@ -132,7 +134,7 @@ export function handleExpression({
 					children: [],
 					refs: [
 						{
-							symbol: `<${node.kind()}/>`,
+							symbol: `<${node.kind()}_${body.shortId}/>`,
 							id: body.shortId,
 							fullHash: body.fullHash,
 							body: body.text,
@@ -141,7 +143,7 @@ export function handleExpression({
 							lang: Lang.TypeScript,
 						},
 					],
-					edits: [node.replace(`<${node.kind()}/>`)],
+					edits: [node.replace(`<${node.kind()}_${body.shortId}/>`)],
 				};
 			}
 			case "new_expression":
@@ -185,6 +187,7 @@ export function handleExpression({
 									? `${parent_id}.${i}.${index}`
 									: `${i}.${index}`,
 							i: 0,
+							parent_is_call_expression: true,
 						}).pipe(
 							Effect.map((x) => ({
 								...x,
@@ -231,6 +234,7 @@ export function handleExpression({
 						url,
 						parent_id,
 						i: i - 1,
+						parent_is_call_expression: true,
 					});
 
 					// I want to put the args expressions in the children of the property_identifier
@@ -253,6 +257,7 @@ export function handleExpression({
 						url,
 						parent_id,
 						i,
+						parent_is_call_expression: true,
 					});
 
 				return {
@@ -266,6 +271,10 @@ export function handleExpression({
 				const parent = node.children()[0];
 				const property_identifier = node.children()[2];
 				// the parent could either be a call_expression or a member_expression
+
+				if (node.text() === "context.subscriptions") {
+					console.log(node.range());
+				}
 
 				// "a().c" (parent is call_expression "a()")
 				if (parent.kind() === "call_expression") {
@@ -329,23 +338,28 @@ export function handleExpression({
 						refs: [],
 						edits: [...parentIdentifier.edits, ...propIdentifierEdits],
 						children: [
-							{
-								id: parent_id !== "" ? `${parent_id}.${i}` : `${i}`,
-								text: parent.text().trim(),
-								range: getCodeRangeFromSgNode(parent),
-								filePath: url.fsPath,
-								references: parentIdentifier.refs,
-								children: parentIdentifier.children,
-							},
-							{
-								id: parent_id !== "" ? `${parent_id}.${i + 1}` : `${i + 1}`,
-								text: property_identifier.text().trim(),
-								range: getCodeRangeFromSgNode(property_identifier),
-								filePath: url.fsPath,
-								references: propIdentifierRefs,
-								children: [],
-							},
-						],
+							parentIdentifier.refs?.length > 0 ||
+							parentIdentifier.children?.length > 0
+								? {
+										id: parent_id !== "" ? `${parent_id}.${i}` : `${i}`,
+										text: parent.text().trim(),
+										range: getCodeRangeFromSgNode(parent),
+										filePath: url.fsPath,
+										references: parentIdentifier.refs,
+										children: parentIdentifier.children,
+									}
+								: undefined,
+							parent_is_call_expression || propIdentifierRefs?.length > 0
+								? {
+										id: parent_id !== "" ? `${parent_id}.${i + 1}` : `${i + 1}`,
+										text: property_identifier.text().trim(),
+										range: getCodeRangeFromSgNode(property_identifier),
+										filePath: url.fsPath,
+										references: propIdentifierRefs,
+										children: [],
+									}
+								: undefined,
+						].filter((x) => x !== undefined),
 					};
 				}
 

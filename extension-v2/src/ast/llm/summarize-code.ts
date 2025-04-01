@@ -5,11 +5,11 @@ import z from "zod";
 import {
 	getModelFromWorkspaceConfig,
 	getOpenAIClientFromWorkspaceConfig,
+	SHOULD_USE_MOCK,
 } from "./llm-config";
 import { getNodifyWorkspaceDir } from "../../utils/get-nodify-workspace-dir";
 import fs from "node:fs/promises";
 import { LLMError } from "./llm.schema";
-import { SHOULD_USE_MOCK } from "./get-abstract-tree";
 
 const summarySchema = z.object({
 	summary: z.string(),

@@ -3,6 +3,7 @@ import type { AbstractionGroup, LLMContext } from "./llm.schema";
 import {
 	getOpenAIClientFromWorkspaceConfig,
 	getModelFromWorkspaceConfig,
+	SHOULD_USE_MOCK,
 } from "./llm-config";
 import { getNodifyWorkspaceDir } from "../../utils/get-nodify-workspace-dir";
 import { z } from "zod";
@@ -13,8 +14,6 @@ import {
 	abstractionTreeSchema,
 } from "./llm.schema";
 import { countTokens } from "gpt-tokenizer";
-
-export const SHOULD_USE_MOCK = false;
 
 /**
  * Analyze the provided AST-parsed code and create an abstraction hierarchy with logical groupings.
