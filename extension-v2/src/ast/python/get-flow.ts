@@ -105,14 +105,24 @@ export function getFlowAST({
 
 				// find all the references in the expression
 				// TODO: things like func_c(func_a(), func_b()) aren't really handled
-				const refs = yield* handleExpression({ node: children[0], url });
+				const {
+					refs,
+					children: expressionChildren,
+					edits,
+				} = yield* handleExpression({
+					node: children[0],
+					url,
+					parent_id: parent_id !== "" ? `${parent_id}.${i}` : `${i}`,
+					i: 0,
+				});
 
 				// create and return the output. Don't include references if there are none
 				const output = {
 					id: parent_id !== "" ? `${parent_id}.${i}` : `${i}`,
-					text: node.text().trim(),
+					text: node.commitEdits(edits).trim(),
 					range: getCodeRangeFromSgNode(node),
 					filePath: url.fsPath,
+					children: expressionChildren,
 				};
 				return yield* Effect.succeed(
 					refs.length === 0
@@ -143,14 +153,24 @@ export function getFlowAST({
 
 				// Handle case with expression
 				const [return_word, expression] = children;
-				const refs = yield* handleExpression({ node: expression, url });
+				const {
+					refs,
+					children: expressionChildren,
+					edits,
+				} = yield* handleExpression({
+					node: expression,
+					url,
+					parent_id: parent_id !== "" ? `${parent_id}.${i}` : `${i}`,
+					i: 0,
+				});
 
 				// create and return the output. Don't include references if there are none
 				const output = {
 					id: parent_id !== "" ? `${parent_id}.${i}` : `${i}`,
-					text: node.text().trim(),
+					text: node.commitEdits(edits).trim(),
 					range: getCodeRangeFromSgNode(node),
 					filePath: url.fsPath,
+					children: expressionChildren,
 				};
 				return yield* Effect.succeed(
 					refs.length === 0

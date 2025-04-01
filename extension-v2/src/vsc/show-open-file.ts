@@ -173,7 +173,7 @@ function processAndShowReferences(
 		graphs,
 		(graph) =>
 			Effect.gen(function* () {
-				if (depth > 2) {
+				if (depth > 5) {
 					return;
 				}
 				if (!graph?.node.data.refID) {

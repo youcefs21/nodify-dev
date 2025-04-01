@@ -45,6 +45,7 @@ suite("TypeScript AST Test Suite", () => {
 				},
 				filePath:
 					"/Users/youcefboumar/Documents/School/Capstone2025/extension-v2/test-workspace/test-ts.ts",
+				children: [],
 				references: [
 					{
 						symbol: "add",

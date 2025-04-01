@@ -44,7 +44,7 @@ export type Kind = (typeof kinds)[number];
 
 export const ignoreKinds = [
 	"=",
-	"identifier",
+	// "identifier",
 	"integer",
 	"[",
 	"]",
@@ -53,7 +53,7 @@ export const ignoreKinds = [
 	",",
 	"lambda",
 	":",
-	"lambda_parameters",
+	// "lambda_parameters",
 	"{",
 	"}",
 	"if",
@@ -90,6 +90,7 @@ export const ignoreKinds = [
 	"string_content",
 	"string_start",
 	"string_end",
+	"string",
 	"for",
 	"in",
 	"int",

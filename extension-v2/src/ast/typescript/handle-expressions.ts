@@ -210,9 +210,11 @@ export function handleExpression({
 								parent_id !== ""
 									? `${parent_id}.${i}.${index}`
 									: `${i}.${index}`,
-							text: ignoreKinds.some((kind) => kind === arg.node.kind())
-								? arg.node.text()
-								: `<${arg.node.kind()}/>`,
+							text:
+								ignoreKinds.some((kind) => kind === arg.node.kind()) ||
+								arg.node.kind() === "identifier"
+									? arg.node.text()
+									: `<${arg.node.kind()}/>`,
 							range: getCodeRangeFromSgNode(arg.node),
 							filePath: url.fsPath,
 							references: arg.refs,
@@ -251,19 +253,28 @@ export function handleExpression({
 					};
 				}
 
-				const { refs: callerIdentifierRefs, edits: callerIdentifierEdits } =
-					yield* handleExpression({
-						node: callerIdentifier,
-						url,
-						parent_id,
-						i,
-						parent_is_call_expression: true,
-					});
+				const caller = yield* handleExpression({
+					node: callerIdentifier,
+					url,
+					parent_id,
+					i,
+					parent_is_call_expression: true,
+				});
 
 				return {
-					children: argNodes,
-					refs: callerIdentifierRefs,
-					edits: [...edits, ...callerIdentifierEdits],
+					children: [
+						{
+							id: `${parent_id}.${i}`,
+							text: callerIdentifier.text(),
+							range: getCodeRangeFromSgNode(callerIdentifier),
+							filePath: url.fsPath,
+							references: caller.refs,
+							children: [],
+						},
+						...argNodes,
+					],
+					refs: [],
+					edits: [...edits, ...caller.edits],
 				};
 			}
 

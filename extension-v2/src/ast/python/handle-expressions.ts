@@ -1,5 +1,5 @@
 import * as vscode from "vscode";
-import { Lang, type SgNode } from "@ast-grep/napi";
+import { type Edit, Lang, type SgNode } from "@ast-grep/napi";
 import { Effect } from "effect";
 import { getDefinition } from "../../vsc/builtin";
 import type { UnknownException } from "effect/Cause";
@@ -8,7 +8,7 @@ import {
 	type NoParentBodyRangeFound,
 } from "../get-definition";
 import { ignoreKinds } from "./ast.schema";
-import type { CodeReference } from "../llm/llm.schema";
+import type { CodeBlock, CodeReference } from "../llm/llm.schema";
 
 class NoIdentifierOrAttributeFound {
 	readonly _tag = "NoIdentifierOrAttributeFound";
@@ -23,6 +23,8 @@ export type HandleExpressionErrors =
 interface Props {
 	node: SgNode;
 	url: vscode.Uri;
+	parent_id: string;
+	i: number;
 }
 
 export function getFullNodeJson(node: SgNode): Record<string, unknown> {
@@ -32,6 +34,12 @@ export function getFullNodeJson(node: SgNode): Record<string, unknown> {
 		children: node.children().map(getFullNodeJson),
 	};
 }
+
+type Output = {
+	children: CodeBlock[];
+	refs: CodeReference[];
+	edits: Edit[];
+};
 
 /**
  * Processes AST expressions to extract code references and definitions.
@@ -47,10 +55,16 @@ export function getFullNodeJson(node: SgNode): Record<string, unknown> {
 export function handleExpression({
 	node,
 	url,
-}: Props): Effect.Effect<CodeReference[], HandleExpressionErrors> {
+	parent_id,
+	i,
+}: Props): Effect.Effect<Output, HandleExpressionErrors> {
 	// Skip processing for basic syntax elements that don't contain meaningful references
 	if (ignoreKinds.some((kind) => kind === node.kind())) {
-		return Effect.succeed([]);
+		return Effect.succeed({
+			children: [],
+			refs: [],
+			edits: [],
+		});
 	}
 
 	// console.log("called handleExpression with", node.kind());
@@ -86,7 +100,11 @@ export function handleExpression({
 							`No definitions found for ${identifier.text()} at ${url.fsPath}:${location.line}:${location.column}`,
 						);
 					}
-					return [];
+					return {
+						children: [],
+						refs: [],
+						edits: [],
+					};
 				}
 
 				// Extract the full range of the definition's body for reference mapping
@@ -95,18 +113,22 @@ export function handleExpression({
 					(def) => getIdentifierBody(def, Lang.Python),
 					{ concurrency: 5 },
 				);
-				return definitionRanges
-					.filter((range) => range !== undefined)
-					.filter((range) => range.isInWorkspace)
-					.map((range) => ({
-						lang: Lang.Python,
-						symbol: identifier.text(),
-						id: range.shortId,
-						fullHash: range.fullHash,
-						body: range.text,
-						range: range.range,
-						filePath: range.uri.fsPath,
-					}));
+				return {
+					children: [],
+					refs: definitionRanges
+						.filter((range) => range !== undefined)
+						.filter((range) => range.isInWorkspace)
+						.map((range) => ({
+							lang: Lang.Python,
+							symbol: identifier.text(),
+							id: range.shortId,
+							fullHash: range.fullHash,
+							body: range.text,
+							range: range.range,
+							filePath: range.uri.fsPath,
+						})),
+					edits: [],
+				};
 			}
 
 			// For compound expressions, recursively process all child nodes
@@ -139,10 +161,19 @@ export function handleExpression({
 				// Process all children concurrently
 				const x = yield* Effect.forEach(
 					node.children(),
-					(x) => handleExpression({ node: x, url }),
+					(x) => handleExpression({ node: x, url, parent_id, i }),
 					{ concurrency: 5 },
 				);
-				return x.flat();
+				return x.reduce(
+					(acc, curr) => {
+						return {
+							children: [...acc.children, ...curr.children],
+							refs: [...acc.refs, ...curr.refs],
+							edits: [...acc.edits, ...curr.edits],
+						};
+					},
+					{ children: [], refs: [], edits: [] },
+				);
 			}
 
 			case "yield": {
@@ -150,13 +181,26 @@ export function handleExpression({
 				// and only process the yielded value(s)
 				const children = yield* Effect.forEach(
 					node.children().slice(1),
-					(x) => handleExpression({ node: x, url }),
+					(x) => handleExpression({ node: x, url, parent_id, i }),
 					{ concurrency: 5 },
 				);
-				return children.flat();
+				return children.reduce(
+					(acc, curr) => {
+						return {
+							children: [...acc.children, ...curr.children],
+							refs: [...acc.refs, ...curr.refs],
+							edits: [...acc.edits, ...curr.edits],
+						};
+					},
+					{ children: [], refs: [], edits: [] },
+				);
 			}
 		}
 
-		return [];
+		return {
+			children: [],
+			refs: [],
+			edits: [],
+		};
 	});
 }
