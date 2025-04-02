@@ -17,6 +17,8 @@ import { StackedNodes } from "./components/StackedNode";
 import { useNodeNavigation } from "./utils/useNodeNavigation";
 import { LoadingScreen } from "./components/LoadingScreen";
 import { SummaryNode } from "./components/SummaryNode";
+import { ErrorBoundary } from "./components/ErrorBoundary";
+import { handleError } from "./utils/errorHandling";
 
 function App() {
 	const [renderedNodes, setNodes, onNodesChange] = useNodesState<CustomNode>(
@@ -50,16 +52,57 @@ function App() {
 		window.addEventListener(
 			"message",
 			(event) => {
-				const message = JSON.parse(event.data) as ServerToClientEvents;
-				if (message.type === "nodes") {
-					setNodes(message.value);
-					console.log("nodes", message.value);
-				} else if (message.type === "edges") {
-					setEdges(message.value);
-					console.log("edges", message.value);
-				} else if (message.type === "base-url") {
-					setBaseUrl(message.value);
-					console.log("base-url", message.value);
+				try {
+					const message = JSON.parse(event.data) as ServerToClientEvents;
+
+					if (message.type === "nodes") {
+						// Validate nodes before setting them
+						if (!Array.isArray(message.value)) {
+							console.error("Received invalid nodes data:", message.value);
+							return;
+						}
+
+						// Filter out any invalid nodes
+						const validNodes = message.value.filter(
+							(node) =>
+								node &&
+								typeof node === "object" &&
+								node.id &&
+								node.data &&
+								typeof node.data === "object",
+						);
+
+						setNodes(validNodes);
+						console.log("nodes", validNodes);
+					} else if (message.type === "edges") {
+						// Validate edges before setting them
+						if (!Array.isArray(message.value)) {
+							console.error("Received invalid edges data:", message.value);
+							return;
+						}
+
+						// Filter out any invalid edges
+						const validEdges = message.value.filter(
+							(edge) =>
+								edge &&
+								typeof edge === "object" &&
+								edge.id &&
+								edge.source &&
+								edge.target,
+						);
+
+						setEdges(validEdges);
+						console.log("edges", validEdges);
+					} else if (message.type === "base-url") {
+						if (typeof message.value !== "string") {
+							console.error("Received invalid base-url:", message.value);
+							return;
+						}
+						setBaseUrl(message.value);
+						console.log("base-url", message.value);
+					}
+				} catch (error) {
+					handleError(error, "Error processing message from extension");
 				}
 			},
 			{ signal: abortController.signal },
@@ -99,25 +142,40 @@ function App() {
 	return (
 		<div className="flex flex-1 w-[calc(100vw-3rem)] h-screen overflow-hidden mocha">
 			<div className="flex-grow">
-				<ReactFlow
-					nodes={renderedNodes}
-					nodeTypes={{
-						stacked: StackedNodes,
-						summary: SummaryNode,
-					}}
-					onNodesChange={onNodesChange}
-					edges={renderedEdges}
-					viewport={viewport}
-					onViewportChange={setViewport}
-					onEdgesChange={onEdgesChange}
-					nodesDraggable={false}
-					nodesConnectable={false}
-					edgesFocusable={false}
-					minZoom={0}
+				<ErrorBoundary
+					fallback={
+						<div className="flex items-center justify-center w-full h-full">
+							<div className="p-4 border rounded shadow-lg bg-surface-0">
+								<h2 className="text-lg font-semibold mb-2">
+									Something went wrong
+								</h2>
+								<p>
+									The visualization encountered an error. Please try refreshing.
+								</p>
+							</div>
+						</div>
+					}
 				>
-					<Controls />
-					<Background variant={BackgroundVariant.Dots} gap={12} size={1} />
-				</ReactFlow>
+					<ReactFlow
+						nodes={renderedNodes}
+						nodeTypes={{
+							stacked: StackedNodes,
+							summary: SummaryNode,
+						}}
+						onNodesChange={onNodesChange}
+						edges={renderedEdges}
+						viewport={viewport}
+						onViewportChange={setViewport}
+						onEdgesChange={onEdgesChange}
+						nodesDraggable={false}
+						nodesConnectable={false}
+						edgesFocusable={false}
+						minZoom={0}
+					>
+						<Controls />
+						<Background variant={BackgroundVariant.Dots} gap={12} size={1} />
+					</ReactFlow>
+				</ErrorBoundary>
 			</div>
 		</div>
 	);

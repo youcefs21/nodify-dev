@@ -31,6 +31,29 @@ import {
 	CheckCircle,
 	ArrowLeft,
 	ClipboardList,
+	Brain,
+	Database,
+	GitBranch,
+	FileSearch,
+	HardDrive,
+	Loader,
+	Pencil,
+	Blocks,
+	Cpu,
+	Cog,
+	Grid,
+	Save,
+	BookOpen,
+	Upload,
+	PlaySquare,
+	Boxes,
+	Scale,
+	FileInput,
+	FileOutput,
+	FileEdit,
+	FileSpreadsheet,
+	AlertTriangle,
+	Keyboard,
 } from "lucide-react";
 import { cn } from "../../utils/cn";
 
@@ -203,6 +226,181 @@ export const TypeIconMap = {
 	finalization: () => (
 		<div className={cn("p-2 rounded-lg bg-green [&>*]:stroke-mantle")}>
 			<CheckCircle className="size-5" />
+		</div>
+	),
+	callback_setup: () => (
+		<div className={cn("p-2 rounded-lg bg-mauve [&>*]:stroke-mantle")}>
+			<Webhook className="size-5" />
+		</div>
+	),
+	model_initialization: () => (
+		<div className={cn("p-2 rounded-lg bg-blue [&>*]:stroke-mantle")}>
+			<Brain className="size-5" />
+		</div>
+	),
+	model_training: () => (
+		<div className={cn("p-2 rounded-lg bg-green [&>*]:stroke-mantle")}>
+			<Activity className="size-5" />
+		</div>
+	),
+	dataset_preparation: () => (
+		<div className={cn("p-2 rounded-lg bg-yellow [&>*]:stroke-mantle")}>
+			<Database className="size-5" />
+		</div>
+	),
+	configuration_setup: () => (
+		<div className={cn("p-2 rounded-lg bg-mauve [&>*]:stroke-mantle")}>
+			<Settings className="size-5" />
+		</div>
+	),
+	execution_flow: () => (
+		<div className={cn("p-2 rounded-lg bg-sapphire [&>*]:stroke-mantle")}>
+			<GitBranch className="size-5" />
+		</div>
+	),
+	callback_method: () => (
+		<div className={cn("p-2 rounded-lg bg-teal [&>*]:stroke-mantle")}>
+			<Webhook className="size-5" />
+		</div>
+	),
+	callback_function: () => (
+		<div className={cn("p-2 rounded-lg bg-pink [&>*]:stroke-mantle")}>
+			<Webhook className="size-5" />
+		</div>
+	),
+	block_management: () => (
+		<div className={cn("p-2 rounded-lg bg-peach [&>*]:stroke-mantle")}>
+			<Blocks className="size-5" />
+		</div>
+	),
+	config_retrieval: () => (
+		<div className={cn("p-2 rounded-lg bg-blue [&>*]:stroke-mantle")}>
+			<FileSearch className="size-5" />
+		</div>
+	),
+	config_update: () => (
+		<div className={cn("p-2 rounded-lg bg-mauve [&>*]:stroke-mantle")}>
+			<Pencil className="size-5" />
+		</div>
+	),
+	logging_setup: () => (
+		<div className={cn("p-2 rounded-lg bg-peach [&>*]:stroke-mantle")}>
+			<Terminal className="size-5" />
+		</div>
+	),
+	file_reading: () => (
+		<div className={cn("p-2 rounded-lg bg-yellow [&>*]:stroke-mantle")}>
+			<FileText className="size-5" />
+		</div>
+	),
+	seed_management: () => (
+		<div className={cn("p-2 rounded-lg bg-sapphire [&>*]:stroke-mantle")}>
+			<HardDrive className="size-5" />
+		</div>
+	),
+	training_execution: () => (
+		<div className={cn("p-2 rounded-lg bg-green [&>*]:stroke-mantle")}>
+			<Play className="size-5" />
+		</div>
+	),
+	trainer_initialization: () => (
+		<div className={cn("p-2 rounded-lg bg-blue [&>*]:stroke-mantle")}>
+			<Loader className="size-5" />
+		</div>
+	),
+	model_setup: () => (
+		<div className={cn("p-2 rounded-lg bg-blue [&>*]:stroke-mantle")}>
+			<Cpu className="size-5" />
+		</div>
+	),
+	configuration_management: () => (
+		<div className={cn("p-2 rounded-lg bg-mauve [&>*]:stroke-mantle")}>
+			<Cog className="size-5" />
+		</div>
+	),
+	model_architecture: () => (
+		<div className={cn("p-2 rounded-lg bg-sapphire [&>*]:stroke-mantle")}>
+			<Grid className="size-5" />
+		</div>
+	),
+	parameter_management: () => (
+		<div className={cn("p-2 rounded-lg bg-yellow [&>*]:stroke-mantle")}>
+			<Sliders className="size-5" />
+		</div>
+	),
+	vocabulary_management: () => (
+		<div className={cn("p-2 rounded-lg bg-teal [&>*]:stroke-mantle")}>
+			<BookOpen className="size-5" />
+		</div>
+	),
+	checkpointing: () => (
+		<div className={cn("p-2 rounded-lg bg-green [&>*]:stroke-mantle")}>
+			<Save className="size-5" />
+		</div>
+	),
+	dataset_initialization: () => (
+		<div className={cn("p-2 rounded-lg bg-peach [&>*]:stroke-mantle")}>
+			<Database className="size-5" />
+		</div>
+	),
+	data_loading: () => (
+		<div className={cn("p-2 rounded-lg bg-yellow [&>*]:stroke-mantle")}>
+			<Upload className="size-5" />
+		</div>
+	),
+	training_control: () => (
+		<div className={cn("p-2 rounded-lg bg-green [&>*]:stroke-mantle")}>
+			<PlaySquare className="size-5" />
+		</div>
+	),
+	model_management: () => (
+		<div className={cn("p-2 rounded-lg bg-blue [&>*]:stroke-mantle")}>
+			<Boxes className="size-5" />
+		</div>
+	),
+	weight_initialization: () => (
+		<div className={cn("p-2 rounded-lg bg-sapphire [&>*]:stroke-mantle")}>
+			<Scale className="size-5" />
+		</div>
+	),
+	argument_definition: () => (
+		<div className={cn("p-2 rounded-lg bg-mauve [&>*]:stroke-mantle")}>
+			<FileInput className="size-5" />
+		</div>
+	),
+	option_processing: () => (
+		<div className={cn("p-2 rounded-lg bg-yellow [&>*]:stroke-mantle")}>
+			<FileOutput className="size-5" />
+		</div>
+	),
+	option_handling: () => (
+		<div className={cn("p-2 rounded-lg bg-teal [&>*]:stroke-mantle")}>
+			<FileEdit className="size-5" />
+		</div>
+	),
+	argument_parsing: () => (
+		<div className={cn("p-2 rounded-lg bg-peach [&>*]:stroke-mantle")}>
+			<FileInput className="size-5" />
+		</div>
+	),
+	file_operation: () => (
+		<div className={cn("p-2 rounded-lg bg-blue [&>*]:stroke-mantle")}>
+			<FileText className="size-5" />
+		</div>
+	),
+	reporting: () => (
+		<div className={cn("p-2 rounded-lg bg-sapphire [&>*]:stroke-mantle")}>
+			<FileSpreadsheet className="size-5" />
+		</div>
+	),
+	error_handling: () => (
+		<div className={cn("p-2 rounded-lg bg-red [&>*]:stroke-mantle")}>
+			<AlertTriangle className="size-5" />
+		</div>
+	),
+	user_input: () => (
+		<div className={cn("p-2 rounded-lg bg-green [&>*]:stroke-mantle")}>
+			<Keyboard className="size-5" />
 		</div>
 	),
 };
