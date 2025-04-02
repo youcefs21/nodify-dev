@@ -1,8 +1,8 @@
 {
 	"name": "nodify",
 	"displayName": "nodify",
-	"description": "",
-	"version": "1.3.1",
+	"description": "Code visualization, made simple.",
+	"version": "1.3.2",
 	"publisher": "nodify-dev",
 	"icon": "assets/logo.png",
 	"engines": {
