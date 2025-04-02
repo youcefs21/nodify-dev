@@ -26,9 +26,6 @@ export function createGraphLayout(nodes: CustomNode[], edges: Edge[]) {
 	}
 	dagre.layout(graph);
 
-	for (const v of graph.nodes()) {
-		console.log(`Node ${v}: ${JSON.stringify(graph.node(v))}`);
-	}
 	return {
 		nodes: nodes.map((node) => {
 			const nodeHeight = node.type === "stacked" ? 64 : 160;

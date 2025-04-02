@@ -5,3 +5,4 @@ out
 .vscode-test
 **/*.tsbuildinfo
 .env
+training-data/**/*.json

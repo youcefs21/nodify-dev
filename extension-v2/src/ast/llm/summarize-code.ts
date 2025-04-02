@@ -46,9 +46,13 @@ export function summarizeCode(code: string) {
 			const data = yield* Effect.tryPromise(() =>
 				fs.readFile(path, { encoding: "utf8" }),
 			);
-			return {
-				summary: summarySchema.parse(JSON.parse(data)).summary,
-			};
+			try {
+				return {
+					summary: summarySchema.parse(JSON.parse(data)).summary,
+				};
+			} catch (error) {
+				console.error("Failed to parse summary", error);
+			}
 		}
 
 		const systemPrompt = `Summarize code snippets concisely. Focus on core functionality only.

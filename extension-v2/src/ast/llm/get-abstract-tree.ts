@@ -15,49 +15,7 @@ import {
 } from "./llm.schema";
 import { countTokens } from "gpt-tokenizer";
 
-/**
- * Analyze the provided AST-parsed code and create an abstraction hierarchy with logical groupings.
- * @param input The LLM context containing AST and references
- * @returns A structured abstraction tree with hierarchical groupings
- */
-export function getAbstractionTree(input: LLMContext, astHash: string) {
-	return Effect.gen(function* () {
-		const dirPath = getNodifyWorkspaceDir();
-
-		const tokens = countTokens(JSON.stringify(input));
-		console.log(`input tokens: ${tokens}`);
-
-		if (SHOULD_USE_MOCK) {
-			const mockFolder = `${dirPath}/ast_cache`;
-			const mockPath = `${mockFolder}/${astHash}.json`;
-
-			// make the directory if it doesn't exist
-			yield* Effect.tryPromise(() => fs.mkdir(mockFolder, { recursive: true }));
-			yield* Effect.tryPromise(() =>
-				fs.writeFile(mockPath, JSON.stringify(input, null, 4)),
-			);
-			return getMockAbstractionTree(input, astHash);
-		}
-
-		const model = getModelFromWorkspaceConfig();
-		const client = getOpenAIClientFromWorkspaceConfig();
-
-		const responsePath = `${dirPath}/abstraction_tree_cache/${astHash}.json`;
-		const logPath = `${dirPath}/llm_logs/${astHash}-abstraction-tree.json`;
-		const exists = yield* Effect.promise(() =>
-			fs
-				.access(responsePath)
-				.then(() => true)
-				.catch(() => false),
-		);
-		if (exists) {
-			const data = yield* Effect.tryPromise(() =>
-				fs.readFile(responsePath, { encoding: "utf8" }),
-			);
-			return z.array(abstractionGroupSchema).parse(JSON.parse(data));
-		}
-
-		const systemPrompt = `You are an expert code analyzer. Your task is to analyze the provided AST structure and create a meaningful abstraction hierarchy.
+export const getAbstractTreeSystemPrompt = `You are an expert code analyzer. Your task is to analyze the provided AST structure and create a meaningful abstraction hierarchy.
 
 TASK: Analyze the provided AST-parsed code and create an abstraction hierarchy with logical groupings.
 
@@ -71,7 +29,7 @@ INSTRUCTIONS:
 3. For each group:
    - Create a concise 2-6 word descriptive label
    - Specify the range of node IDs covered (from first to last in the sequence)
-   - Categorize with a single-word type that broadly describes its purpose (examples: "event_listener", "data_processor", "machine_learning", "visualization", "documentation", "utility", "callback", "network_call", "notification", etc.)
+   - Categorize with a single-word type that broadly describes its purpose. ONLY use one of these allowed types: "documentation", "utility", "initialization", "execution", "callback", "validation", "visualization", "configuration", "processing", "security", "display", "terminal", "notification", "termination", "package", "messaging", "error", "file", "search", "loading", "folder", "conditional", "hardware", "network"
 4. Ensure each leaf node contains at most ONE reference in its range
 5. Group related operations together rather than treating each line as its own group
 6. Your ranges must include everything. Don't skip any nodes.
@@ -159,18 +117,60 @@ type AbstractionTreeOutput = {
 	{
 		"label": "Fetch data and return null if failed",
 		"idRange": ["0", "1.1"],
-		"type": "network_call",
+		"type": "network",
 		"referenceID": "hfuh2bda"
 	},
 	{
 		"label": "Multiply all values by 2, and return result",
 		"idRange": ["2", "3"],
-		"type": "data_processor",
+		"type": "processing",
 		"referenceID": "abc123"
 	},
   ]
 }
 `;
+
+/**
+ * Analyze the provided AST-parsed code and create an abstraction hierarchy with logical groupings.
+ * @param input The LLM context containing AST and references
+ * @returns A structured abstraction tree with hierarchical groupings
+ */
+export function getAbstractionTree(input: LLMContext, astHash: string) {
+	return Effect.gen(function* () {
+		const dirPath = getNodifyWorkspaceDir();
+
+		const tokens = countTokens(JSON.stringify(input));
+		console.log(`input tokens: ${tokens}`);
+
+		if (SHOULD_USE_MOCK) {
+			const mockFolder = `${dirPath}/ast_cache`;
+			const mockPath = `${mockFolder}/${astHash}.json`;
+
+			// make the directory if it doesn't exist
+			yield* Effect.tryPromise(() => fs.mkdir(mockFolder, { recursive: true }));
+			yield* Effect.tryPromise(() =>
+				fs.writeFile(mockPath, JSON.stringify(input, null, 4)),
+			);
+			return getMockAbstractionTree(input, astHash);
+		}
+
+		const model = getModelFromWorkspaceConfig();
+		const client = getOpenAIClientFromWorkspaceConfig();
+
+		const responsePath = `${dirPath}/abstraction_tree_cache/${astHash}.json`;
+		const logPath = `${dirPath}/llm_logs/${astHash}-abstraction-tree.json`;
+		const exists = yield* Effect.promise(() =>
+			fs
+				.access(responsePath)
+				.then(() => true)
+				.catch(() => false),
+		);
+		if (exists) {
+			const data = yield* Effect.tryPromise(() =>
+				fs.readFile(responsePath, { encoding: "utf8" }),
+			);
+			return z.array(abstractionGroupSchema).parse(JSON.parse(data));
+		}
 
 		// use local model for testing purposes
 		if (tokens > 15_000) {
@@ -192,7 +192,7 @@ type AbstractionTreeOutput = {
 				client.chat.completions
 					.create({
 						messages: [
-							{ role: "system", content: systemPrompt },
+							{ role: "system", content: getAbstractTreeSystemPrompt },
 							{ role: "user", content: JSON.stringify(input, null, 2) },
 						],
 						response_format: { type: "json_object" },
@@ -239,7 +239,7 @@ type AbstractionTreeOutput = {
 					logPath,
 					JSON.stringify(
 						[
-							{ role: "system", content: systemPrompt },
+							{ role: "system", content: getAbstractTreeSystemPrompt },
 							{ role: "user", content: JSON.stringify(input, null, 2) },
 							{ role: "assistant", content: message },
 						],
