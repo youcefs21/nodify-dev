@@ -1,9 +1,5 @@
 # Nodify
 
-<p align="center">
-  <img src="assets/logo.png" alt="The Nodify Project logo" width="200"/>
-</p>
-
 Take your codebase understanding to the next level!
 Nodify is a VSCode extension that visualizes the flow of execution through an entire program.
 Using the power of AI, contributors and users alike can instantly grasp the architecture of any codebase.
@@ -17,8 +13,6 @@ As a productivity-focused tool, the goals of Nodify are as follows:
 - Complete automation of the documentation process for execution flow diagrams.
 - Interactable diagrams that can expand and contract based on level of desired detail.
 - Zero interruptions and non-invasive implementation to the normal development workflow.
-
-<!-- TODO put link demo vid (from youtube?) -->
 
 # User Guide
 
