@@ -11,6 +11,7 @@ Using the power of AI, contributors and users alike can instantly grasp the arch
 ## What is Nodify?
 
 Nodify is a VSCode extension that generates high-level execution flow diagrams for any Python or TypeScript codebase. With Nodify, developers can instantly visualize interactions between different components with zero hassle. This living, interactable form of documentation grows alongside the software development process and makes use of the latest LLMs to provide intelligent summaries where applicable. Through Nodify’s autonomous diagram generation, engineers can see the progression of a codebase in real-time, catching design flaws long before they cause problems in published code.
+[![Nodify](https://img.youtube.com/vi/l-cZ0Sc6k4k/0.jpg)](https://youtu.be/l-cZ0Sc6k4k)
 
 As a productivity-focused tool, the goals of Nodify are as follows:
 
