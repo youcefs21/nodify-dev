@@ -44,7 +44,7 @@ A GPU with 16GB of VRAM is recommended for reasonable response times with local 
 
 1. Install and start [Ollama](https://ollama.com/).
 2. Run the `Select LLM Server IP` command in VSCode using 127.0.0.1. The specific port may vary from machine to machine, but 11434 is the default.
-3. Download a model to run locally through Ollama's CLI using `ollama run <model_id>`. We recommend `phi4:14b-q4_K_M` or `phi4:14b-q8_0`.
+3. Download a model to run locally through Ollama's CLI using `ollama run <model_id>`. Nodify's fine-tuned model can be fetched by running `ollama pull youcefb/nodify:Q4_K_M`. `phi4:14b-q4_K_M` or `phi4:14b-q8_0` will also work.
 4. Select the preferred model name from the drop down of the `Select LLM Model ID` command.
 
 Nodify will take significantly longer on startup for local LLMs, since Ollama must first load the entire model into GPU memory.

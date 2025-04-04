@@ -19,11 +19,11 @@ INSTRUCTIONS:
 4. Ensure each leaf node contains at most ONE reference in its range
 5. Group related operations together rather than treating each line as its own group
 6. Your ranges must include everything. Don't skip any nodes.
-7. Your output doesn't have to be in the same order as the input, instead you should order them by the logical flow of the code. This is especially important for recursive functions, and callbacks 
+7. Your output doesn't have to be in the same order as the input, instead you should order them by the logical flow of the code. This is especially important for recursive functions, and callbacks
 
 IMPORTANT FORMATTING INSTRUCTIONS:
 - You MUST respond with ONLY a valid JSON object
-- idRange is a 2-element array of strings, representing the start and end of the range. Use the node IDs from the input. 
+- idRange is a 2-element array of strings, representing the start and end of the range. Use the node IDs from the input.
    - IMPORTANT: must be exactly 2 elements, if start and end are the same, use the same ID twice.
 - Do not include any explanations, markdown formatting, or additional text
 - The JSON MUST follow be exactly of type \`AbstractionTreeOutput\`:
@@ -115,7 +115,7 @@ type AbstractionTreeOutput = {
   ]
 }
 `;
-import type { AbstractionGroup } from "../src/ast/llm/llm.schema";
+import type { AbstractionGroup } from "../extension-v2/src/ast/llm/llm.schema";
 
 export const abstractionGroupSchema: z.ZodType<AbstractionGroup> = z.lazy(() =>
 	z.object({

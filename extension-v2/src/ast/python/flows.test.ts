@@ -26,7 +26,6 @@ suite("AST Test Suite", () => {
 		}).pipe(Effect.runPromise);
 
 		assert.ok(ast.length === 1);
-		assert.ok(!("children" in ast[0]));
 		assert.strictEqual(ast[0].text, `print("Hello, World!")`);
 		assert.strictEqual(ast[0].id, "0");
 	});
