@@ -19,6 +19,7 @@ import { LoadingScreen } from "./components/LoadingScreen";
 import { SummaryNode } from "./components/SummaryNode";
 import { ErrorBoundary } from "./components/ErrorBoundary";
 import { handleError } from "./utils/errorHandling";
+import { ExportButtons } from "./components/ExportButtons";
 
 function App() {
 	const [renderedNodes, setNodes, onNodesChange] = useNodesState<CustomNode>(
@@ -170,10 +171,12 @@ function App() {
 						nodesDraggable={false}
 						nodesConnectable={false}
 						edgesFocusable={false}
+						connectionLineStyle={{ stroke: "#ffff" }}
 						minZoom={0}
 					>
 						<Controls />
 						<Background variant={BackgroundVariant.Dots} gap={12} size={1} />
+						<ExportButtons />
 					</ReactFlow>
 				</ErrorBoundary>
 			</div>
