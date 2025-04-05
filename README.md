@@ -39,6 +39,8 @@ Nodify is available for free as a [VSCode extension](https://marketplace.visuals
 
    _Note: Using OpenAI models requires a valid API key to be stored in the `OPENAI_API_KEY` environment variable. On Windows computers, this can be done through the [control panel](https://superuser.com/questions/949560/how-do-i-set-system-environment-variables-in-windows-10)._
 
+   **Note 2: For capstone-related testing, we have prepared a proxy server at `https://model.nodify.dev` where the required API key is `OPENAI_API_KEY=nodify`. Please select `https://model.nodify.dev` when running the `Select LLM Server IP` and store the API key as an environment variable as described above.**
+
 4. Navigate to the function definition you wish to start Nodify from and click on `Open Nodify at <func>`. A new window should appear with the Nodify loading logo until the first layers of the diagram are ready to render. When first running Nodify, this may take up to a few minutes. Nodify's own architecture can be visualized by opening this [repository](https://docs.google.com/document/d/1j3ipolHBj3V-nyrA8U-OOPp64l0-TTCFQrBqOX_N4Ss/edit?tab=t.0), navigating to `extension-v2/src/extension.ts` and running Nodify on the `activate` function.
 
    Alternatively, Nodify can start from any file in a codebase with the `Open Nodify Webview` command. This command should really be used only on `__main__.py` Python projects that do not use a starting function.
