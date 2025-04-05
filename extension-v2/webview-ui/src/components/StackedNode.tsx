@@ -51,22 +51,6 @@ export function StackedNodes({ data }: NodeProps<CustomNode>) {
 					<span className="font-mono text-sm">
 						{data.label || "Unnamed Node"}
 					</span>
-					{(data.refID || data.parentId === "root") && (
-						<Button
-							variant="outline"
-							size="icon"
-							className="p-1 h-fit w-fit ml-auto mb-auto"
-							onClick={() => {
-								if (!data.children[0]?.chunkId) return;
-								sendToServer({
-									type: "rerun-llm",
-									chunkId: data.children[0].chunkId,
-								});
-							}}
-						>
-							<RefreshCcw className="size-3" />
-						</Button>
-					)}
 				</div>
 
 				<div className="flex flex-col gap-2 px-3 py-2">

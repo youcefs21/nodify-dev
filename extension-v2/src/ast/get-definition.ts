@@ -46,7 +46,9 @@ export function getIdentifierBody(
 			isInWorkspace = workspaceFolders.some((folder) => {
 				const folderPath = folder.uri.fsPath;
 				return (
-					filePath.startsWith(folderPath) && !filePath.includes("node_modules")
+					filePath.startsWith(folderPath) &&
+					!filePath.includes("node_modules") &&
+					!filePath.includes("venv")
 				);
 			});
 			if (!isInWorkspace) {

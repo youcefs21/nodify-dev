@@ -75,23 +75,6 @@ export function SummaryNode({ data }: NodeProps<CustomNode>) {
 					<span className="font-mono text-sm truncate">
 						{data.label || "Unnamed Node"}
 					</span>
-					{(data.refID || data.parentId === "root") && (
-						<Button
-							variant="outline"
-							size="icon"
-							className="p-1 h-fit w-fit ml-auto mb-auto"
-							onClick={(e) => {
-								e.stopPropagation();
-								if (!summaryNode.chunkId) return;
-								sendToServer({
-									type: "rerun-llm",
-									chunkId: summaryNode.chunkId,
-								});
-							}}
-						>
-							<RefreshCcw className="size-3" />
-						</Button>
-					)}
 				</div>
 				<div className="w-full text-left grid grid-cols-8 justify-between h-36">
 					<span className="font-mono text-sm whitespace-pre-wrap col-span-7 truncate">
