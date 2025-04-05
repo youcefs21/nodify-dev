@@ -2,7 +2,7 @@
 	"name": "nodify",
 	"displayName": "nodify",
 	"description": "Code visualization, made simple.",
-	"version": "1.4.1",
+	"version": "1.4.3",
 	"publisher": "nodify-dev",
 	"icon": "assets/logo.png",
 	"engines": {
@@ -72,6 +72,11 @@
 					"type": "boolean",
 					"default": true,
 					"description": "Enable Nodify codelensing for classes."
+				},
+				"nodify.maxAnalysisDepth": {
+					"type": "number",
+					"default": 5,
+					"description": "The maximum depth of Nodify's analysis, measured by nodes traveled (functions called). Higher values allow for deeper code navigation but may result in longer complete loading times. Note that the base layer loading times will still remain the same, only the deeper layers will take longer to fully render. Minimum depth is 1."
 				}
 			}
 		},

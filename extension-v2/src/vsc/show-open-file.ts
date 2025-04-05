@@ -173,7 +173,21 @@ function processAndShowReferences(
 		graphs,
 		(graph) =>
 			Effect.gen(function* () {
-				if (depth > 5) {
+				const configuration = vscode.workspace.getConfiguration("nodify");
+				let maxAnalysisDepth = configuration.get<number>("maxAnalysisDepth");
+				if (maxAnalysisDepth === undefined) {
+					console.error(
+						"maxAnalysisDepth is not set in settings (got undefined) - defaulting to 5",
+					);
+					maxAnalysisDepth = 5;
+				}
+				if (maxAnalysisDepth < 1) {
+					console.error(
+						"maxAnalysisDepth is set to a value less than 1 - defaulting to 5",
+					);
+					maxAnalysisDepth = 5;
+				}
+				if (depth > maxAnalysisDepth) {
 					return;
 				}
 				if (!graph?.node.data.refID) {
