@@ -35,7 +35,7 @@ Nodify is available for free as a [VSCode extension](https://marketplace.visuals
 3. Use the command palette (`CTRL+Shift+P`) to pass in LLM details through the `Select LLM Server IP` and `Select LLM Model ID` commands. If using local LLMs, see the [local LLM Guide](#setting-up-ollama-for-local-llm-usage). The rest of this guide will continue by using OpenAI as the LLM service.
 
    1. After running `Select LLM Server IP`, choose the `https://api.openai.com` option.
-   2. After running `Select LLM Model ID`, choose the `gpt-4o-mini` or `gpt-4o` option.
+   2. After running `Select LLM Model ID`, choose the `gpt-4o-mini` or `gpt-4o` option. We have also fine tuned gpt-4o-mini specifically for nodify. An API key can be provided on request
 
    _Note: Using OpenAI models requires a valid API key to be stored in the `OPENAI_API_KEY` environment variable. On Windows computers, this can be done through the [control panel](https://superuser.com/questions/949560/how-do-i-set-system-environment-variables-in-windows-10)._
 
@@ -52,7 +52,7 @@ A GPU with 16GB of VRAM is recommended for reasonable response times with local 
 
 1. Install and start [Ollama](https://ollama.com/).
 2. Run the `Select LLM Server IP` command in VSCode using 127.0.0.1. The specific port may vary from machine to machine, but 11434 is the default.
-3. Download our custom trained model to run locally through Ollama's CLI using:
+3. Download our custom trained model (based on phi 4 14B) to run locally through Ollama's CLI using:
 ```sh
 ollama pull youcefb/nodify:Q4_K_M
 ```
