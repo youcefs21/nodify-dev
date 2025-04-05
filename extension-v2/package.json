@@ -2,7 +2,7 @@
 	"name": "nodify",
 	"displayName": "nodify",
 	"description": "Code visualization, made simple.",
-	"version": "1.4.3",
+	"version": "1.4.4",
 	"publisher": "nodify-dev",
 	"icon": "assets/logo.png",
 	"engines": {

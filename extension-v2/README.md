@@ -27,11 +27,11 @@ Nodify is available for free as a [VSCode extension](https://marketplace.visuals
 3. Use the command palette (`CTRL+Shift+P`) to pass in LLM details through the `Select LLM Server IP` and `Select LLM Model ID` commands. If using local LLMs, see the [local LLM Guide](#setting-up-ollama-for-local-llm-usage). The rest of this guide will continue by using OpenAI as the LLM service.
 
    1. After running `Select LLM Server IP`, choose the `https://api.openai.com` option.
-   2. After running `Select LLM Model ID`, choose the `gpt-4o-mini` or `gpt-4o` option.
+   2. After running `Select LLM Model ID`, choose the `gpt-4o-mini` or `gpt-4o` option. We have also fine tuned gpt-4o-mini specifically for nodify. An API key can be provided on request
 
    _Note: Using OpenAI models requires a valid API key to be stored in the `OPENAI_API_KEY` environment variable. On Windows computers, this can be done through the [control panel](https://superuser.com/questions/949560/how-do-i-set-system-environment-variables-in-windows-10)._
 
-4. Navigate to the function definition you wish to start Nodify from and click on `Open Nodify at <func>`. A new window should appear with the Nodify loading logo until the first layers of the diagram are ready to render. When first running Nodify, this may take up to a few minutes. Nodify's structure can be seen by opening this repository, navigating to `extension-v2/src/extension.ts` and running Nodify on the `activate` function.
+4. Navigate to the function definition you wish to start Nodify from and click on `Open Nodify at <func>`. A new window should appear with the Nodify loading logo until the first layers of the diagram are ready to render. When first running Nodify, this may take up to a few minutes. Nodify's own architecture can be visualized by opening this [repository](https://docs.google.com/document/d/1j3ipolHBj3V-nyrA8U-OOPp64l0-TTCFQrBqOX_N4Ss/edit?tab=t.0), navigating to `extension-v2/src/extension.ts` and running Nodify on the `activate` function.
 
    Alternatively, Nodify can start from any file in a codebase with the `Open Nodify Webview` command. This command should really be used only on `__main__.py` Python projects that do not use a starting function.
 
@@ -44,8 +44,13 @@ A GPU with 16GB of VRAM is recommended for reasonable response times with local 
 
 1. Install and start [Ollama](https://ollama.com/).
 2. Run the `Select LLM Server IP` command in VSCode using 127.0.0.1. The specific port may vary from machine to machine, but 11434 is the default.
-3. Download a model to run locally through Ollama's CLI using `ollama run <model_id>`. Nodify's fine-tuned model can be fetched by running `ollama pull youcefb/nodify:Q4_K_M`. `phi4:14b-q4_K_M` or `phi4:14b-q8_0` will also work.
-4. Select the preferred model name from the drop down of the `Select LLM Model ID` command.
+3. Download our custom trained model (based on phi 4 14B) to run locally through Ollama's CLI using:
+
+```sh
+ollama pull youcefb/nodify:Q4_K_M
+```
+
+4. After it's done downloading, select the model name from the drop down of the `Select LLM Model ID` command.
 
 Nodify will take significantly longer on startup for local LLMs, since Ollama must first load the entire model into GPU memory.
 
