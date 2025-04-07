@@ -1,4 +1,4 @@
 {
-    "nodify.LLMServerIP": "http://127.0.0.1:11434",
-    "nodify.LLMModelID": "youcefb/nodify:Q4_K_M"
+    "nodify.LLMServerIP": "https://model.nodify.dev",
+    "nodify.LLMModelID": "nodify"
 }
