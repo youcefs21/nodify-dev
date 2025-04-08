@@ -132,7 +132,7 @@ export function getGraphsFromAst(
 		// 🌳 If there is more than one reference, get the abstraction tree
 		if (
 			processedRefs.length > 1 ||
-			flatCodeBlocks.length > 3 ||
+			flatCodeBlocks.length > 1 ||
 			isStartingRef
 		) {
 			const tree = yield* getAbstractionTree(promptContext, astHash);
