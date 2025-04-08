@@ -1,3 +1,9 @@
 extension/package-lock.json
 extension/nodify/package-lock.json
 *.vsix
+node_modules
+*.json
+*.jsonl
+.DS_Store
+.env
+dist
